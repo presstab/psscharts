@@ -1,3 +1,4 @@
+/*
 MIT License
 
 Copyright (c) 2020 Paddington Software Services
@@ -19,5 +20,32 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+*/
 
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
 
+#include <QMainWindow>
+
+namespace Ui {
+class MainWindow;
+}
+
+class LineChart;
+
+class MainWindow : public QMainWindow
+{
+    Q_OBJECT
+private:
+    Ui::MainWindow *ui;
+    LineChart* m_chart;
+
+public:
+    explicit MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
+
+private slots:
+    void RedrawChart();
+};
+
+#endif // MAINWINDOW_H

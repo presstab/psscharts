@@ -1,0 +1,7 @@
+*.o
+Makefile
+moc_*
+.qmake.stash
+ui_*
+build-*
+*.pro.user
