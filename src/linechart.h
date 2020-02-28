@@ -47,6 +47,9 @@ enum AxisLabelType
 class LineChart : public QWidget
 {
     Q_OBJECT
+private:
+    const uint8_t VERSION = 1;
+
 protected:
     std::map<uint32_t, double> m_mapPoints;
     std::pair<double, double> m_pairYRange; // min, max
@@ -133,6 +136,7 @@ public:
     void SetAxisLabelsOnOff(bool fDrawXLabels, bool fDrawYLabels);
     void SetAxisSectionCount(uint32_t nCount);
     void SetAxisSeparatorPen(const QPen& pen);
+    uint8_t Version() { return VERSION; }
 
     QRect ChartArea() const;
     QRect YLabelArea() const;
