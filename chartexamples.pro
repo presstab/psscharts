@@ -33,7 +33,8 @@ SOURCES += \
 HEADERS += \
         chartexamples/mainwindow.h \
         src/linechart.h \
-        src/stringutil.h
+        src/stringutil.h \
+    src/axislabelsettings.h
 
 FORMS += \
         chartexamples/mainwindow.ui

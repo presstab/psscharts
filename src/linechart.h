@@ -25,6 +25,8 @@ SOFTWARE.
 #ifndef LINECHART_H
 #define LINECHART_H
 
+#include "axislabelsettings.h"
+
 #include <QBrush>
 #include <QPen>
 #include <QPointF>
@@ -37,7 +39,7 @@ SOFTWARE.
 class QColor;
 class QPaintEvent;
 
-enum AxisLabelType
+enum class AxisLabelType
 {
     AX_NO_LABEL,
     AX_TIMESTAMP,
@@ -73,16 +75,9 @@ protected:
     QString m_strTitleY; //! Title for Y-axis
     QFont m_fontYTitle;
 
-    //Y-Labels
-    QFont m_fontYLabels;
-    int m_widthYLabelArea;
-    int m_labelPrecision;
-    AxisLabelType m_labelTypeY;
-    bool m_fDrawYAxisLabels;
-
-    //X-Labels
-    AxisLabelType m_labelTypeX;
-    bool m_fDrawXAxisLabels;
+    //Axis Tick Labels
+    AxisLabelSettings m_settingsYLabels;
+    AxisLabelSettings m_settingsXLabels;
 
     bool m_fDrawXAxis;
     bool m_fDrawYAxis;
@@ -90,7 +85,6 @@ protected:
     int m_yPadding;
     int m_rightMargin;
     int m_topTitleHeight;
-    int m_xLabelsHeight;
 
     uint32_t m_axisSections; // Split the axis into this many sections
 

@@ -56,19 +56,19 @@ SOFTWARE.
 LineChart::LineChart(QWidget *parent) : QWidget (parent)
 {
     setAutoFillBackground(true);
-    m_labelTypeY = AxisLabelType::AX_NO_LABEL;
-    m_labelTypeX = AxisLabelType::AX_NO_LABEL;
-    m_widthYLabelArea = 30;
+    m_settingsYLabels.labeltype = AxisLabelType::AX_NO_LABEL;
+    m_settingsXLabels.labeltype = AxisLabelType::AX_NO_LABEL;
+    m_settingsYLabels.nDimension = 30;
+    m_settingsXLabels.nDimension = 30;
+    m_settingsYLabels.nPrecision = 2;
+    m_settingsYLabels.fEnabled = false;
+    m_settingsXLabels.fEnabled = false;
     m_axisSections = 0;
     m_yPadding = 0;
-    m_labelPrecision = 2;
     m_fEnableFill = true;
     m_fChangesMade = true;
     m_rightMargin = -1;
     m_topTitleHeight = -1;
-    m_xLabelsHeight = -1;
-    m_fDrawXAxisLabels = false;
-    m_fDrawYAxisLabels = false;
     m_precision = 100000000;
 }
 
@@ -153,17 +153,17 @@ void LineChart::SetTopTitleHeight(int height)
 
 int LineChart::HeightXLabelArea() const
 {
-    if (m_xLabelsHeight != -1)
-        return m_xLabelsHeight;
+    if (m_settingsXLabels.nDimension != -1)
+        return m_settingsXLabels.nDimension;
 
-    if (m_labelTypeX == AxisLabelType::AX_NO_LABEL)
+    if (m_settingsXLabels.labeltype == AxisLabelType::AX_NO_LABEL)
         return 0;
-    return 30;
+    return 30; //fallback
 }
 
 void LineChart::SetXLabelHeight(int height)
 {
-    m_xLabelsHeight = height;
+    m_settingsXLabels.nDimension = height;
 }
 
 int LineChart::WidthYTitleArea() const
@@ -175,9 +175,9 @@ int LineChart::WidthYTitleArea() const
 
 int LineChart::WidthYLabelArea() const
 {
-    if (m_labelTypeY == AxisLabelType::AX_NO_LABEL)
+    if (m_settingsYLabels.labeltype == AxisLabelType::AX_NO_LABEL)
         return 0;
-    return m_widthYLabelArea;
+    return m_settingsYLabels.nDimension;
 }
 
 int LineChart::WidthRightMargin() const
@@ -288,20 +288,20 @@ void LineChart::paintEvent(QPaintEvent *event)
         }
         painter.restore();
 
-        painter.setFont(m_fontYLabels);
+        painter.setFont(m_settingsYLabels.font);
         painter.setBrush(m_brushLabels);
 
         QFontMetrics fm(painter.font());
 
         //Draw the Y-axis labels
-        if (m_fDrawYAxisLabels) {
+        if (m_settingsYLabels.fEnabled) {
             QRect rectYLabels = YLabelArea();
             for (int y : vYPoints) {
                 QPointF pointDraw(rectYLabels.left(), y);
                 auto pairPoints = ConvertFromPlotPoint(pointDraw);
                 const double& nValue = pairPoints.second;
 
-                QString strLabel = QString::fromStdString(PrecisionToString(nValue, m_labelPrecision));
+                QString strLabel = QString::fromStdString(PrecisionToString(nValue, m_settingsYLabels.nPrecision));
 
                 int nWidthText = fm.horizontalAdvance(strLabel);
 
@@ -318,7 +318,7 @@ void LineChart::paintEvent(QPaintEvent *event)
         }
 
         //Draw the X-axis labels
-        if (m_fDrawXAxisLabels) {
+        if (m_settingsXLabels.fEnabled) {
             QRect rectXLabels = XLabelArea();
             for (int x : vXPoints) {
                 QPointF pointDraw(x, rectXLabels.top());
@@ -326,7 +326,7 @@ void LineChart::paintEvent(QPaintEvent *event)
                 const uint32_t& nValue = pairPoints.first;
 
                 QString strLabel;
-                if (m_labelTypeX == AxisLabelType::AX_TIMESTAMP) {
+                if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
                     QDateTime datetime;
                     datetime.setSecsSinceEpoch(nValue);
                     QDate date = datetime.date();
@@ -459,19 +459,19 @@ void LineChart::SetTopTitleFont(const QFont &font)
 
 void LineChart::SetXLabelType(AxisLabelType labelType)
 {
-    m_labelTypeX = labelType;
+    m_settingsXLabels.labeltype = labelType;
     m_fChangesMade = true;
 }
 
 void LineChart::SetYLabelType(AxisLabelType labelType)
 {
-    m_labelTypeY = labelType;
+    m_settingsYLabels.labeltype = labelType;
     m_fChangesMade = true;
 }
 
 void LineChart::SetYLabelWidth(int width)
 {
-    m_widthYLabelArea = width;
+    m_settingsYLabels.nDimension = width;
 }
 
 void LineChart::SetYTitle(const QString &strTitle)
@@ -500,8 +500,8 @@ void LineChart::SetAxisOnOff(bool fDrawX, bool fDrawY)
  */
 void LineChart::SetAxisLabelsOnOff(bool fDrawXLabels, bool fDrawYLabels)
 {
-    m_fDrawXAxisLabels = fDrawXLabels;
-    m_fDrawYAxisLabels = fDrawYLabels;
+    m_settingsXLabels.fEnabled = fDrawXLabels;
+    m_settingsYLabels.fEnabled = fDrawYLabels;
 }
 
 /**
@@ -600,7 +600,7 @@ QBrush LineChart::BackgroundBrush() const
 
 void LineChart::SetYLabelFont(const QFont& font)
 {
-    m_fontYLabels = font;
+    m_settingsYLabels.font = font;
 }
 
 void LineChart::SetYPadding(int nPadding)
@@ -629,7 +629,8 @@ void LineChart::EnableFill(bool fEnable)
  */
 void LineChart::SetLabelPrecision(int precision)
 {
-    m_labelPrecision = precision;
+    m_settingsYLabels.nPrecision = precision;
+    m_settingsXLabels.nPrecision = precision;
 }
 
 void LineChart::SetRightMargin(int margin)
