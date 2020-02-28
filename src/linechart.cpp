@@ -56,13 +56,9 @@ SOFTWARE.
 LineChart::LineChart(QWidget *parent) : QWidget (parent)
 {
     setAutoFillBackground(true);
-    m_settingsYLabels.labeltype = AxisLabelType::AX_NO_LABEL;
-    m_settingsXLabels.labeltype = AxisLabelType::AX_NO_LABEL;
-    m_settingsYLabels.nDimension = 30;
-    m_settingsXLabels.nDimension = 30;
-    m_settingsYLabels.nPrecision = 2;
-    m_settingsYLabels.fEnabled = false;
-    m_settingsXLabels.fEnabled = false;
+    m_settingsXLabels.SetNull();
+    m_settingsYLabels.SetNull();
+
     m_axisSections = 0;
     m_yPadding = 0;
     m_fEnableFill = true;
@@ -153,6 +149,9 @@ void LineChart::SetTopTitleHeight(int height)
 
 int LineChart::HeightXLabelArea() const
 {
+    if (m_settingsXLabels.fDynamicSizing && m_settingsXLabels.sizeDynamicDimension.height() > 0)
+        return m_settingsXLabels.sizeDynamicDimension.height();
+
     if (m_settingsXLabels.nDimension != -1)
         return m_settingsXLabels.nDimension;
 
@@ -175,8 +174,12 @@ int LineChart::WidthYTitleArea() const
 
 int LineChart::WidthYLabelArea() const
 {
+    if (m_settingsYLabels.fDynamicSizing && m_settingsYLabels.sizeDynamicDimension.width() > 0)
+        return  m_settingsYLabels.sizeDynamicDimension.width();
+
     if (m_settingsYLabels.labeltype == AxisLabelType::AX_NO_LABEL)
         return 0;
+
     return m_settingsYLabels.nDimension;
 }
 
@@ -184,6 +187,14 @@ int LineChart::WidthRightMargin() const
 {
     if (m_rightMargin != -1)
         return m_rightMargin;
+
+    //No specific instructions given, so size so that the whole x label will fit
+    if (m_settingsXLabels.fDynamicSizing && m_settingsXLabels.sizeDynamicDimension.width() > 0) {
+        int nWidth = m_settingsXLabels.sizeDynamicDimension.width()/2;
+        if (nWidth % 2)
+            nWidth += 1;
+        return nWidth;
+    }
 
     //Just copy left side for symetry
     if (WidthYTitleArea() + WidthYLabelArea() > 0)
@@ -241,6 +252,29 @@ void LineChart::paintEvent(QPaintEvent *event)
     if (m_mapPoints.size() <= 1) {
         return;
     }
+
+    //If axis labels are dynamic, get the sizing
+    if (m_axisSections > 0) {
+        if (m_settingsYLabels.fDynamicSizing) {
+            QString strLabel = PrecisionToString(MaxY(), m_settingsYLabels.nPrecision);
+            QFontMetrics fm(m_settingsYLabels.font);
+            m_settingsYLabels.sizeDynamicDimension.setWidth(fm.horizontalAdvance(strLabel)+3);
+            m_settingsYLabels.sizeDynamicDimension.setHeight(fm.height());
+        }
+
+        if (m_settingsXLabels.fDynamicSizing) {
+            QString strLabel;
+            if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP)
+                strLabel = TimeStampToString(MaxX());
+            else
+                strLabel = PrecisionToString(MaxX(), m_settingsXLabels.nPrecision);
+
+            QFontMetrics fm(m_settingsXLabels.font);
+            m_settingsXLabels.sizeDynamicDimension.setHeight(fm.height()+3);
+            m_settingsXLabels.sizeDynamicDimension.setWidth(fm.horizontalAdvance(strLabel)+3);
+        }
+    }
+
     QVector<QPointF> qvecPolygon;
     QVector<QLineF> qvecLines;
     QRect rectFull = rect();
@@ -288,20 +322,19 @@ void LineChart::paintEvent(QPaintEvent *event)
         }
         painter.restore();
 
-        painter.setFont(m_settingsYLabels.font);
-        painter.setBrush(m_brushLabels);
-
-        QFontMetrics fm(painter.font());
-
         //Draw the Y-axis labels
         if (m_settingsYLabels.fEnabled) {
+            painter.setFont(m_settingsYLabels.font);
+            painter.setBrush(m_brushLabels);
+            QFontMetrics fm(painter.font());
+
             QRect rectYLabels = YLabelArea();
             for (int y : vYPoints) {
                 QPointF pointDraw(rectYLabels.left(), y);
                 auto pairPoints = ConvertFromPlotPoint(pointDraw);
                 const double& nValue = pairPoints.second;
 
-                QString strLabel = QString::fromStdString(PrecisionToString(nValue, m_settingsYLabels.nPrecision));
+                QString strLabel = PrecisionToString(nValue, m_settingsYLabels.nPrecision);
 
                 int nWidthText = fm.horizontalAdvance(strLabel);
 
@@ -319,6 +352,10 @@ void LineChart::paintEvent(QPaintEvent *event)
 
         //Draw the X-axis labels
         if (m_settingsXLabels.fEnabled) {
+            painter.setFont(m_settingsXLabels.font);
+            painter.setBrush(m_brushLabels);
+            QFontMetrics fm(painter.font());
+
             QRect rectXLabels = XLabelArea();
             for (int x : vXPoints) {
                 QPointF pointDraw(x, rectXLabels.top());
@@ -327,12 +364,9 @@ void LineChart::paintEvent(QPaintEvent *event)
 
                 QString strLabel;
                 if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
-                    QDateTime datetime;
-                    datetime.setSecsSinceEpoch(nValue);
-                    QDate date = datetime.date();
-                    strLabel = QString("%1/%2/%3").arg(QString::number(date.month()))
-                            .arg(QString::number(date.day()))
-                            .arg(QString::number(date.year()));
+                    strLabel = TimeStampToString(nValue);
+                } else {
+                    strLabel = PrecisionToString(nValue, m_settingsXLabels.nPrecision);
                 }
 
                 QRect rectDraw;

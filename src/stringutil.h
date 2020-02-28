@@ -25,8 +25,10 @@ SOFTWARE.
 #ifndef STRINGUTIL_H
 #define STRINGUTIL_H
 
-#include <string>
+#include <QString>
 
-std::string PrecisionToString(double d, int precision = 8);
+QString PrecisionToString(double d, int precision = 8);
+QString TimeStampToString(const uint64_t& nTime);
+
 
 #endif // STRINGUTIL_H

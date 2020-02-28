@@ -26,6 +26,7 @@ SOFTWARE.
 #define AXISLABELSETTINGS_H
 
 #include <QFont>
+#include <QSize>
 
 enum class AxisLabelType;
 
@@ -33,9 +34,27 @@ struct AxisLabelSettings
 {
     QFont font;
     int nDimension; //Width if Y labels, Height if X Labels
+    bool fDynamicSizing; //Whether the dimension should be followed, or should go with a hint
+    QSize sizeDynamicDimension;
     int nPrecision; //If label is a number, how many places after the decimal
     AxisLabelType labeltype;
     bool fEnabled; //Is the drawing of the axis labels enabled
+
+    AxisLabelSettings()
+    {
+        SetNull();
+    }
+
+    void SetNull()
+    {
+        font.setPointSize(8);
+        nDimension = 30;
+        fDynamicSizing = true;
+        sizeDynamicDimension = QSize(0,0);
+        nPrecision = 2;
+        fEnabled = false;
+    }
+
 };
 
 #endif // AXISLABELSETTINGS_H

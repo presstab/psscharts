@@ -24,13 +24,25 @@ SOFTWARE.
 
 #include "stringutil.h"
 
+#include <QDateTime>
+
 #include <sstream>
 #include <iomanip>
 
-std::string PrecisionToString(double d, int precision)
+QString PrecisionToString(double d, int precision)
 {
     std::stringstream stream;
     stream << std::fixed << std::setprecision(precision);
     stream << d;
-    return stream.str();
+    return QString::fromStdString(stream.str());
+}
+
+QString TimeStampToString(const uint64_t &nTime)
+{
+    QDateTime datetime;
+    datetime.setSecsSinceEpoch(nTime);
+    QDate date = datetime.date();
+    return QString("%1/%2/%3").arg(QString::number(date.month()))
+            .arg(QString::number(date.day()))
+            .arg(QString::number(date.year()));
 }

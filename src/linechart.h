@@ -122,6 +122,8 @@ public:
     void SetYLabelWidth(int width);
     void SetYLabelFont(const QFont& font);
     void SetXLabelHeight(int height);
+    AxisLabelSettings* YLabelSettings() { return &m_settingsYLabels; }
+    AxisLabelSettings* XLabelSettings() { return &m_settingsXLabels; }
     void SetLabelPrecision(int precision);
     void SetYPadding(int nPadding);
     void SetYTitle(const QString& strTitle);

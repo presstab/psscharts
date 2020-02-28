@@ -83,8 +83,8 @@ MainWindow::MainWindow(QWidget *parent) :
     //Axis gridlines
     ui->checkboxDrawXAxisLine->setChecked(true);
     ui->checkBoxDrawYAxisLine->setChecked(true);
+    ui->spinboxYLabelPrecision->setValue(2);
 
-    m_chart->SetYLabelFont(QFont());
     m_chart->SetYLabelType(AxisLabelType::AX_NUMBER);
     m_chart->SetXLabelType(AxisLabelType::AX_TIMESTAMP);
 
@@ -129,6 +129,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->spinboxLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxTitleFontSize, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxYTitleFontSize, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
+    connect(ui->spinboxYLabelPrecision, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
 }
 
 MainWindow::~MainWindow()
@@ -152,6 +153,9 @@ void MainWindow::RedrawChart()
     fontYTitle.setBold(ui->checkboxYTitleBold->isChecked());
     m_chart->SetYTitleFont(fontYTitle);
 
+
+    //Axis Labels
+    m_chart->SetLabelPrecision(ui->spinboxYLabelPrecision->value());
     m_chart->SetAxisLabelsOnOff(ui->checkboxDrawXTitle->checkState() == Qt::Checked, ui->checkboxDrawYTitle->checkState() == Qt::Checked);
 
     //Axis gridlines
