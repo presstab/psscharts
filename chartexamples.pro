@@ -25,18 +25,18 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
-        main.cpp \
-        mainwindow.cpp \
-        ../linechart.cpp \
-    ../stringutil.cpp
+        chartexamples/main.cpp \
+        chartexamples/mainwindow.cpp \
+        src/linechart.cpp \
+        src/stringutil.cpp
 
 HEADERS += \
-        mainwindow.h \
-        ../linechart.h \
-    ../stringutil.h
+        chartexamples/mainwindow.h \
+        src/linechart.h \
+        src/stringutil.h
 
 FORMS += \
-        mainwindow.ui
+        chartexamples/mainwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

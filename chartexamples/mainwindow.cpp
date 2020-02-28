@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "../linechart.h"
+#include "src/linechart.h"
 
 #include <QRandomGenerator>
 
