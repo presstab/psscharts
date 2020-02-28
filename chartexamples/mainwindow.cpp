@@ -67,9 +67,16 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboboxLineColor->addItems(listQtColors);
     ui->comboboxLineColor->setCurrentIndex(0); //black
 
-    //Titles
-    ui->lineeditYTitle->setText("Price");
+    //Chart Title
     ui->lineeditChartTitle->setText("Line Chart");
+    ui->spinboxTitleFontSize->setValue(14);
+    ui->checkboxChartTitleBold->setCheckState(Qt::Checked);
+
+    // Y Title
+    ui->lineeditYTitle->setText("Price");
+    ui->spinboxYTitleFontSize->setValue(12);
+    ui->checkboxYTitleBold->setCheckState(Qt::Unchecked);
+
     ui->checkboxDrawXTitle->setChecked(true);
     ui->checkboxDrawYTitle->setChecked(true);
 
@@ -112,12 +119,16 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->checkBoxDrawYAxisLine, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkboxFillChart, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkboxFillBackground, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkboxChartTitleBold, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkboxYTitleBold, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->comboboxChartFillColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxBgColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxLineColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
 
     connect(ui->spinboxGridlines, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
+    connect(ui->spinboxTitleFontSize, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
+    connect(ui->spinboxYTitleFontSize, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
 }
 
 MainWindow::~MainWindow()
@@ -127,8 +138,20 @@ MainWindow::~MainWindow()
 
 void MainWindow::RedrawChart()
 {
+    //Chart Title
     m_chart->SetTopTitle(ui->lineeditChartTitle->text());
+    QFont fontChartTitle;
+    fontChartTitle.setPointSize(ui->spinboxTitleFontSize->value());
+    fontChartTitle.setBold(ui->checkboxChartTitleBold->isChecked());
+    m_chart->SetTopTitleFont(fontChartTitle);
+
+    //Y Title
     m_chart->SetYTitle(ui->lineeditYTitle->text());
+    QFont fontYTitle;
+    fontYTitle.setPointSize(ui->spinboxYTitleFontSize->value());
+    fontYTitle.setBold(ui->checkboxYTitleBold->isChecked());
+    m_chart->SetYTitleFont(fontYTitle);
+
     m_chart->SetAxisLabelsOnOff(ui->checkboxDrawXTitle->checkState() == Qt::Checked, ui->checkboxDrawYTitle->checkState() == Qt::Checked);
 
     //Axis gridlines

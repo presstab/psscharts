@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>406</width>
-    <height>369</height>
+    <height>395</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,18 +29,12 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QLineEdit" name="lineeditChartTitle"/>
-        </item>
         <item row="1" column="0">
          <widget class="QLabel" name="label_2">
           <property name="text">
            <string>Y Title</string>
           </property>
          </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QLineEdit" name="lineeditYTitle"/>
         </item>
         <item row="2" column="0">
          <widget class="QLabel" name="label_3">
@@ -164,6 +158,40 @@
         <item row="8" column="1">
          <widget class="QComboBox" name="comboboxLineColor"/>
         </item>
+        <item row="0" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <item>
+           <widget class="QLineEdit" name="lineeditChartTitle"/>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="spinboxTitleFontSize"/>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkboxChartTitleBold">
+            <property name="text">
+             <string>bold</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="1" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item>
+           <widget class="QLineEdit" name="lineeditYTitle"/>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="spinboxYTitleFontSize"/>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkboxYTitleBold">
+            <property name="text">
+             <string>bold</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
        </layout>
       </item>
      </layout>
@@ -176,7 +204,7 @@
      <x>0</x>
      <y>0</y>
      <width>406</width>
-     <height>22</height>
+     <height>25</height>
     </rect>
    </property>
   </widget>
