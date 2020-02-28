@@ -390,6 +390,7 @@ void LineChart::paintEvent(QPaintEvent *event)
     //Draw y title
     if (!m_strTitleY.isEmpty()) {
         painter.save();
+        painter.setFont(m_fontYTitle);
         painter.rotate(-90);
 
         //The painter rotates around the (0,0) coordinate.
@@ -476,6 +477,12 @@ void LineChart::SetYLabelWidth(int width)
 void LineChart::SetYTitle(const QString &strTitle)
 {
     m_strTitleY = strTitle;
+    m_fChangesMade = true;
+}
+
+void LineChart::SetYTitleFont(const QFont &font)
+{
+    m_fontYTitle = font;
     m_fChangesMade = true;
 }
 

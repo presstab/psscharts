@@ -60,22 +60,31 @@ protected:
     QBrush m_brushLabels;
     QPen m_penAxisSeparater;
     int m_lineWidth;
-    QString m_strTopTitle; //! Chart main title
-    QFont m_fontTopTitle;
-    QString m_strTitleY; //! Title for Y-axis-*-
     uint32_t m_precision;
 
-    bool m_fDrawXAxis;
-    bool m_fDrawXAxisLabels;
-    bool m_fDrawYAxis;
-    bool m_fDrawYAxisLabels;
-    AxisLabelType m_labelTypeY;
-    AxisLabelType m_labelTypeX;
-    int m_widthYLabelArea;
-    QFont m_fontYLabels;
-    int m_yPadding;
-    int m_labelPrecision;
+    //Top Title
+    QString m_strTopTitle; //! Chart main title
+    QFont m_fontTopTitle;
 
+    //Y-Title
+    QString m_strTitleY; //! Title for Y-axis
+    QFont m_fontYTitle;
+
+    //Y-Labels
+    QFont m_fontYLabels;
+    int m_widthYLabelArea;
+    int m_labelPrecision;
+    AxisLabelType m_labelTypeY;
+    bool m_fDrawYAxisLabels;
+
+    //X-Labels
+    AxisLabelType m_labelTypeX;
+    bool m_fDrawXAxisLabels;
+
+    bool m_fDrawXAxis;
+    bool m_fDrawYAxis;
+
+    int m_yPadding;
     int m_rightMargin;
     int m_topTitleHeight;
     int m_xLabelsHeight;
@@ -119,6 +128,7 @@ public:
     void SetLabelPrecision(int precision);
     void SetYPadding(int nPadding);
     void SetYTitle(const QString& strTitle);
+    void SetYTitleFont(const QFont& font);
     void SetAxisOnOff(bool fDrawX, bool fDrawY);
     void SetAxisLabelsOnOff(bool fDrawXLabels, bool fDrawYLabels);
     void SetAxisSectionCount(uint32_t nCount);
