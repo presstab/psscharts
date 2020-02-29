@@ -66,6 +66,8 @@ LineChart::LineChart(QWidget *parent) : QWidget (parent)
     m_rightMargin = -1;
     m_topTitleHeight = -1;
     m_precision = 100000000;
+
+    setMouseTracking(true);
 }
 
 /**
@@ -208,6 +210,11 @@ void LineChart::AddDataPoint(const uint32_t& x, const double& y)
     ProcessChangedData();
 }
 
+void LineChart::EnableMouseDisplay(bool fEnable)
+{
+    m_mousedisplay.SetEnabled(fEnable);
+}
+
 void LineChart::RemoveDataPoint(const uint32_t &x)
 {
     m_mapPoints.erase(x);
@@ -275,10 +282,26 @@ void LineChart::paintEvent(QPaintEvent *event)
         }
     }
 
-    QVector<QPointF> qvecPolygon;
-    QVector<QLineF> qvecLines;
     QRect rectFull = rect();
     QRect rectChart = ChartArea();
+
+    // Determine if mouse location is inside of the chart
+    QPoint gposMouse = QCursor::pos();
+    QPoint gposChart = mapToGlobal(QPoint(0+WidthYTitleArea()+WidthYLabelArea(),0+HeightTopTitleArea()));
+    QPoint lposMouse = this->mapFromGlobal(gposMouse);
+    bool fMouseInChartArea = false;
+    if (m_mousedisplay.IsEnabled() && gposMouse.y() > gposChart.y()) {
+        if (gposMouse.y() < rectChart.height() + gposChart.y()) {
+            //Y is in chart range, check if x is in the chart range too
+            if (gposMouse.x() > gposChart.x() && gposMouse.x() < gposChart.x() + rectChart.width()) {
+                fMouseInChartArea = true;
+            }
+        }
+     }
+
+    QVector<QPointF> qvecPolygon;
+    QVector<QLineF> qvecLines;
+
     qvecPolygon.append(rectChart.bottomLeft());
     bool fFirstRun = true;
     QPointF pointPrev;
@@ -438,6 +461,19 @@ void LineChart::paintEvent(QPaintEvent *event)
         painter.restore();
     }
 
+    //Draw mouse display
+    if (m_mousedisplay.IsEnabled() && fMouseInChartArea) {
+        painter.setPen(m_mousedisplay.Pen());
+        QPointF posLeft(rectChart.left(), lposMouse.y());
+        QPointF posRight(rectChart.right(), lposMouse.y());
+        QLineF lineMouseX(posLeft, posRight);
+        painter.drawLine(lineMouseX);
+
+        QPointF posTop(lposMouse.x(), rectChart.top());
+        QPointF posBottom(lposMouse.x(), rectChart.bottom());
+        painter.drawLine(QLineF(posTop, posBottom));
+    }
+
     m_fChangesMade = false;
 }
 
@@ -451,6 +487,12 @@ QPixmap LineChart::grab(const QRect &rectangle)
 
     m_pixmapCache = QWidget::grab(rectangle);
     return m_pixmapCache;
+}
+
+void LineChart::mouseMoveEvent(QMouseEvent *event)
+{
+    QWidget::mouseMoveEvent(event);
+    repaint();
 }
 
 void LineChart::SetBackgroundBrush(const QBrush &brush)

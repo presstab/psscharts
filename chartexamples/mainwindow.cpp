@@ -53,8 +53,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
     m_chart = new LineChart(this);
-    ui->hlayoutMain->addWidget(m_chart, /*stretch*/1);
+    if (this->width() > this->height())
+        ui->formLayout->addRow(m_chart);
+    else
+        ui->hlayoutMain->addWidget(m_chart, /*stretch*/1);
 
     ui->comboboxChartFillColor->addItems(listQtColors);
     ui->comboboxChartFillColor->setCurrentIndex(8); //cyan
@@ -91,6 +95,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->spinboxGridlines->setValue(5);
     ui->spinboxLineWidth->setValue(3);
 
+    //Crosshairs
+    ui->checkboxCrosshairs->setChecked(true);
+    ui->spinboxCrosshairWidth->setValue(2);
+    ui->comboboxCrosshairColor->addItems(listQtColors);
+    ui->comboboxCrosshairColor->setCurrentIndex(0); //black
+
     //Generate some data points to fill the chart
     std::map<uint32_t, double> mapPoints;
     double nLastPoint = 0;
@@ -121,15 +131,18 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->checkboxFillBackground, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkboxChartTitleBold, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkboxYTitleBold, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkboxCrosshairs, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->comboboxChartFillColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxBgColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxLineColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboboxCrosshairColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
 
     connect(ui->spinboxGridlines, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxTitleFontSize, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxYTitleFontSize, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxYLabelPrecision, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
+    connect(ui->spinboxCrosshairWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
 }
 
 MainWindow::~MainWindow()
@@ -172,9 +185,17 @@ void MainWindow::RedrawChart()
         colorBackground = static_cast<Qt::GlobalColor>(ui->comboboxBgColor->currentIndex()+2);
     m_chart->SetBackgroundBrush(QBrush(colorBackground));
 
+    //Line Color
     m_chart->SetLineWidth(ui->spinboxLineWidth->value());
     QColor colorLine = static_cast<Qt::GlobalColor>(ui->comboboxLineColor->currentIndex()+2);
     m_chart->SetLineBrush(colorLine);
+
+    //Mouse Display
+    m_chart->EnableMouseDisplay(ui->checkboxCrosshairs->isChecked());
+    MouseDisplay* display = m_chart->MouseDisplay();
+    display->SetWidth(ui->spinboxCrosshairWidth->value());
+    QColor colorCrosshair = static_cast<Qt::GlobalColor>(ui->comboboxCrosshairColor->currentIndex()+2);
+    display->SetColor(colorCrosshair);
 
     m_chart->repaint();
 }
