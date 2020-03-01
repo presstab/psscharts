@@ -26,6 +26,7 @@ SOFTWARE.
 #define LINECHART_H
 
 #include "axislabelsettings.h"
+#include "mousedisplay.h"
 
 #include <QBrush>
 #include <QPen>
@@ -66,6 +67,7 @@ protected:
     QPen m_penAxisSeparater;
     int m_lineWidth;
     uint32_t m_precision;
+    MouseDisplay m_mousedisplay;
 
     //Top Title
     QString m_strTopTitle; //! Chart main title
@@ -104,6 +106,7 @@ public:
     LineChart(QWidget* parent = nullptr);
     bool ChangesMade() const { return m_fChangesMade; }
     void AddDataPoint(const uint32_t& x, const double& y);
+    void EnableMouseDisplay(bool fEnable);
     void RemoveDataPoint(const uint32_t& x);
     void SetDataPoints(const std::map<uint32_t, double>& mapPoints);
     void paintEvent(QPaintEvent *event) override;
@@ -122,8 +125,6 @@ public:
     void SetYLabelWidth(int width);
     void SetYLabelFont(const QFont& font);
     void SetXLabelHeight(int height);
-    AxisLabelSettings* YLabelSettings() { return &m_settingsYLabels; }
-    AxisLabelSettings* XLabelSettings() { return &m_settingsXLabels; }
     void SetLabelPrecision(int precision);
     void SetYPadding(int nPadding);
     void SetYTitle(const QString& strTitle);
@@ -133,6 +134,10 @@ public:
     void SetAxisSectionCount(uint32_t nCount);
     void SetAxisSeparatorPen(const QPen& pen);
     uint8_t Version() { return VERSION; }
+
+    AxisLabelSettings* YLabelSettings() { return &m_settingsYLabels; }
+    AxisLabelSettings* XLabelSettings() { return &m_settingsXLabels; }
+    MouseDisplay* MouseDisplay() { return &m_mousedisplay; }
 
     QRect ChartArea() const;
     QRect YLabelArea() const;
@@ -145,6 +150,7 @@ public:
     QBrush BackgroundBrush() const;
 
     QPixmap grab(const QRect &rectangle = QRect(QPoint(0, 0), QSize(-1, -1)));
+    void mouseMoveEvent(QMouseEvent* event) override;
 };
 
 #endif // LINECHART_H

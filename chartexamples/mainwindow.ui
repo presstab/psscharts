@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>406</width>
-    <height>401</height>
+    <width>496</width>
+    <height>421</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>PSS Charts</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
@@ -202,6 +202,30 @@
         <item row="3" column="1">
          <widget class="QSpinBox" name="spinboxYLabelPrecision"/>
         </item>
+        <item row="10" column="0">
+         <widget class="QLabel" name="label_11">
+          <property name="text">
+           <string>Crosshairs</string>
+          </property>
+         </widget>
+        </item>
+        <item row="10" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_8">
+          <item>
+           <widget class="QCheckBox" name="checkboxCrosshairs">
+            <property name="text">
+             <string>Enable</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="spinboxCrosshairWidth"/>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboboxCrosshairColor"/>
+          </item>
+         </layout>
+        </item>
        </layout>
       </item>
      </layout>
@@ -213,8 +237,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>406</width>
-     <height>25</height>
+     <width>496</width>
+     <height>21</height>
     </rect>
    </property>
   </widget>
