@@ -34,6 +34,7 @@ class MouseDisplay
 private:
     bool m_isEnabled;
     QPen m_pen;
+    QColor m_colorLabelBackground;
 
 public:
     MouseDisplay()
@@ -43,11 +44,13 @@ public:
 
     void SetNull();
     void SetColor(const QColor& color);
+    void SetLabelBackgroundColor(const QColor& color);
     void SetEnabled(bool fEnable) { m_isEnabled = fEnable; }
-     void SetWidth(int nWidth);
+    void SetWidth(int nWidth);
 
     bool IsEnabled() const { return m_isEnabled; }
     QPen Pen() const { return m_pen; }
+    QColor LabelBackgroundColor() const { return m_colorLabelBackground; }
 };
 
 #endif // MOUSEDISPLAY_H

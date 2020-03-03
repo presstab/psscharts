@@ -247,8 +247,22 @@ void LineChart::ProcessChangedData()
     m_fChangesMade = true;
 }
 
+/**
+ * @brief GetLineEquation Get the slope and y intercept of a line
+ * @param line[in]
+ * @param nSlope[out]
+ * @param nYIntercept[out]
+ */
+void GetLineEquation(const QLineF& line, double& nSlope, double& nYIntercept)
+{
+    nSlope = (line.y2() - line.y1()) / (line.x2() - line.x1());
+    nYIntercept = line.y1() - (nSlope * line.x1());
+}
+
 void LineChart::paintEvent(QPaintEvent *event)
 {
+    Q_UNUSED(event);
+
     //Fill in the background first
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
@@ -349,27 +363,9 @@ void LineChart::paintEvent(QPaintEvent *event)
         if (m_settingsYLabels.fEnabled) {
             painter.setFont(m_settingsYLabels.font);
             painter.setBrush(m_brushLabels);
-            QFontMetrics fm(painter.font());
-
-            QRect rectYLabels = YLabelArea();
-            for (int y : vYPoints) {
-                QPointF pointDraw(rectYLabels.left(), y);
-                auto pairPoints = ConvertFromPlotPoint(pointDraw);
-                const double& nValue = pairPoints.second;
-
-                QString strLabel = PrecisionToString(nValue, m_settingsYLabels.nPrecision);
-
-                int nWidthText = fm.horizontalAdvance(strLabel);
-
-                QRect rectDraw;
-                rectDraw.setTopLeft(pointDraw.toPoint());
-                rectDraw.setBottomRight(QPoint(rectYLabels.right() - 3, rectDraw.y() + fm.height()));
-
-                //Center the label onto the line
-                rectDraw.moveTop(rectDraw.top() - fm.height() / 2);
-
-                Qt::AlignmentFlag hAlign = (nWidthText > rectYLabels.width() ? Qt::AlignLeft : Qt::AlignRight);
-                painter.drawText(rectDraw, hAlign, strLabel);
+            DrawYLabels(painter, vYPoints, /*isMouseDisplay*/false);
+            if (m_mousedisplay.IsEnabled() && fMouseInChartArea) {
+                DrawYLabels(painter, {lposMouse.y()}, /*isMouseDisplay*/true);
             }
         }
 
@@ -377,31 +373,12 @@ void LineChart::paintEvent(QPaintEvent *event)
         if (m_settingsXLabels.fEnabled) {
             painter.setFont(m_settingsXLabels.font);
             painter.setBrush(m_brushLabels);
-            QFontMetrics fm(painter.font());
+            DrawXLabels(painter, vXPoints, /*drawIndicatorLine*/true);
 
-            QRect rectXLabels = XLabelArea();
-            for (int x : vXPoints) {
-                QPointF pointDraw(x, rectXLabels.top());
-                auto pairPoints = ConvertFromPlotPoint(pointDraw);
-                const uint32_t& nValue = pairPoints.first;
-
-                QString strLabel;
-                if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
-                    strLabel = TimeStampToString(nValue);
-                } else {
-                    strLabel = PrecisionToString(nValue, m_settingsXLabels.nPrecision);
-                }
-
-                QRect rectDraw;
-                rectDraw.setTopLeft(pointDraw.toPoint());
-                int nWidthText = fm.horizontalAdvance(strLabel);
-                rectDraw.setBottomRight(QPoint(pointDraw.x() + nWidthText, rectXLabels.bottom()));
-
-                //Center the label on the line
-                rectDraw.moveLeft(rectDraw.left() - rectDraw.width() / 2);
-                painter.drawText(rectDraw, Qt::AlignCenter, strLabel);
-                painter.drawLine(QLine(QPoint(rectDraw.center().x(), rectDraw.top()),
-                                       QPoint(rectDraw.center().x(), rectDraw.top() + 5)));
+            // Give detail about where mouse is located
+            if (m_mousedisplay.IsEnabled() && fMouseInChartArea) {
+                //Draw the x label
+                DrawXLabels(painter, {lposMouse.x()}, /*drawIndicatorLine*/false);
             }
         }
     }
@@ -472,9 +449,142 @@ void LineChart::paintEvent(QPaintEvent *event)
         QPointF posTop(lposMouse.x(), rectChart.top());
         QPointF posBottom(lposMouse.x(), rectChart.bottom());
         painter.drawLine(QLineF(posTop, posBottom));
+
+        //Draw a point on the chart
+        double y = 0;
+        for (const QLineF& line : qvecLines) {
+            //Find the line that the mouse x point would belong on
+            if (lposMouse.x() > line.x1() && lposMouse.x() < line.x2()) {
+                double nLineSlope = 0;
+                double nLineYIntercept = 0;
+                GetLineEquation(line, nLineSlope, nLineYIntercept);
+                y = nLineSlope * lposMouse.x() + nLineYIntercept;
+                break;
+            }
+        }
+
+        //Draw a dot on the line series where the mouse X point is
+        QPainterPath pathDot;
+        QPointF pointCircleCenter(lposMouse.x(), y);
+        pathDot.addEllipse(pointCircleCenter, 5, 5);
+        painter.fillPath(pathDot, m_brushLine);
+
+        //Add a border to the dot
+        QPen pen;
+        pen.setColor(m_mousedisplay.LabelBackgroundColor());
+        pen.setWidth(2);
+        painter.setPen(pen);
+        painter.drawPath(pathDot);
+
+        //Draw a small tooltip looking item showing the point's data (x,y)
+        auto pairData = ConvertFromPlotPoint(pointCircleCenter);
+        const uint32_t& nX = pairData.first;
+        const double& nY = pairData.second;
+        QString strLabel = "(";
+        if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
+            strLabel += TimeStampToString(nX);
+        } else {
+            strLabel += PrecisionToString(nX, m_settingsXLabels.nPrecision);
+        }
+        strLabel += ", ";
+        strLabel += PrecisionToString(nY, m_settingsYLabels.nPrecision);
+        strLabel += ")";
+
+        //Create the background of the tooltip
+        QFontMetrics fm(painter.font());
+        int nWidthText = fm.horizontalAdvance(strLabel) + 4;
+
+        QPoint pointTopLeft(pointCircleCenter.x() - nWidthText/2, pointCircleCenter.y()+10);
+
+        QRect rectDraw;
+        rectDraw.setTopLeft(pointTopLeft);
+        rectDraw.setWidth(nWidthText);
+        rectDraw.setHeight(fm.height() + 4);
+
+        QPainterPath pathBackground;
+        pathBackground.addRoundedRect(rectDraw, 5, 5);
+        painter.fillPath(pathBackground, m_mousedisplay.LabelBackgroundColor());
+
+        //Draw the text of the tooltip
+        painter.setBrush(m_brushLabels);
+        painter.setPen(Qt::black);
+        painter.drawText(rectDraw, Qt::AlignCenter, strLabel);
     }
 
     m_fChangesMade = false;
+}
+
+void LineChart::DrawXLabels(QPainter& painter, const std::vector<int>& vXPoints, bool fDrawIndicatorLine)
+{
+    QFontMetrics fm(painter.font());
+
+    QRect rectXLabels = XLabelArea();
+    for (int x : vXPoints) {
+        QPointF pointDraw(x, rectXLabels.top());
+        auto pairPoints = ConvertFromPlotPoint(pointDraw);
+        const uint32_t& nValue = pairPoints.first;
+
+        QString strLabel;
+        if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
+            strLabel = TimeStampToString(nValue);
+        } else {
+            strLabel = PrecisionToString(nValue, m_settingsXLabels.nPrecision);
+        }
+
+        QRect rectDraw;
+        rectDraw.setTopLeft(pointDraw.toPoint());
+        int nWidthText = fm.horizontalAdvance(strLabel);
+        rectDraw.setBottomRight(QPoint(pointDraw.x() + nWidthText, rectXLabels.bottom()));
+
+        //Center the label on the line
+        rectDraw.moveLeft(rectDraw.left() - rectDraw.width() / 2);
+        if (!fDrawIndicatorLine) {
+            //Assume this is for the mouse display if not using an indicator line
+            QPainterPath path;
+            path.addRoundedRect(rectDraw, 5, 5);
+            painter.fillPath(path, m_mousedisplay.LabelBackgroundColor());
+        }
+
+        painter.drawText(rectDraw, Qt::AlignCenter, strLabel);
+
+        //Draw a line on the axis showing the location of this x value
+        if (fDrawIndicatorLine)
+            painter.drawLine(QLine(QPoint(rectDraw.center().x(), rectDraw.top()),
+                                   QPoint(rectDraw.center().x(), rectDraw.top() + 5)));
+    }
+}
+
+void LineChart::DrawYLabels(QPainter &painter, const std::vector<int> &vYPoints, bool isMouseDisplay)
+{
+    QFontMetrics fm(painter.font());
+
+    QRect rectYLabels = YLabelArea();
+    for (int y : vYPoints) {
+        QPointF pointDraw(rectYLabels.left(), y);
+        auto pairPoints = ConvertFromPlotPoint(pointDraw);
+        const double& nValue = pairPoints.second;
+
+        QString strLabel = PrecisionToString(nValue, m_settingsYLabels.nPrecision);
+
+        int nWidthText = fm.horizontalAdvance(strLabel);
+
+        QRect rectDraw;
+        rectDraw.setTopLeft(pointDraw.toPoint());
+        rectDraw.setBottomRight(QPoint(rectYLabels.right() - 3, rectDraw.y() + fm.height()));
+
+        //Center the label onto the line
+        rectDraw.moveTop(rectDraw.top() - fm.height() / 2);
+
+        Qt::AlignmentFlag hAlign = (nWidthText > rectYLabels.width() ? Qt::AlignLeft : Qt::AlignRight);
+
+        if (isMouseDisplay) {
+            QPainterPath path;
+            path.addRoundedRect(rectDraw, 5, 5);
+            painter.fillPath(path, m_mousedisplay.LabelBackgroundColor());
+        }
+
+        painter.drawText(rectDraw, hAlign, strLabel);
+    }
 }
 
 QPixmap LineChart::grab(const QRect &rectangle)
