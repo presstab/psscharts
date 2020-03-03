@@ -51,7 +51,7 @@ class LineChart : public QWidget
 {
     Q_OBJECT
 private:
-    const uint8_t VERSION = 1;
+    const uint8_t VERSION = 2;
 
 protected:
     std::map<uint32_t, double> m_mapPoints;
