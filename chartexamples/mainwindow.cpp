@@ -27,6 +27,7 @@ SOFTWARE.
 #include "src/linechart.h"
 
 #include <QRandomGenerator>
+#include <QScreen>
 
 QStringList listQtColors = {
     "black",
@@ -55,7 +56,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     m_chart = new LineChart(this);
-    if (this->width() > this->height())
+    QSize sizeScreen = QGuiApplication::screens()[0]->size();
+    if (sizeScreen.height() > sizeScreen.width())
         ui->formLayout->addRow(m_chart);
     else
         ui->hlayoutMain->addWidget(m_chart, /*stretch*/1);
@@ -192,7 +194,7 @@ void MainWindow::RedrawChart()
 
     //Mouse Display
     m_chart->EnableMouseDisplay(ui->checkboxCrosshairs->isChecked());
-    MouseDisplay* display = m_chart->MouseDisplay();
+    MouseDisplay* display = m_chart->GetMouseDisplay();
     display->SetWidth(ui->spinboxCrosshairWidth->value());
     QColor colorCrosshair = static_cast<Qt::GlobalColor>(ui->comboboxCrosshairColor->currentIndex()+2);
     display->SetColor(colorCrosshair);

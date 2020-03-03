@@ -51,7 +51,7 @@ class LineChart : public QWidget
 {
     Q_OBJECT
 private:
-    const uint8_t VERSION = 1;
+    const uint8_t VERSION = 2;
 
 protected:
     std::map<uint32_t, double> m_mapPoints;
@@ -106,6 +106,8 @@ public:
     LineChart(QWidget* parent = nullptr);
     bool ChangesMade() const { return m_fChangesMade; }
     void AddDataPoint(const uint32_t& x, const double& y);
+    void DrawXLabels(QPainter& painter, const std::vector<int>& vXPoints, bool fDrawIndicatorLine);
+    void DrawYLabels(QPainter& painter, const std::vector<int>& vYPoints, bool isMouseDisplay);
     void EnableMouseDisplay(bool fEnable);
     void RemoveDataPoint(const uint32_t& x);
     void SetDataPoints(const std::map<uint32_t, double>& mapPoints);
@@ -137,7 +139,7 @@ public:
 
     AxisLabelSettings* YLabelSettings() { return &m_settingsYLabels; }
     AxisLabelSettings* XLabelSettings() { return &m_settingsXLabels; }
-    MouseDisplay* MouseDisplay() { return &m_mousedisplay; }
+    MouseDisplay* GetMouseDisplay() { return &m_mousedisplay; }
 
     QRect ChartArea() const;
     QRect YLabelArea() const;

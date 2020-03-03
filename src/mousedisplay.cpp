@@ -29,11 +29,17 @@ void MouseDisplay::SetNull()
     m_pen = QPen();
     m_pen.setWidth(2);
     m_isEnabled = false;
+    m_colorLabelBackground = Qt::lightGray;
 }
 
 void MouseDisplay::SetColor(const QColor &color)
 {
     m_pen.setColor(color);
+}
+
+void MouseDisplay::SetLabelBackgroundColor(const QColor &color)
+{
+    m_colorLabelBackground = color;
 }
 
 void MouseDisplay::SetWidth(int nWidth)
