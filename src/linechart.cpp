@@ -313,12 +313,14 @@ void LineChart::paintEvent(QPaintEvent *event)
         }
      }
 
+    //Create the lines that are drawn
     QVector<QPointF> qvecPolygon;
     QVector<QLineF> qvecLines;
 
     qvecPolygon.append(rectChart.bottomLeft());
     bool fFirstRun = true;
     QPointF pointPrev;
+    bool fMouseSet = false;
     for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
         QPointF point = ConvertToPlotPoint(pair);
         qvecPolygon.append(point);
@@ -331,6 +333,18 @@ void LineChart::paintEvent(QPaintEvent *event)
         QLineF line(pointPrev, point);
         qvecLines.append(line);
         pointPrev = point;
+
+        if (fMouseInChartArea && !fMouseSet) {
+            //Find the line that the mouse x point would belong on
+            if (lposMouse.x() >= line.x1() && lposMouse.x() <= line.x2()) {
+                double nLineSlope = 0;
+                double nLineYIntercept = 0;
+                GetLineEquation(line, nLineSlope, nLineYIntercept);
+                double y = nLineSlope * lposMouse.x() + nLineYIntercept;
+                m_mousedisplay.SetDot(QPointF(lposMouse.x(), y));
+                fMouseSet = true;
+            }
+        }
     }
 
     // Cleanly close the polygon
@@ -440,41 +454,29 @@ void LineChart::paintEvent(QPaintEvent *event)
 
     //Draw mouse display
     if (m_mousedisplay.IsEnabled() && fMouseInChartArea) {
+        //Cross hair lines
         painter.setPen(m_mousedisplay.Pen());
         QPointF posLeft(rectChart.left(), lposMouse.y());
         QPointF posRight(rectChart.right(), lposMouse.y());
         QLineF lineMouseX(posLeft, posRight);
         painter.drawLine(lineMouseX);
-
         QPointF posTop(lposMouse.x(), rectChart.top());
         QPointF posBottom(lposMouse.x(), rectChart.bottom());
         painter.drawLine(QLineF(posTop, posBottom));
 
-        //Draw a point on the chart
-        double y = 0;
-        for (const QLineF& line : qvecLines) {
-            //Find the line that the mouse x point would belong on
-            if (lposMouse.x() > line.x1() && lposMouse.x() < line.x2()) {
-                double nLineSlope = 0;
-                double nLineYIntercept = 0;
-                GetLineEquation(line, nLineSlope, nLineYIntercept);
-                y = nLineSlope * lposMouse.x() + nLineYIntercept;
-                break;
-            }
-        }
-
         //Draw a dot on the line series where the mouse X point is
         QPainterPath pathDot;
-        QPointF pointCircleCenter(lposMouse.x(), y);
+        QPointF pointCircleCenter(m_mousedisplay.DotPos());
         pathDot.addEllipse(pointCircleCenter, 5, 5);
-        painter.fillPath(pathDot, m_brushLine);
+        painter.setBrush(m_brushLine.color());
+        painter.fillPath(pathDot, m_brushLine.color());
 
         //Add a border to the dot
-        QPen pen;
-        pen.setColor(m_mousedisplay.LabelBackgroundColor());
-        pen.setWidth(2);
-        painter.setPen(pen);
-        painter.drawPath(pathDot);
+//        QPen pen;
+//        pen.setColor(m_mousedisplay.LabelBackgroundColor());
+//        pen.setWidth(2);
+//        painter.setPen(pen);
+//        painter.drawPath(pathDot);
 
         //Draw a small tooltip looking item showing the point's data (x,y)
         auto pairData = ConvertFromPlotPoint(pointCircleCenter);

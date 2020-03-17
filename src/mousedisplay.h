@@ -35,6 +35,7 @@ private:
     bool m_isEnabled;
     QPen m_pen;
     QColor m_colorLabelBackground;
+    QPointF m_posDot;
 
 public:
     MouseDisplay()
@@ -44,10 +45,12 @@ public:
 
     void SetNull();
     void SetColor(const QColor& color);
+    void SetDot(const QPointF& pos) { m_posDot = pos; }
     void SetLabelBackgroundColor(const QColor& color);
     void SetEnabled(bool fEnable) { m_isEnabled = fEnable; }
     void SetWidth(int nWidth);
 
+    QPointF DotPos() const { return m_posDot; }
     bool IsEnabled() const { return m_isEnabled; }
     QPen Pen() const { return m_pen; }
     QColor LabelBackgroundColor() const { return m_colorLabelBackground; }
