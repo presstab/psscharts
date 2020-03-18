@@ -29,6 +29,8 @@ SOFTWARE.
 #include <QColor>
 #include <QPen>
 
+namespace PssCharts {
+
 class MouseDisplay
 {
 private:
@@ -56,4 +58,5 @@ public:
     QColor LabelBackgroundColor() const { return m_colorLabelBackground; }
 };
 
+} //namespace
 #endif // MOUSEDISPLAY_H

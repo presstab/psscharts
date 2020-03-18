@@ -40,6 +40,8 @@ SOFTWARE.
 class QColor;
 class QPaintEvent;
 
+namespace PssCharts {
+
 enum class AxisLabelType
 {
     AX_NO_LABEL,
@@ -51,7 +53,7 @@ class LineChart : public QWidget
 {
     Q_OBJECT
 private:
-    const uint8_t VERSION = 2;
+    const uint8_t VERSION = 3;
 
 protected:
     std::map<uint32_t, double> m_mapPoints;
@@ -128,6 +130,7 @@ public:
     void SetYLabelFont(const QFont& font);
     void SetXLabelHeight(int height);
     void SetLabelPrecision(int precision);
+    void SetLabelAutoPrecision(bool fEnable);
     void SetYPadding(int nPadding);
     void SetYTitle(const QString& strTitle);
     void SetYTitleFont(const QFont& font);
@@ -155,4 +158,5 @@ public:
     void mouseMoveEvent(QMouseEvent* event) override;
 };
 
+} //namespace
 #endif // LINECHART_H

@@ -52,6 +52,7 @@ SOFTWARE.
  * ----------------------------------------------
  *
 */
+namespace PssCharts {
 
 LineChart::LineChart(QWidget *parent) : QWidget (parent)
 {
@@ -274,10 +275,19 @@ void LineChart::paintEvent(QPaintEvent *event)
         return;
     }
 
+    //If auto precision is enabled, determine the precision to use
+    if (m_settingsYLabels.AutoPrecisionEnabled()) {
+        double nDifference = MaxY() - MinY();
+        if (m_settingsYLabels.labeltype == AxisLabelType::AX_NUMBER) {
+            //Determine by difference in decimal
+            m_settingsYLabels.SetPrecision(PrecisionHint(nDifference), /*fDisableAuto*/false);
+        }
+    }
+
     //If axis labels are dynamic, get the sizing
     if (m_axisSections > 0) {
         if (m_settingsYLabels.fDynamicSizing) {
-            QString strLabel = PrecisionToString(MaxY(), m_settingsYLabels.nPrecision);
+            QString strLabel = PrecisionToString(MaxY(), m_settingsYLabels.Precision());
             QFontMetrics fm(m_settingsYLabels.font);
             m_settingsYLabels.sizeDynamicDimension.setWidth(fm.horizontalAdvance(strLabel)+3);
             m_settingsYLabels.sizeDynamicDimension.setHeight(fm.height());
@@ -288,7 +298,7 @@ void LineChart::paintEvent(QPaintEvent *event)
             if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP)
                 strLabel = TimeStampToString(MaxX());
             else
-                strLabel = PrecisionToString(MaxX(), m_settingsXLabels.nPrecision);
+                strLabel = PrecisionToString(MaxX(), m_settingsXLabels.Precision());
 
             QFontMetrics fm(m_settingsXLabels.font);
             m_settingsXLabels.sizeDynamicDimension.setHeight(fm.height()+3);
@@ -377,6 +387,7 @@ void LineChart::paintEvent(QPaintEvent *event)
         if (m_settingsYLabels.fEnabled) {
             painter.setFont(m_settingsYLabels.font);
             painter.setBrush(m_brushLabels);
+            painter.setPen(m_brushLabels.color());
             DrawYLabels(painter, vYPoints, /*isMouseDisplay*/false);
             if (m_mousedisplay.IsEnabled() && fMouseInChartArea) {
                 DrawYLabels(painter, {lposMouse.y()}, /*isMouseDisplay*/true);
@@ -486,10 +497,10 @@ void LineChart::paintEvent(QPaintEvent *event)
         if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
             strLabel += TimeStampToString(nX);
         } else {
-            strLabel += PrecisionToString(nX, m_settingsXLabels.nPrecision);
+            strLabel += PrecisionToString(nX, m_settingsXLabels.Precision());
         }
         strLabel += ", ";
-        strLabel += PrecisionToString(nY, m_settingsYLabels.nPrecision);
+        strLabel += PrecisionToString(nY, m_settingsYLabels.Precision());
         strLabel += ")";
 
         //Create the background of the tooltip
@@ -530,7 +541,7 @@ void LineChart::DrawXLabels(QPainter& painter, const std::vector<int>& vXPoints,
         if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
             strLabel = TimeStampToString(nValue);
         } else {
-            strLabel = PrecisionToString(nValue, m_settingsXLabels.nPrecision);
+            strLabel = PrecisionToString(nValue, m_settingsXLabels.Precision());
         }
 
         QRect rectDraw;
@@ -566,7 +577,7 @@ void LineChart::DrawYLabels(QPainter &painter, const std::vector<int> &vYPoints,
         auto pairPoints = ConvertFromPlotPoint(pointDraw);
         const double& nValue = pairPoints.second;
 
-        QString strLabel = PrecisionToString(nValue, m_settingsYLabels.nPrecision);
+        QString strLabel = PrecisionToString(nValue, m_settingsYLabels.Precision());
 
         int nWidthText = fm.horizontalAdvance(strLabel);
 
@@ -817,11 +828,19 @@ void LineChart::EnableFill(bool fEnable)
  */
 void LineChart::SetLabelPrecision(int precision)
 {
-    m_settingsYLabels.nPrecision = precision;
-    m_settingsXLabels.nPrecision = precision;
+    m_settingsYLabels.SetPrecision(precision, /*disableAuto*/true);
+    m_settingsXLabels.SetPrecision(precision, /*disableAuto*/true);
+}
+
+void LineChart::SetLabelAutoPrecision(bool fEnable)
+{
+    m_settingsYLabels.SetAutoPrecision(fEnable);
+    m_settingsXLabels.SetAutoPrecision(fEnable);
 }
 
 void LineChart::SetRightMargin(int margin)
 {
     m_rightMargin = margin;
 }
+
+}//namespace

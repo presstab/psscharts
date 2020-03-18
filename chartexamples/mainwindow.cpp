@@ -55,7 +55,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    m_chart = new LineChart(this);
+    m_chart = new PssCharts::LineChart(this);
     QSize sizeScreen = QGuiApplication::screens()[0]->size();
     if (sizeScreen.height() > sizeScreen.width())
         ui->formLayout->addRow(m_chart);
@@ -91,8 +91,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->checkBoxDrawYAxisLine->setChecked(true);
     ui->spinboxYLabelPrecision->setValue(2);
 
-    m_chart->SetYLabelType(AxisLabelType::AX_NUMBER);
-    m_chart->SetXLabelType(AxisLabelType::AX_TIMESTAMP);
+    m_chart->SetYLabelType(PssCharts::AxisLabelType::AX_NUMBER);
+    m_chart->SetXLabelType(PssCharts::AxisLabelType::AX_TIMESTAMP);
 
     ui->spinboxGridlines->setValue(5);
     ui->spinboxLineWidth->setValue(3);
@@ -194,7 +194,7 @@ void MainWindow::RedrawChart()
 
     //Mouse Display
     m_chart->EnableMouseDisplay(ui->checkboxCrosshairs->isChecked());
-    MouseDisplay* display = m_chart->GetMouseDisplay();
+    PssCharts::MouseDisplay* display = m_chart->GetMouseDisplay();
     display->SetWidth(ui->spinboxCrosshairWidth->value());
     QColor colorCrosshair = static_cast<Qt::GlobalColor>(ui->comboboxCrosshairColor->currentIndex()+2);
     display->SetColor(colorCrosshair);

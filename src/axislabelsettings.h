@@ -28,15 +28,21 @@ SOFTWARE.
 #include <QFont>
 #include <QSize>
 
+namespace PssCharts {
+
 enum class AxisLabelType;
 
-struct AxisLabelSettings
+class AxisLabelSettings
 {
+private:
+    int m_nPrecision; //If label is a number, how many places after the decimal
+    bool fAutoPrecision;
+
+public:
     QFont font;
     int nDimension; //Width if Y labels, Height if X Labels
     bool fDynamicSizing; //Whether the dimension should be followed, or should go with a hint
     QSize sizeDynamicDimension;
-    int nPrecision; //If label is a number, how many places after the decimal
     AxisLabelType labeltype;
     bool fEnabled; //Is the drawing of the axis labels enabled
 
@@ -51,10 +57,35 @@ struct AxisLabelSettings
         nDimension = 30;
         fDynamicSizing = true;
         sizeDynamicDimension = QSize(0,0);
-        nPrecision = 2;
+        m_nPrecision = 2;
         fEnabled = false;
+        fAutoPrecision = true;
+    }
+
+    void SetPrecision(int n, bool fDisableAutoPrecision)
+    {
+        m_nPrecision = n;
+        if (fDisableAutoPrecision)
+            fAutoPrecision = false;
+    }
+
+    int Precision() const
+    {
+        return m_nPrecision;
+    }
+
+    void SetAutoPrecision(bool fEnable)
+    {
+        fAutoPrecision = fEnable;
+    }
+
+    bool AutoPrecisionEnabled() const
+    {
+        return fAutoPrecision;
     }
 
 };
+
+}//namespace
 
 #endif // AXISLABELSETTINGS_H

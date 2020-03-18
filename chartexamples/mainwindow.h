@@ -31,14 +31,16 @@ namespace Ui {
 class MainWindow;
 }
 
+namespace PssCharts {
 class LineChart;
+}
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 private:
     Ui::MainWindow *ui;
-    LineChart* m_chart;
+    PssCharts::LineChart* m_chart;
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);

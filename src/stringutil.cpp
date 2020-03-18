@@ -29,6 +29,8 @@ SOFTWARE.
 #include <sstream>
 #include <iomanip>
 
+namespace PssCharts {
+
 QString PrecisionToString(double d, int precision)
 {
     std::stringstream stream;
@@ -46,3 +48,27 @@ QString TimeStampToString(const uint64_t &nTime)
             .arg(QString::number(date.day()))
             .arg(QString::number(date.year()));
 }
+
+int PrecisionHint(const double& n)
+{
+    if (n >100)
+        return  0;
+    else if (n > 10)
+        return 1;
+    else if (n > 1)
+        return 2;
+    else if (n > 0.1)
+        return 3;
+    else if (n > 0.01)
+        return 4;
+    else if (n > 0.001)
+        return 5;
+    else if (n > 0.0001)
+        return 6;
+    else if (n > 0.00001)
+        return 7;
+
+     return 8;
+}
+
+} //namespace

@@ -24,6 +24,8 @@ SOFTWARE.
 
 #include "mousedisplay.h"
 
+namespace PssCharts {
+
 void MouseDisplay::SetNull()
 {
     m_pen = QPen();
@@ -47,3 +49,4 @@ void MouseDisplay::SetWidth(int nWidth)
     m_pen.setWidth(nWidth);
 }
 
+} //namespace
