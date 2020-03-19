@@ -1,4 +1,4 @@
-# psscharts
+# PssCharts
 Lightweight Chart Library for Qt.
 
 To see a chart in action, build the example chart tool using chart_examples.pro.
