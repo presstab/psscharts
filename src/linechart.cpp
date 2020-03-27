@@ -723,6 +723,25 @@ void LineChart::SetAxisSeparatorPen(const QPen &pen)
     m_fChangesMade = true;
 }
 
+uint32_t LineChart::Version() const
+{
+    uint32_t nVersion = 0;
+    nVersion |= VERSION_BUILD;
+    nVersion |= (VERSION_REVISION << 8);
+    nVersion |= (VERSION_MINOR << 16);
+    nVersion |= (VERSION_MAJOR << 24);
+    return nVersion;
+}
+
+QString LineChart::VersionString() const
+{
+    return QString("v%1.%2.%3.%4")
+            .arg(QString::number(VERSION_MAJOR))
+            .arg(QString::number(VERSION_MINOR))
+            .arg(QString::number(VERSION_REVISION))
+            .arg(QString::number(VERSION_BUILD));
+}
+
 /**
  * @brief LineChart::ChartArea : Get the area of the widget that is dedicated to the chart itself
  * @return
