@@ -62,6 +62,8 @@ MainWindow::MainWindow(QWidget *parent) :
     else
         ui->hlayoutMain->addWidget(m_chart, /*stretch*/1);
 
+    setWindowTitle(QString("PssCharts %1").arg(m_chart->VersionString()));
+
     ui->comboboxChartFillColor->addItems(listQtColors);
     ui->comboboxChartFillColor->setCurrentIndex(8); //cyan
     ui->checkboxFillChart->setChecked(true);
@@ -74,7 +76,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboboxLineColor->setCurrentIndex(0); //black
 
     //Chart Title
-    ui->lineeditChartTitle->setText("Line Chart");
+    ui->lineeditChartTitle->setText("PssCharts");
     ui->spinboxTitleFontSize->setValue(14);
     ui->checkboxChartTitleBold->setCheckState(Qt::Checked);
 
@@ -167,7 +169,6 @@ void MainWindow::RedrawChart()
     fontYTitle.setPointSize(ui->spinboxYTitleFontSize->value());
     fontYTitle.setBold(ui->checkboxYTitleBold->isChecked());
     m_chart->SetYTitleFont(fontYTitle);
-
 
     //Axis Labels
     m_chart->SetLabelPrecision(ui->spinboxYLabelPrecision->value());

@@ -53,7 +53,10 @@ class LineChart : public QWidget
 {
     Q_OBJECT
 private:
-    const uint8_t VERSION = 3;
+    const uint32_t VERSION_MAJOR = 0;
+    const uint32_t VERSION_MINOR = 0;
+    const uint32_t VERSION_REVISION = 3;
+    const uint32_t VERSION_BUILD = 0;
 
 protected:
     std::map<uint32_t, double> m_mapPoints;
@@ -138,7 +141,8 @@ public:
     void SetAxisLabelsOnOff(bool fDrawXLabels, bool fDrawYLabels);
     void SetAxisSectionCount(uint32_t nCount);
     void SetAxisSeparatorPen(const QPen& pen);
-    uint8_t Version() { return VERSION; }
+    uint32_t Version() const;
+    QString VersionString() const;
 
     AxisLabelSettings* YLabelSettings() { return &m_settingsYLabels; }
     AxisLabelSettings* XLabelSettings() { return &m_settingsXLabels; }
