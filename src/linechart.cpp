@@ -314,10 +314,10 @@ void LineChart::paintEvent(QPaintEvent *event)
     QPoint gposChart = mapToGlobal(QPoint(0+WidthYTitleArea()+WidthYLabelArea(),0+HeightTopTitleArea()));
     QPoint lposMouse = this->mapFromGlobal(gposMouse);
     bool fMouseInChartArea = false;
-    if (m_mousedisplay.IsEnabled() && gposMouse.y() > gposChart.y()) {
-        if (gposMouse.y() < rectChart.height() + gposChart.y()) {
+    if (m_mousedisplay.IsEnabled() && gposMouse.y() >= gposChart.y()) {
+        if (gposMouse.y() <= rectChart.height() + gposChart.y()) {
             //Y is in chart range, check if x is in the chart range too
-            if (gposMouse.x() > gposChart.x() && gposMouse.x() < gposChart.x() + rectChart.width()) {
+            if (gposMouse.x() >= gposChart.x() && gposMouse.x() <= gposChart.x() + rectChart.width()) {
                 fMouseInChartArea = true;
             }
         }
