@@ -100,6 +100,7 @@ protected:
 
     int HeightTopTitleArea() const;
     int HeightXLabelArea() const;
+    QRect MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const;
 
     int WidthYTitleArea() const;
     int WidthYLabelArea() const;
