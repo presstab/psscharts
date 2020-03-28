@@ -504,15 +504,7 @@ void LineChart::paintEvent(QPaintEvent *event)
         strLabel += ")";
 
         //Create the background of the tooltip
-        QFontMetrics fm(painter.font());
-        int nWidthText = fm.horizontalAdvance(strLabel) + 4;
-
-        QPoint pointTopLeft(pointCircleCenter.x() - nWidthText/2, pointCircleCenter.y()+10);
-
-        QRect rectDraw;
-        rectDraw.setTopLeft(pointTopLeft);
-        rectDraw.setWidth(nWidthText);
-        rectDraw.setHeight(fm.height() + 4);
+        QRect rectDraw = MouseOverTooltipRect(painter, rectFull, pointCircleCenter, strLabel);
 
         QPainterPath pathBackground;
         pathBackground.addRoundedRect(rectDraw, 5, 5);
@@ -525,6 +517,36 @@ void LineChart::paintEvent(QPaintEvent *event)
     }
 
     m_fChangesMade = false;
+}
+
+/**
+ * @brief LineChart::MouseOverTooltipRect Get the boundaries of the tooltip that is drawn for the mouseover data.
+ * @param painter: The chart widget's painter.
+ * @param rectFull: The QRect of the entire drawing area of the chart widget.
+ * @param pointCircleCenter: the center of the dot that is being drawn for the mouseover.
+ * @param strLabel: the label text that is being placed in the tooltip.
+ * @return QRect with the coordinates that the tooltip should be drawn in.
+ */
+QRect LineChart::MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const
+{
+    QFontMetrics fm(painter.font());
+    int nWidthText = fm.horizontalAdvance(strLabel) + 4;
+
+    //Place the tooltip right below the dot being displayed.
+    QPoint pointTopLeft(pointCircleCenter.x() - nWidthText/2, pointCircleCenter.y()+10);
+
+    QRect rectDraw;
+    rectDraw.setTopLeft(pointTopLeft);
+    rectDraw.setWidth(nWidthText);
+    rectDraw.setHeight(fm.height() + 4);
+
+    //The tooltip is outside of the drawing zone, shift it into the drawing zone
+    if (rectDraw.left() < rectFull.left())
+        rectDraw.moveRight(rectFull.left()+3);
+    if (rectDraw.right() > rectFull.right())
+        rectDraw.moveLeft(rectFull.right() - rectDraw.width() - 3);
+
+    return rectDraw;
 }
 
 void LineChart::DrawXLabels(QPainter& painter, const std::vector<int>& vXPoints, bool fDrawIndicatorLine)
