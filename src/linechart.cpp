@@ -64,6 +64,7 @@ LineChart::LineChart(QWidget *parent) : QWidget (parent)
     m_yPadding = 0;
     m_fEnableFill = true;
     m_fChangesMade = true;
+    m_fIsLineChart = false;
     m_rightMargin = -1;
     m_topTitleHeight = -1;
     m_precision = 100000000;
@@ -228,6 +229,12 @@ void LineChart::SetDataPoints(const std::map<uint32_t, double>& mapPoints)
     ProcessChangedData();
 }
 
+void LineChart::SetCandleDataPoints(const std::map<uint32_t, Candlestick>& mapPoints)
+{
+    m_candlePoints = mapPoints;
+    ProcessChangedData();
+}
+
 void LineChart::ProcessChangedData()
 {
     m_pairXRange = {0, 0};
@@ -323,42 +330,108 @@ void LineChart::paintEvent(QPaintEvent *event)
         }
      }
 
-    //Create the lines that are drawn
-    QVector<QPointF> qvecPolygon;
-    QVector<QLineF> qvecLines;
+    if (m_fIsLineChart) {
+        //Create the lines that are drawn
+        QVector<QPointF> qvecPolygon;
+        QVector<QLineF> qvecLines;
 
-    qvecPolygon.append(rectChart.bottomLeft());
-    bool fFirstRun = true;
-    QPointF pointPrev;
-    bool fMouseSet = false;
-    for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
-        QPointF point = ConvertToPlotPoint(pair);
-        qvecPolygon.append(point);
-        if (fFirstRun) {
+        qvecPolygon.append(rectChart.bottomLeft());
+        bool fFirstRun = true;
+        QPointF pointPrev;
+        bool fMouseSet = false;
+        for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
+            QPointF point = ConvertToPlotPoint(pair);
+            qvecPolygon.append(point);
+            if (fFirstRun) {
+                pointPrev = point;
+                fFirstRun = false;
+                continue;
+            }
+
+            QLineF line(pointPrev, point);
+            qvecLines.append(line);
             pointPrev = point;
-            fFirstRun = false;
-            continue;
-        }
 
-        QLineF line(pointPrev, point);
-        qvecLines.append(line);
-        pointPrev = point;
-
-        if (fMouseInChartArea && !fMouseSet) {
-            //Find the line that the mouse x point would belong on
-            if (lposMouse.x() >= line.x1() && lposMouse.x() <= line.x2()) {
-                double nLineSlope = 0;
-                double nLineYIntercept = 0;
-                GetLineEquation(line, nLineSlope, nLineYIntercept);
-                double y = nLineSlope * lposMouse.x() + nLineYIntercept;
-                m_mousedisplay.SetDot(QPointF(lposMouse.x(), y));
-                fMouseSet = true;
+            if (fMouseInChartArea && !fMouseSet) {
+                //Find the line that the mouse x point would belong on
+                if (lposMouse.x() >= line.x1() && lposMouse.x() <= line.x2()) {
+                    double nLineSlope = 0;
+                    double nLineYIntercept = 0;
+                    GetLineEquation(line, nLineSlope, nLineYIntercept);
+                    double y = nLineSlope * lposMouse.x() + nLineYIntercept;
+                    m_mousedisplay.SetDot(QPointF(lposMouse.x(), y));
+                    fMouseSet = true;
+                }
             }
         }
-    }
 
-    // Cleanly close the polygon
-    qvecPolygon.append(QPointF(rectChart.right(), rectChart.bottom()));
+        // Cleanly close the polygon
+        qvecPolygon.append(QPointF(rectChart.right(), rectChart.bottom()));
+
+        if (m_fEnableFill) {
+            //Fill in the chart area - Note: this is the most computational part of the painting
+            QPolygonF polygon(qvecPolygon);
+            painter.setBrush(m_brushFill);
+            painter.drawConvexPolygon(polygon); //supposedly faster than "drawPolygon()"
+        }
+
+        //Draw the lines
+        painter.save();
+        QPen penLine;
+        penLine.setBrush(m_brushLine);
+        penLine.setWidth(m_lineWidth);
+        painter.setPen(penLine);
+        painter.drawLines(qvecLines);
+        painter.restore();
+    } else {
+        //Create the lines that are drawn
+        QVector<QPointF> qvecPolygon;
+        QVector<QLineF> qvecLines;
+        QVector<QRectF> qvecRects;
+
+        qvecPolygon.append(rectChart.bottomLeft());
+        bool fFirstRun = true;
+        QPointF pointPrev;
+        bool fMouseSet = false;
+        for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
+            QPointF point = ConvertToPlotPoint(pair);
+            qvecPolygon.append(point);
+            if (fFirstRun) {
+                pointPrev = point;
+                fFirstRun = false;
+                continue;
+            }
+
+            QRectF rect(pointPrev, point);
+            QBrush rectBrush;
+            (point.y() > pointPrev.y()) ? rectBrush = QBrush(QColor(Qt::red)) : rectBrush = QBrush(QColor(Qt::green));
+            painter.drawRect(rect);
+            painter.fillRect(rect, rectBrush);
+            pointPrev = point;
+            qvecRects.append(rect);
+
+//            if (fMouseInChartArea && !fMouseSet) {
+//                //Find the line that the mouse x point would belong on
+//                if (lposMouse.x() >= line.x1() && lposMouse.x() <= line.x2()) {
+//                    double nLineSlope = 0;
+//                    double nLineYIntercept = 0;
+//                    GetLineEquation(line, nLineSlope, nLineYIntercept);
+//                    double y = nLineSlope * lposMouse.x() + nLineYIntercept;
+//                    m_mousedisplay.SetDot(QPointF(lposMouse.x(), y));
+//                    fMouseSet = true;
+//                }
+//            }
+        }
+
+//        //Draw the lines
+//        painter.save();
+//        QPen penLine;
+//        penLine.setBrush(m_brushLine);
+//        penLine.setWidth(m_lineWidth);
+//        painter.setPen(penLine);
+//        painter.drawRects(qvecRects);
+//        painter.restore();
+    }
 
     //Draw axis sections next so that they get covered up by chart fill
     if (m_axisSections > 0) {
@@ -407,22 +480,6 @@ void LineChart::paintEvent(QPaintEvent *event)
             }
         }
     }
-
-    if (m_fEnableFill) {
-        //Fill in the chart area - Note: this is the most computational part of the painting
-        QPolygonF polygon(qvecPolygon);
-        painter.setBrush(m_brushFill);
-        painter.drawConvexPolygon(polygon); //supposedly faster than "drawPolygon()"
-    }
-
-    //Draw the lines
-    painter.save();
-    QPen penLine;
-    penLine.setBrush(m_brushLine);
-    penLine.setWidth(m_lineWidth);
-    painter.setPen(penLine);
-    painter.drawLines(qvecLines);
-    painter.restore();
 
     //Draw axis
     if (m_fDrawXAxis) {
@@ -743,6 +800,11 @@ void LineChart::SetAxisSeparatorPen(const QPen &pen)
 {
     m_penAxisSeparater = pen;
     m_fChangesMade = true;
+}
+
+void LineChart::SetChartType(const QString &type)
+{
+    m_fIsLineChart = type == "Line";
 }
 
 uint32_t LineChart::Version() const

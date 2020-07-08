@@ -49,6 +49,11 @@ QStringList listQtColors = {
     "darkYellow",
 };
 
+QStringList listChartFormats = {
+    "Line",
+    "Candlestick"
+};
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -74,6 +79,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->comboboxLineColor->addItems(listQtColors);
     ui->comboboxLineColor->setCurrentIndex(0); //black
+
+    ui->comboBoxChartType->addItems(listChartFormats);
+    ui->comboBoxChartType->setCurrentIndex(0); //line
 
     //Chart Title
     ui->lineeditChartTitle->setText("PssCharts");
@@ -140,6 +148,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->comboboxBgColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxLineColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxCrosshairColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboBoxChartType, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
 
     connect(ui->spinboxGridlines, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
@@ -156,6 +165,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::RedrawChart()
 {
+    //Chart Type
+    m_chart->SetChartType(ui->comboBoxChartType->currentText());
+
     //Chart Title
     m_chart->SetTopTitle(ui->lineeditChartTitle->text());
     QFont fontChartTitle;

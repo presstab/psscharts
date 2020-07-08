@@ -49,6 +49,26 @@ enum class AxisLabelType
     AX_NUMBER
 };
 
+enum class ChartType
+{
+    LINE,
+    CANDLESTICK
+};
+
+struct Candlestick {
+    double m_open;
+    double m_high;
+    double m_low;
+    double m_close;
+
+    Candlestick(double open, double high, double low, double close) {
+        open = m_open;
+        high = m_high;
+        low = m_low;
+        close = m_close;
+    }
+};
+
 class LineChart : public QWidget
 {
     Q_OBJECT
@@ -60,6 +80,7 @@ private:
 
 protected:
     std::map<uint32_t, double> m_mapPoints;
+    std::map<uint32_t, Candlestick> m_candlePoints;
     std::pair<double, double> m_pairYRange; // min, max
     std::pair<double, double> m_pairXRange; // min, max
     QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair) const;
@@ -88,6 +109,7 @@ protected:
 
     bool m_fDrawXAxis;
     bool m_fDrawYAxis;
+    bool m_fIsLineChart;
 
     int m_yPadding;
     int m_rightMargin;
@@ -142,6 +164,8 @@ public:
     void SetAxisLabelsOnOff(bool fDrawXLabels, bool fDrawYLabels);
     void SetAxisSectionCount(uint32_t nCount);
     void SetAxisSeparatorPen(const QPen& pen);
+    void SetChartType(const QString& type);
+    void SetCandleDataPoints(const std::map<uint32_t, Candlestick>& mapPoints);
     uint32_t Version() const;
     QString VersionString() const;
 
