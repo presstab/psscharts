@@ -55,23 +55,27 @@ enum class ChartType
     CANDLESTICK
 };
 
-struct Candlestick {
-    double m_open;
-    double m_high;
-    double m_low;
-    double m_close;
-
-    Candlestick(double open, double high, double low, double close) {
-        open = m_open;
-        high = m_high;
-        low = m_low;
-        close = m_close;
-    }
-};
-
 class LineChart : public QWidget
 {
     Q_OBJECT
+
+
+public:
+
+    struct Candlestick {
+        double m_open;
+        double m_high;
+        double m_low;
+        double m_close;
+
+        Candlestick(double open, double high, double low, double close) {
+            open = m_open;
+            high = m_high;
+            low = m_low;
+            close = m_close;
+        }
+    };
+
 private:
     const uint32_t VERSION_MAJOR = 0;
     const uint32_t VERSION_MINOR = 0;
@@ -85,6 +89,8 @@ protected:
     std::pair<double, double> m_pairXRange; // min, max
     QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair) const;
     std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point);
+    QPointF ConvertToCandlePlotPoint(const std::pair<uint32_t, Candlestick>& pair) const;
+    std::pair<uint32_t, double> ConvertFromCandlePlotPoint(const QPointF& point);
     QBrush m_brushBackground;
     QBrush m_brushLine;
     QBrush m_brushFill;
@@ -165,7 +171,7 @@ public:
     void SetAxisSectionCount(uint32_t nCount);
     void SetAxisSeparatorPen(const QPen& pen);
     void SetChartType(const QString& type);
-    void SetCandleDataPoints(const std::map<uint32_t, Candlestick>& mapPoints);
+    void SetCandleDataPoints(std::map<uint32_t, Candlestick> mapPoints);
     uint32_t Version() const;
     QString VersionString() const;
 

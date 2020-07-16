@@ -81,7 +81,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboboxLineColor->setCurrentIndex(0); //black
 
     ui->comboBoxChartType->addItems(listChartFormats);
-    ui->comboBoxChartType->setCurrentIndex(0); //line
+    ui->comboBoxChartType->setCurrentIndex(1); //line
 
     //Chart Title
     ui->lineeditChartTitle->setText("PssCharts");
@@ -114,7 +114,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboboxCrosshairColor->setCurrentIndex(0); //black
 
     //Generate some data points to fill the chart
-    std::map<uint32_t, double> mapPoints;
+    std::map<uint32_t, PssCharts::LineChart::Candlestick> mapPoints;
     double nLastPoint = 0;
     for (auto i = 0; i < 100; i++) {
         double y = QRandomGenerator::global()->generateDouble();
@@ -125,10 +125,27 @@ MainWindow::MainWindow(QWidget *parent) :
             if (nPercentChange < -0.3)
                 y = nLastPoint*0.7;
         }
-        mapPoints.emplace(i*(60*60*24), y);
-        nLastPoint = y;
+        mapPoints.emplace(i*(60*60*24), PssCharts::LineChart::Candlestick(y, y+.15, y+.3, y+.5));
+        nLastPoint = y + 0.5;
     }
-    m_chart->SetDataPoints(mapPoints);
+    m_chart->SetCandleDataPoints(mapPoints);
+
+//    //Generate some data points to fill the chart
+//    std::map<uint32_t, double> mapPoints;
+//    double nLastPoint = 0;
+//    for (auto i = 0; i < 100; i++) {
+//        double y = QRandomGenerator::global()->generateDouble();
+//        if (nLastPoint > 0) {
+//            double nPercentChange = (y - nLastPoint) / nLastPoint;
+//            if (nPercentChange > 0.3)
+//                y = nLastPoint*1.3;
+//            if (nPercentChange < -0.3)
+//                y = nLastPoint*0.7;
+//        }
+//        mapPoints.emplace(i*(60*60*24), y);
+//        nLastPoint = y;
+//    }
+//    m_chart->SetDataPoints(mapPoints);
     m_chart->setMinimumSize(QSize(600,400));
     m_chart->show();
     RedrawChart();

@@ -26,6 +26,7 @@ SOFTWARE.
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "src/linechart.h"
 
 namespace Ui {
 class MainWindow;

@@ -135,6 +135,69 @@ std::pair<uint32_t, double> LineChart::ConvertFromPlotPoint(const QPointF& point
     return pairValues;
 }
 
+/**
+ * @brief LineChart::ConvertToPlotPoint: convert a datapoint into the actual point it will be painted to
+ * @param pair
+ * @return
+ */
+QPointF LineChart::ConvertToCandlePlotPoint(const std::pair<uint32_t, Candlestick> &pair) const
+{
+    QRect rectChart = ChartArea();
+    if (m_yPadding > 0) {
+        //Y padding will make it so that there is an area on the top and bottom of the ChartArea
+        //that does not get drawn in. It makes it so the lines don't go right onto the edges.
+        rectChart.setBottom(rectChart.bottom() - m_yPadding);
+        rectChart.setTop(rectChart.top() + m_yPadding);
+    }
+
+    //compute point-value of X
+    int nWidth = rectChart.width();
+    double nValueMaxX = (MaxX() - MinX());
+    double nValueX = ((pair.first - MinX()) / nValueMaxX);
+    nValueX *= nWidth;
+    nValueX += rectChart.left();
+
+    //compute point-value of Y
+    int nHeight = rectChart.height();
+    uint64_t y1 = pair.second.m_open * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
+    uint64_t nMaxY = MaxY()*m_precision;
+    uint64_t nMinY = MinY()*m_precision;
+    uint64_t nSpanY = (nMaxY - nMinY);
+    uint64_t nValueY = (y1 - nMinY);
+    nValueY *= nHeight;
+    double dValueY = nValueY;
+    if (nSpanY == 0) {
+        dValueY = rectChart.top() + (nHeight/2);
+    } else {
+        dValueY /= nSpanY;
+        dValueY = rectChart.bottom() - dValueY; // Qt uses inverted Y axis
+    }
+    return QPointF(nValueX, dValueY);
+}
+
+/**
+ * @brief LineChart::ConvertFromPlotPoint: convert a point on the chart to the value it represents
+ * @return
+ */
+std::pair<uint32_t, double> LineChart::ConvertFromCandlePlotPoint(const QPointF& point)
+{
+    std::pair<uint32_t, double> pairValues;
+    QRect rectChart = ChartArea();
+
+    //Y
+    auto t = rectChart.bottom() - point.y();
+    auto t1 = t / rectChart.height();
+    auto t2 = t1 * (MaxY() - MinY());
+    pairValues.second = t2 + MinY();
+
+    //X
+    t1 = (point.x() - rectChart.left()) / rectChart.width();
+    t2 = t1 * (MaxX() - MinX());
+    pairValues.first = t2 + MinX();
+
+    return pairValues;
+}
+
 int LineChart::HeightTopTitleArea() const
 {
     if (m_topTitleHeight != -1)
@@ -229,7 +292,7 @@ void LineChart::SetDataPoints(const std::map<uint32_t, double>& mapPoints)
     ProcessChangedData();
 }
 
-void LineChart::SetCandleDataPoints(const std::map<uint32_t, Candlestick>& mapPoints)
+void LineChart::SetCandleDataPoints(std::map<uint32_t, Candlestick> mapPoints)
 {
     m_candlePoints = mapPoints;
     ProcessChangedData();
@@ -339,8 +402,8 @@ void LineChart::paintEvent(QPaintEvent *event)
         bool fFirstRun = true;
         QPointF pointPrev;
         bool fMouseSet = false;
-        for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
-            QPointF point = ConvertToPlotPoint(pair);
+        for (const std::pair<uint32_t, Candlestick>& pair : m_candlePoints) {
+            QPointF point = ConvertToCandlePlotPoint(pair);
             qvecPolygon.append(point);
             if (fFirstRun) {
                 pointPrev = point;
@@ -383,25 +446,32 @@ void LineChart::paintEvent(QPaintEvent *event)
         painter.setPen(penLine);
         painter.drawLines(qvecLines);
         painter.restore();
-    } else {
+    }
+/*{
         //Create the lines that are drawn
         QVector<QPointF> qvecPolygon;
         QVector<QLineF> qvecLines;
         QVector<QRectF> qvecRects;
-
+        painter.save();
+        QPen penLine;
+        penLine.setBrush(m_brushLine);
+        penLine.setWidth(m_lineWidth);
+        painter.setPen(penLine);
         qvecPolygon.append(rectChart.bottomLeft());
         bool fFirstRun = true;
         QPointF pointPrev;
-        bool fMouseSet = false;
         for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
-            QPointF point = ConvertToPlotPoint(pair);
+            QPointF point = ConvertToCandlePlotPoint(pair);
             qvecPolygon.append(point);
             if (fFirstRun) {
                 pointPrev = point;
                 fFirstRun = false;
                 continue;
             }
-
+            QLineF bottomLine(QPoint(pointPrev.x() + 5, pointPrev.y()), QPoint(pointPrev.x() + 5, pointPrev.y() + 10));
+            painter.drawLine(bottomLine);
+            QLineF topLine(QPoint(point.x() + 5, point.y()), QPoint(point.x() + 5, point.y() - 10));
+            painter.drawLine(topLine);
             QRectF rect(pointPrev, point);
             QBrush rectBrush;
             (point.y() > pointPrev.y()) ? rectBrush = QBrush(QColor(Qt::red)) : rectBrush = QBrush(QColor(Qt::green));
@@ -409,28 +479,59 @@ void LineChart::paintEvent(QPaintEvent *event)
             painter.fillRect(rect, rectBrush);
             pointPrev = point;
             qvecRects.append(rect);
-
-//            if (fMouseInChartArea && !fMouseSet) {
-//                //Find the line that the mouse x point would belong on
-//                if (lposMouse.x() >= line.x1() && lposMouse.x() <= line.x2()) {
-//                    double nLineSlope = 0;
-//                    double nLineYIntercept = 0;
-//                    GetLineEquation(line, nLineSlope, nLineYIntercept);
-//                    double y = nLineSlope * lposMouse.x() + nLineYIntercept;
-//                    m_mousedisplay.SetDot(QPointF(lposMouse.x(), y));
-//                    fMouseSet = true;
-//                }
-//            }
         }
-
-//        //Draw the lines
-//        painter.save();
-//        QPen penLine;
-//        penLine.setBrush(m_brushLine);
-//        penLine.setWidth(m_lineWidth);
-//        painter.setPen(penLine);
-//        painter.drawRects(qvecRects);
-//        painter.restore();
+        painter.save();
+        painter.restore();
+    }*/
+    else {
+        //Create the lines that are drawn
+        QVector<QPointF> qvecPolygon;
+        QVector<QLineF> qvecLines;
+        QVector<QRectF> qvecRects;
+        painter.save();
+        QPen penLine;
+        penLine.setBrush(m_brushLine);
+        penLine.setWidth(m_lineWidth);
+        painter.setPen(penLine);
+        qvecPolygon.append(rectChart.bottomLeft());
+        bool fFirstRun = true;
+        QPointF pointPrev;
+        for (const std::pair<uint32_t, Candlestick>& pair : m_candlePoints) {
+            QPointF point = ConvertToCandlePlotPoint(pair);
+            qvecPolygon.append(point);
+            if (fFirstRun) {
+                pointPrev = point;
+                fFirstRun = false;
+                continue;
+            }
+            QRectF rect(pointPrev, point);
+            QBrush rectBrush;
+            (point.y() > pointPrev.y()) ? rectBrush = QBrush(QColor(Qt::red)) : rectBrush = QBrush(QColor(Qt::green));
+            painter.drawRect(rect);
+            painter.fillRect(rect, QBrush(QColor(0,0,0,0)));
+//            painter.fillRect(rect, rectBrush);
+            pointPrev = point;
+            qvecRects.append(rect);
+//            if (rectBrush == QBrush(QColor(Qt::green))) {
+                QLineF topLine(QPoint(point.x() + 5, point.y()), QPoint(point.x() + 5, point.y() + 10));
+                painter.setPen(QColor(Qt::green));
+                painter.drawLine(topLine);
+                QLineF bottomLine(QPoint(pointPrev.x() + 5, pointPrev.y() - 10), QPoint(pointPrev.x() + 5, pointPrev.y()));
+                painter.setPen(QColor(Qt::red));
+                painter.drawLine(bottomLine);
+//            } else {
+                QLineF topaLine(QPoint(point.x() + 5, point.y()), QPoint(point.x() + 5, point.y() - 10));
+                painter.setPen(QColor(Qt::yellow));
+                painter.drawLine(topaLine);
+                QLineF bottomaLine(QPoint(pointPrev.x() + 5, pointPrev.y()), QPoint(pointPrev.x() + 5, pointPrev.y() + 10));
+                painter.setPen(QColor(Qt::blue));
+                painter.drawLine(bottomaLine);
+//            }
+            painter.setPen(penLine);
+//            break;
+        }
+        painter.save();
+        painter.restore();
     }
 
     //Draw axis sections next so that they get covered up by chart fill
