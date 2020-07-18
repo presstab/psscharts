@@ -27,14 +27,12 @@ CONFIG += c++11
 SOURCES += \
         chartexamples/main.cpp \
         chartexamples/mainwindow.cpp \
-    src/candlestickchart.cpp \
         src/linechart.cpp \
         src/stringutil.cpp \
     src/mousedisplay.cpp
 
 HEADERS += \
         chartexamples/mainwindow.h \
-    src/candlestickchart.h \
         src/linechart.h \
         src/stringutil.h \
     src/axislabelsettings.h \

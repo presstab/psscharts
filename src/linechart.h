@@ -89,7 +89,7 @@ protected:
     std::pair<double, double> m_pairXRange; // min, max
     QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair) const;
     std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point);
-    QPointF ConvertToCandlePlotPoint(const std::pair<uint32_t, Candlestick>& pair) const;
+    std::pair<uint32_t, Candlestick> ConvertToCandlePlotPoint(const std::pair<uint32_t, Candlestick>& pair) const;
     std::pair<uint32_t, double> ConvertFromCandlePlotPoint(const QPointF& point);
     QBrush m_brushBackground;
     QBrush m_brushLine;

@@ -140,7 +140,7 @@ std::pair<uint32_t, double> LineChart::ConvertFromPlotPoint(const QPointF& point
  * @param pair
  * @return
  */
-QPointF LineChart::ConvertToCandlePlotPoint(const std::pair<uint32_t, Candlestick> &pair) const
+std::pair<uint32_t, PssCharts::LineChart::Candlestick> LineChart::ConvertToCandlePlotPoint(const std::pair<uint32_t, Candlestick> &pair) const
 {
     QRect rectChart = ChartArea();
     if (m_yPadding > 0) {
@@ -157,22 +157,64 @@ QPointF LineChart::ConvertToCandlePlotPoint(const std::pair<uint32_t, Candlestic
     nValueX *= nWidth;
     nValueX += rectChart.left();
 
-    //compute point-value of Y
+    //compute point-value of Open
     int nHeight = rectChart.height();
-    uint64_t y1 = pair.second.m_open * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
-    uint64_t nMaxY = MaxY()*m_precision;
-    uint64_t nMinY = MinY()*m_precision;
-    uint64_t nSpanY = (nMaxY - nMinY);
-    uint64_t nValueY = (y1 - nMinY);
-    nValueY *= nHeight;
-    double dValueY = nValueY;
-    if (nSpanY == 0) {
-        dValueY = rectChart.top() + (nHeight/2);
+    uint64_t open1 = pair.second.m_open * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
+    uint64_t nMaxOpen = MaxY()*m_precision;
+    uint64_t nMinOpen = MinY()*m_precision;
+    uint64_t nSpanOpen = (nMaxOpen - nMinOpen);
+    uint64_t nValueOpen = (open1 - nMinOpen);
+    nValueOpen *= nHeight;
+    double dValueOpen = nValueOpen;
+    if (nSpanOpen == 0) {
+        dValueOpen = rectChart.top() + (nHeight/2);
     } else {
-        dValueY /= nSpanY;
-        dValueY = rectChart.bottom() - dValueY; // Qt uses inverted Y axis
+        dValueOpen /= nSpanOpen;
+        dValueOpen = rectChart.bottom() - dValueOpen; // Qt uses inverted Y axis
     }
-    return QPointF(nValueX, dValueY);
+    //compute point-value of High
+    uint64_t high1 = pair.second.m_high * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
+    uint64_t nMaxHigh = MaxY()*m_precision;
+    uint64_t nMinHigh = MinY()*m_precision;
+    uint64_t nSpanHigh = (nMaxHigh - nMinHigh);
+    uint64_t nValueHigh = (high1 - nMinHigh);
+    nValueHigh *= nHeight;
+    double dValueHigh = nValueHigh;
+    if (nSpanHigh == 0) {
+        dValueHigh = rectChart.top() + (nHeight/2);
+    } else {
+        dValueHigh /= nSpanHigh;
+        dValueHigh = rectChart.bottom() - dValueHigh; // Qt uses inverted Y axis
+    }
+    //compute point-value of Low
+    uint64_t Low1 = pair.second.m_low * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
+    uint64_t nMaxLow = MaxY()*m_precision;
+    uint64_t nMinLow = MinY()*m_precision;
+    uint64_t nSpanLow = (nMaxLow - nMinLow);
+    uint64_t nValueLow = (Low1 - nMinLow);
+    nValueLow *= nHeight;
+    double dValueLow = nValueLow;
+    if (nSpanLow == 0) {
+        dValueLow = rectChart.top() + (nHeight/2);
+    } else {
+        dValueLow /= nSpanLow;
+        dValueLow = rectChart.bottom() - dValueLow; // Qt uses inverted Y axis
+    }
+    //compute point-value of Close
+    uint64_t Close1 = pair.second.m_close * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
+    uint64_t nMaxClose = MaxY()*m_precision;
+    uint64_t nMinClose = MinY()*m_precision;
+    uint64_t nSpanClose = (nMaxClose - nMinClose);
+    uint64_t nValueClose = (Close1 - nMinClose);
+    nValueClose *= nHeight;
+    double dValueClose = nValueClose;
+    if (nSpanClose == 0) {
+        dValueClose = rectChart.top() + (nHeight/2);
+    } else {
+        dValueClose /= nSpanClose;
+        dValueClose = rectChart.bottom() - dValueClose; // Qt uses inverted Y axis
+    }
+    return std::pair<uint32_t, PssCharts::LineChart::Candlestick>(nValueX, Candlestick(dValueOpen, dValueLow, dValueHigh, dValueClose));
 }
 
 /**
@@ -402,8 +444,8 @@ void LineChart::paintEvent(QPaintEvent *event)
         bool fFirstRun = true;
         QPointF pointPrev;
         bool fMouseSet = false;
-        for (const std::pair<uint32_t, Candlestick>& pair : m_candlePoints) {
-            QPointF point = ConvertToCandlePlotPoint(pair);
+        for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
+            QPointF point = ConvertToPlotPoint(pair);
             qvecPolygon.append(point);
             if (fFirstRun) {
                 pointPrev = point;
@@ -446,44 +488,7 @@ void LineChart::paintEvent(QPaintEvent *event)
         painter.setPen(penLine);
         painter.drawLines(qvecLines);
         painter.restore();
-    }
-/*{
-        //Create the lines that are drawn
-        QVector<QPointF> qvecPolygon;
-        QVector<QLineF> qvecLines;
-        QVector<QRectF> qvecRects;
-        painter.save();
-        QPen penLine;
-        penLine.setBrush(m_brushLine);
-        penLine.setWidth(m_lineWidth);
-        painter.setPen(penLine);
-        qvecPolygon.append(rectChart.bottomLeft());
-        bool fFirstRun = true;
-        QPointF pointPrev;
-        for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
-            QPointF point = ConvertToCandlePlotPoint(pair);
-            qvecPolygon.append(point);
-            if (fFirstRun) {
-                pointPrev = point;
-                fFirstRun = false;
-                continue;
-            }
-            QLineF bottomLine(QPoint(pointPrev.x() + 5, pointPrev.y()), QPoint(pointPrev.x() + 5, pointPrev.y() + 10));
-            painter.drawLine(bottomLine);
-            QLineF topLine(QPoint(point.x() + 5, point.y()), QPoint(point.x() + 5, point.y() - 10));
-            painter.drawLine(topLine);
-            QRectF rect(pointPrev, point);
-            QBrush rectBrush;
-            (point.y() > pointPrev.y()) ? rectBrush = QBrush(QColor(Qt::red)) : rectBrush = QBrush(QColor(Qt::green));
-            painter.drawRect(rect);
-            painter.fillRect(rect, rectBrush);
-            pointPrev = point;
-            qvecRects.append(rect);
-        }
-        painter.save();
-        painter.restore();
-    }*/
-    else {
+    } else {
         //Create the lines that are drawn
         QVector<QPointF> qvecPolygon;
         QVector<QLineF> qvecLines;
@@ -497,7 +502,8 @@ void LineChart::paintEvent(QPaintEvent *event)
         bool fFirstRun = true;
         QPointF pointPrev;
         for (const std::pair<uint32_t, Candlestick>& pair : m_candlePoints) {
-            QPointF point = ConvertToCandlePlotPoint(pair);
+            std::pair<uint32_t, Candlestick> chartCandle = ConvertToCandlePlotPoint(pair);
+            QPointF point = QPointF(chartCandle.first ,chartCandle.second.m_low);
             qvecPolygon.append(point);
             if (fFirstRun) {
                 pointPrev = point;
@@ -528,7 +534,7 @@ void LineChart::paintEvent(QPaintEvent *event)
                 painter.drawLine(bottomaLine);
 //            }
             painter.setPen(penLine);
-//            break;
+            break;
         }
         painter.save();
         painter.restore();
