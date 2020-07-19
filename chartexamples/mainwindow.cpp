@@ -114,37 +114,36 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboboxCrosshairColor->setCurrentIndex(0); //black
 
     //Generate some data points to fill the chart
-//    std::map<uint32_t, PssCharts::LineChart::Candlestick> mapCandlePoints;
-//    double nCandleLastPoint = 0;
-//    for (auto i = 0; i < 100; i++) {
-//        double y = QRandomGenerator::global()->generateDouble();
-//        if (nCandleLastPoint > 0) {
-//            double nPercentChange = (y - nCandleLastPoint) / nCandleLastPoint;
-//            if (nPercentChange > 0.3)
-//                y = nCandleLastPoint*1.3;
-//            if (nPercentChange < -0.3)
-//                y = nCandleLastPoint*0.7;
-//        }
-//        mapCandlePoints.emplace(i*(60*60*24), PssCharts::LineChart::Candlestick(y, y+.15, y+.3, y+.5));
-//        nCandleLastPoint = y + 0.5;
-//    }
-//    m_chart->SetCandleDataPoints(mapCandlePoints);
+    std::map<uint32_t, PssCharts::Candle> mapCandlePoints;
+    for (auto i = 0; i < 100; i = i+5) {
+        mapCandlePoints.emplace(i*(60*60*24), PssCharts::Candle(.32, .43, 0.1, .17));
+        mapCandlePoints.emplace((i+1)*(60*60*24), PssCharts::Candle(.34, .45, 0.17, .21));
+        mapCandlePoints.emplace((i+2)*(60*60*24), PssCharts::Candle(.215, .35, 0.21, .32));
+        mapCandlePoints.emplace((i+3)*(60*60*24), PssCharts::Candle(.25, .39, 0.13, .33));
+        mapCandlePoints.emplace((i+4)*(60*60*24), PssCharts::Candle(.27, .41, 0.11, .23));
+    }
+    m_chart->SetCandleDataPoints(mapCandlePoints);
 
     //Generate some data points to fill the chart
     std::map<uint32_t, double> mapPoints;
-    double nLastPoint = 0;
-    for (auto i = 0; i < 100; i++) {
-        double y = QRandomGenerator::global()->generateDouble();
-        if (nLastPoint > 0) {
-            double nPercentChange = (y - nLastPoint) / nLastPoint;
-            if (nPercentChange > 0.3)
-                y = nLastPoint*1.3;
-            if (nPercentChange < -0.3)
-                y = nLastPoint*0.7;
-        }
-        mapPoints.emplace(i*(60*60*24), y);
-        nLastPoint = y;
-    }
+//    double nLastPoint = 0;
+//    for (auto i = 0; i < 100; i++) {
+//        double y = QRandomGenerator::global()->generateDouble();
+//        if (nLastPoint > 0) {
+//            double nPercentChange = (y - nLastPoint) / nLastPoint;
+//            if (nPercentChange > 0.3)
+//                y = nLastPoint*1.3;
+//            if (nPercentChange < -0.3)
+//                y = nLastPoint*0.7;
+//        }
+//        mapPoints.emplace(i*(60*60*24), y);
+//        nLastPoint = y;
+//    }
+    mapPoints.emplace(0*(60*60*24), .284);
+    mapPoints.emplace(33*(60*60*24), .1);
+    mapPoints.emplace(50*(60*60*24), .33);
+    mapPoints.emplace(75*(60*60*24), .215);
+    mapPoints.emplace(100*(60*60*24), .45);
     m_chart->SetDataPoints(mapPoints);
     m_chart->setMinimumSize(QSize(600,400));
     m_chart->show();

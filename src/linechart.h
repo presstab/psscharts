@@ -42,6 +42,20 @@ class QPaintEvent;
 
 namespace PssCharts {
 
+struct Candle {
+    double m_open;
+    double m_high;
+    double m_low;
+    double m_close;
+
+    Candle(double open, double high, double low, double close) {
+        m_open = open;
+        m_high = high;
+        m_low = low;
+        m_close = close;
+    }
+};
+
 enum class AxisLabelType
 {
     AX_NO_LABEL,
@@ -59,23 +73,6 @@ class LineChart : public QWidget
 {
     Q_OBJECT
 
-
-public:
-
-    struct Candlestick {
-        double m_open;
-        double m_high;
-        double m_low;
-        double m_close;
-
-        Candlestick(double open, double high, double low, double close) {
-            open = m_open;
-            high = m_high;
-            low = m_low;
-            close = m_close;
-        }
-    };
-
 private:
     const uint32_t VERSION_MAJOR = 0;
     const uint32_t VERSION_MINOR = 0;
@@ -84,12 +81,12 @@ private:
 
 protected:
     std::map<uint32_t, double> m_mapPoints;
-    std::map<uint32_t, Candlestick> m_candlePoints;
+    std::map<uint32_t, Candle> m_candlePoints;
     std::pair<double, double> m_pairYRange; // min, max
     std::pair<double, double> m_pairXRange; // min, max
     QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair) const;
     std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point);
-    std::pair<uint32_t, Candlestick> ConvertToCandlePlotPoint(const std::pair<uint32_t, Candlestick>& pair) const;
+    std::pair<uint32_t, Candle> ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle>& pair) const;
     std::pair<uint32_t, double> ConvertFromCandlePlotPoint(const QPointF& point);
     QBrush m_brushBackground;
     QBrush m_brushLine;
@@ -136,6 +133,9 @@ protected:
 
     void ProcessChangedData();
 
+    //Candlestick stuff
+    double m_rectWidth;
+
 public:
     LineChart(QWidget* parent = nullptr);
     bool ChangesMade() const { return m_fChangesMade; }
@@ -171,9 +171,10 @@ public:
     void SetAxisSectionCount(uint32_t nCount);
     void SetAxisSeparatorPen(const QPen& pen);
     void SetChartType(const QString& type);
-    void SetCandleDataPoints(std::map<uint32_t, Candlestick> mapPoints);
+    void SetCandleDataPoints(std::map<uint32_t, Candle>& mapPoints);
     uint32_t Version() const;
     QString VersionString() const;
+    PssCharts::Candle MakeCandle(double open, double high, double low, double close);
 
     AxisLabelSettings* YLabelSettings() { return &m_settingsYLabels; }
     AxisLabelSettings* XLabelSettings() { return &m_settingsXLabels; }

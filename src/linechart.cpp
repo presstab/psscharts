@@ -68,6 +68,7 @@ LineChart::LineChart(QWidget *parent) : QWidget (parent)
     m_rightMargin = -1;
     m_topTitleHeight = -1;
     m_precision = 100000000;
+    m_rectWidth = 5;
 
     setMouseTracking(true);
 }
@@ -140,7 +141,7 @@ std::pair<uint32_t, double> LineChart::ConvertFromPlotPoint(const QPointF& point
  * @param pair
  * @return
  */
-std::pair<uint32_t, PssCharts::LineChart::Candlestick> LineChart::ConvertToCandlePlotPoint(const std::pair<uint32_t, Candlestick> &pair) const
+std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle> &pair) const
 {
     QRect rectChart = ChartArea();
     if (m_yPadding > 0) {
@@ -214,7 +215,7 @@ std::pair<uint32_t, PssCharts::LineChart::Candlestick> LineChart::ConvertToCandl
         dValueClose /= nSpanClose;
         dValueClose = rectChart.bottom() - dValueClose; // Qt uses inverted Y axis
     }
-    return std::pair<uint32_t, PssCharts::LineChart::Candlestick>(nValueX, Candlestick(dValueOpen, dValueLow, dValueHigh, dValueClose));
+    return std::pair<uint32_t, PssCharts::Candle>(nValueX, Candle(dValueOpen, dValueLow, dValueHigh, dValueClose));
 }
 
 /**
@@ -334,7 +335,7 @@ void LineChart::SetDataPoints(const std::map<uint32_t, double>& mapPoints)
     ProcessChangedData();
 }
 
-void LineChart::SetCandleDataPoints(std::map<uint32_t, Candlestick> mapPoints)
+void LineChart::SetCandleDataPoints(std::map<uint32_t, Candle>& mapPoints)
 {
     m_candlePoints = mapPoints;
     ProcessChangedData();
@@ -345,19 +346,47 @@ void LineChart::ProcessChangedData()
     m_pairXRange = {0, 0};
     m_pairYRange = {0, 0};
     bool fFirstRun = true;
-    for (const auto& pair : m_mapPoints) {
-        //Set min and max for x and y
-        if (fFirstRun || pair.first < m_pairXRange.first)
-            m_pairXRange.first = pair.first;
-        if (fFirstRun || pair.first > m_pairXRange.second)
-            m_pairXRange.second = pair.first;
-        if (fFirstRun || pair.second < m_pairYRange.first)
-            m_pairYRange.first = pair.second;
-        if (fFirstRun || pair.second > m_pairYRange.second)
-            m_pairYRange.second = pair.second;
-        fFirstRun = false;
+    if(!m_fIsLineChart) {
+        for (const auto& pair : m_mapPoints) {
+            //Set min and max for x and y
+            if (fFirstRun || pair.first < m_pairXRange.first)
+                m_pairXRange.first = pair.first;
+            if (fFirstRun || pair.first > m_pairXRange.second)
+                m_pairXRange.second = pair.first;
+            if (fFirstRun || pair.second < m_pairYRange.first)
+                m_pairYRange.first = pair.second;
+            if (fFirstRun || pair.second > m_pairYRange.second)
+                m_pairYRange.second = pair.second;
+            fFirstRun = false;
+        }
+        m_fChangesMade = true;
+    } else {
+        for (const auto& pair : m_candlePoints) {
+            //Set min and max for x and y
+            if (fFirstRun || pair.first < m_pairXRange.first)
+                m_pairXRange.first = pair.first;
+            if (fFirstRun || pair.first > m_pairXRange.second)
+                m_pairXRange.second = pair.first;
+            if (pair.second.m_high < m_pairYRange.first)
+                m_pairYRange.first = pair.second.m_high;
+            if (pair.second.m_high > m_pairYRange.second)
+                m_pairYRange.second = pair.second.m_high;
+            if (pair.second.m_low < m_pairYRange.first)
+                m_pairYRange.first = pair.second.m_low;
+            if (pair.second.m_low > m_pairYRange.second)
+                m_pairYRange.second = pair.second.m_low;
+            if (pair.second.m_open < m_pairYRange.first)
+                m_pairYRange.first = pair.second.m_open;
+            if (pair.second.m_open > m_pairYRange.second)
+                m_pairYRange.second = pair.second.m_open;
+            if (pair.second.m_close < m_pairYRange.first)
+                m_pairYRange.first = pair.second.m_close;
+            if (pair.second.m_close > m_pairYRange.second)
+                m_pairYRange.second = pair.second.m_close;
+            fFirstRun = false;
+        }
+        m_fChangesMade = true;
     }
-    m_fChangesMade = true;
 }
 
 /**
@@ -499,42 +528,39 @@ void LineChart::paintEvent(QPaintEvent *event)
         penLine.setWidth(m_lineWidth);
         painter.setPen(penLine);
         qvecPolygon.append(rectChart.bottomLeft());
-        bool fFirstRun = true;
-        QPointF pointPrev;
-        for (const std::pair<uint32_t, Candlestick>& pair : m_candlePoints) {
-            std::pair<uint32_t, Candlestick> chartCandle = ConvertToCandlePlotPoint(pair);
-            QPointF point = QPointF(chartCandle.first ,chartCandle.second.m_low);
-            qvecPolygon.append(point);
-            if (fFirstRun) {
-                pointPrev = point;
-                fFirstRun = false;
-                continue;
+        for (const std::pair<uint32_t, Candle>& pair : m_candlePoints) {
+            std::pair<uint32_t, Candle> chartCandle = ConvertToCandlePlotPoint(pair);
+            if (chartCandle.second.m_open > chartCandle.second.m_close) {
+                QPointF pointL = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_low);
+                QPointF pointH = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_high);
+                QPointF pointC = QPointF(chartCandle.first, chartCandle.second.m_close);
+                QPointF pointO = QPointF(chartCandle.first + 2*m_rectWidth, chartCandle.second.m_open);
+                QPointF pointC2 = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_close);
+                QPointF pointO2 = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_open);
+                QRectF rect(pointO, pointC);
+                QBrush rectBrush = QBrush(QColor(Qt::red));
+                painter.drawRect(rect);
+                painter.fillRect(rect, rectBrush);
+                QLineF HOline(pointH, pointO2);
+                QLineF LCline(pointL, pointC2);
+                painter.drawLine(HOline);
+                painter.drawLine(LCline);
+            } else {
+                QPointF pointL = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_low);
+                QPointF pointH = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_high);
+                QPointF pointC = QPointF(chartCandle.first + 2*m_rectWidth, chartCandle.second.m_close);
+                QPointF pointO = QPointF(chartCandle.first, chartCandle.second.m_open);
+                QPointF pointC2 = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_close);
+                QPointF pointO2 = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_open);
+                QRectF rect(pointO, pointC);
+                QBrush rectBrush = QBrush(QColor(Qt::green));
+                painter.drawRect(rect);
+                painter.fillRect(rect, rectBrush);
+                QLineF HCline(pointH, pointC2);
+                QLineF LOline(pointL, pointO2);
+                painter.drawLine(HCline);
+                painter.drawLine(LOline);
             }
-            QRectF rect(pointPrev, point);
-            QBrush rectBrush;
-            (point.y() > pointPrev.y()) ? rectBrush = QBrush(QColor(Qt::red)) : rectBrush = QBrush(QColor(Qt::green));
-            painter.drawRect(rect);
-            painter.fillRect(rect, QBrush(QColor(0,0,0,0)));
-//            painter.fillRect(rect, rectBrush);
-            pointPrev = point;
-            qvecRects.append(rect);
-//            if (rectBrush == QBrush(QColor(Qt::green))) {
-                QLineF topLine(QPoint(point.x() + 5, point.y()), QPoint(point.x() + 5, point.y() + 10));
-                painter.setPen(QColor(Qt::green));
-                painter.drawLine(topLine);
-                QLineF bottomLine(QPoint(pointPrev.x() + 5, pointPrev.y() - 10), QPoint(pointPrev.x() + 5, pointPrev.y()));
-                painter.setPen(QColor(Qt::red));
-                painter.drawLine(bottomLine);
-//            } else {
-                QLineF topaLine(QPoint(point.x() + 5, point.y()), QPoint(point.x() + 5, point.y() - 10));
-                painter.setPen(QColor(Qt::yellow));
-                painter.drawLine(topaLine);
-                QLineF bottomaLine(QPoint(pointPrev.x() + 5, pointPrev.y()), QPoint(pointPrev.x() + 5, pointPrev.y() + 10));
-                painter.setPen(QColor(Qt::blue));
-                painter.drawLine(bottomaLine);
-//            }
-            painter.setPen(penLine);
-            break;
         }
         painter.save();
         painter.restore();
@@ -1051,6 +1077,11 @@ void LineChart::SetLabelAutoPrecision(bool fEnable)
 void LineChart::SetRightMargin(int margin)
 {
     m_rightMargin = margin;
+}
+
+Candle LineChart::MakeCandle(double open, double high, double low, double close)
+{
+    return Candle(open, high, low, close);
 }
 
 }//namespace
