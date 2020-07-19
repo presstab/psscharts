@@ -68,7 +68,7 @@ LineChart::LineChart(QWidget *parent) : QWidget (parent)
     m_rightMargin = -1;
     m_topTitleHeight = -1;
     m_precision = 100000000;
-    m_rectWidth = 5;
+    m_rectWidth = 2;
 
     setMouseTracking(true);
 }
@@ -215,7 +215,7 @@ std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const
         dValueClose /= nSpanClose;
         dValueClose = rectChart.bottom() - dValueClose; // Qt uses inverted Y axis
     }
-    return std::pair<uint32_t, PssCharts::Candle>(nValueX, Candle(dValueOpen, dValueLow, dValueHigh, dValueClose));
+    return std::pair<uint32_t, PssCharts::Candle>(nValueX, Candle(dValueHigh, dValueLow, dValueOpen, dValueClose));
 }
 
 /**
@@ -538,7 +538,7 @@ void LineChart::paintEvent(QPaintEvent *event)
                 QPointF pointC2 = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_close);
                 QPointF pointO2 = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_open);
                 QRectF rect(pointO, pointC);
-                QBrush rectBrush = QBrush(QColor(Qt::red));
+                QBrush rectBrush = m_brushDownCandle;
                 painter.drawRect(rect);
                 painter.fillRect(rect, rectBrush);
                 QLineF HOline(pointH, pointO2);
@@ -553,7 +553,7 @@ void LineChart::paintEvent(QPaintEvent *event)
                 QPointF pointC2 = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_close);
                 QPointF pointO2 = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_open);
                 QRectF rect(pointO, pointC);
-                QBrush rectBrush = QBrush(QColor(Qt::green));
+                QBrush rectBrush = m_brushUpCandle;
                 painter.drawRect(rect);
                 painter.fillRect(rect, rectBrush);
                 QLineF HCline(pointH, pointC2);
@@ -830,6 +830,22 @@ void LineChart::mouseMoveEvent(QMouseEvent *event)
     repaint();
 }
 
+void LineChart::SetUpCandleBrush(const QBrush &brush)
+{
+    m_brushUpCandle = brush;
+    QPalette palette = this->palette();
+    palette.setBrush(QPalette::ColorRole::Base, brush);
+    m_fChangesMade = true;
+}
+
+void LineChart::SetDownCandleBrush(const QBrush &brush)
+{
+    m_brushDownCandle = brush;
+    QPalette palette = this->palette();
+    palette.setBrush(QPalette::ColorRole::Base, brush);
+    m_fChangesMade = true;
+}
+
 void LineChart::SetBackgroundBrush(const QBrush &brush)
 {
     m_brushBackground = brush;
@@ -1077,11 +1093,6 @@ void LineChart::SetLabelAutoPrecision(bool fEnable)
 void LineChart::SetRightMargin(int margin)
 {
     m_rightMargin = margin;
-}
-
-Candle LineChart::MakeCandle(double open, double high, double low, double close)
-{
-    return Candle(open, high, low, close);
 }
 
 }//namespace

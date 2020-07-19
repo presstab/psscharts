@@ -22,6 +22,16 @@
       </property>
       <item>
        <layout class="QFormLayout" name="formLayout">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_12">
+          <property name="text">
+           <string>Chart Type</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="comboBoxChartType"/>
+        </item>
         <item row="1" column="0">
          <widget class="QLabel" name="label">
           <property name="text">
@@ -29,12 +39,46 @@
           </property>
          </widget>
         </item>
+        <item row="1" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <item>
+           <widget class="QLineEdit" name="lineeditChartTitle"/>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="spinboxTitleFontSize"/>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkboxChartTitleBold">
+            <property name="text">
+             <string>bold</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
         <item row="2" column="0">
          <widget class="QLabel" name="label_2">
           <property name="text">
            <string>Y Title</string>
           </property>
          </widget>
+        </item>
+        <item row="2" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item>
+           <widget class="QLineEdit" name="lineeditYTitle"/>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="spinboxYTitleFontSize"/>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkboxYTitleBold">
+            <property name="text">
+             <string>bold</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item row="3" column="0">
          <widget class="QLabel" name="label_3">
@@ -61,6 +105,16 @@
           </item>
          </layout>
         </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="label_10">
+          <property name="text">
+           <string>Axis Label Precision</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QSpinBox" name="spinboxYLabelPrecision"/>
+        </item>
         <item row="5" column="0">
          <widget class="QLabel" name="label_4">
           <property name="text">
@@ -86,20 +140,6 @@
           </item>
          </layout>
         </item>
-        <item row="7" column="0">
-         <widget class="QLabel" name="label_5">
-          <property name="text">
-           <string>Fill Chart</string>
-          </property>
-         </widget>
-        </item>
-        <item row="9" column="0">
-         <widget class="QLabel" name="label_6">
-          <property name="text">
-           <string>Line Width</string>
-          </property>
-         </widget>
-        </item>
         <item row="6" column="0">
          <widget class="QLabel" name="label_7">
           <property name="text">
@@ -110,13 +150,10 @@
         <item row="6" column="1">
          <widget class="QSpinBox" name="spinboxGridlines"/>
         </item>
-        <item row="9" column="1">
-         <widget class="QSpinBox" name="spinboxLineWidth"/>
-        </item>
-        <item row="10" column="0">
-         <widget class="QLabel" name="label_8">
+        <item row="7" column="0">
+         <widget class="QLabel" name="label_5">
           <property name="text">
-           <string>Line Color</string>
+           <string>Fill Chart</string>
           </property>
          </widget>
         </item>
@@ -155,52 +192,25 @@
           </item>
          </layout>
         </item>
-        <item row="10" column="1">
-         <widget class="QComboBox" name="comboboxLineColor"/>
-        </item>
-        <item row="1" column="1">
-         <layout class="QHBoxLayout" name="horizontalLayout_6">
-          <item>
-           <widget class="QLineEdit" name="lineeditChartTitle"/>
-          </item>
-          <item>
-           <widget class="QSpinBox" name="spinboxTitleFontSize"/>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkboxChartTitleBold">
-            <property name="text">
-             <string>bold</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="2" column="1">
-         <layout class="QHBoxLayout" name="horizontalLayout_7">
-          <item>
-           <widget class="QLineEdit" name="lineeditYTitle"/>
-          </item>
-          <item>
-           <widget class="QSpinBox" name="spinboxYTitleFontSize"/>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkboxYTitleBold">
-            <property name="text">
-             <string>bold</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="4" column="0">
-         <widget class="QLabel" name="label_10">
+        <item row="9" column="0">
+         <widget class="QLabel" name="label_6">
           <property name="text">
-           <string>Axis Label Precision</string>
+           <string>Line Width</string>
           </property>
          </widget>
         </item>
-        <item row="4" column="1">
-         <widget class="QSpinBox" name="spinboxYLabelPrecision"/>
+        <item row="9" column="1">
+         <widget class="QSpinBox" name="spinboxLineWidth"/>
+        </item>
+        <item row="10" column="0">
+         <widget class="QLabel" name="label_8">
+          <property name="text">
+           <string>Line Color</string>
+          </property>
+         </widget>
+        </item>
+        <item row="10" column="1">
+         <widget class="QComboBox" name="comboboxLineColor"/>
         </item>
         <item row="11" column="0">
          <widget class="QLabel" name="label_11">
@@ -226,15 +236,25 @@
           </item>
          </layout>
         </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_12">
+        <item row="12" column="0">
+         <widget class="QLabel" name="label_25">
           <property name="text">
-           <string>Chart Type</string>
+           <string>Up Candle Color</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QComboBox" name="comboBoxChartType"/>
+        <item row="13" column="0">
+         <widget class="QLabel" name="label_26">
+          <property name="text">
+           <string>Down Candle Color</string>
+          </property>
+         </widget>
+        </item>
+        <item row="12" column="1">
+         <widget class="QComboBox" name="comboBoxUpCandleColor"/>
+        </item>
+        <item row="13" column="1">
+         <widget class="QComboBox" name="comboBoxDownCandleColor"/>
         </item>
        </layout>
       </item>

@@ -83,6 +83,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBoxChartType->addItems(listChartFormats);
     ui->comboBoxChartType->setCurrentIndex(1); //line
 
+    ui->comboBoxUpCandleColor->addItems(listQtColors);
+    ui->comboBoxUpCandleColor->setCurrentIndex(6); //green
+
+    ui->comboBoxDownCandleColor->addItems(listQtColors);
+    ui->comboBoxDownCandleColor->setCurrentIndex(5); //red
+
     //Chart Title
     ui->lineeditChartTitle->setText("PssCharts");
     ui->spinboxTitleFontSize->setValue(14);
@@ -115,35 +121,51 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Generate some data points to fill the chart
     std::map<uint32_t, PssCharts::Candle> mapCandlePoints;
-    for (auto i = 0; i < 100; i = i+5) {
-        mapCandlePoints.emplace(i*(60*60*24), PssCharts::Candle(.32, .43, 0.1, .17));
-        mapCandlePoints.emplace((i+1)*(60*60*24), PssCharts::Candle(.34, .45, 0.17, .21));
-        mapCandlePoints.emplace((i+2)*(60*60*24), PssCharts::Candle(.215, .35, 0.21, .32));
-        mapCandlePoints.emplace((i+3)*(60*60*24), PssCharts::Candle(.25, .39, 0.13, .33));
-        mapCandlePoints.emplace((i+4)*(60*60*24), PssCharts::Candle(.27, .41, 0.11, .23));
+    double nLastHigh = 0;
+    double nLastLow = 0;
+    for (auto i = 0; i < 100; i++) {
+        double r1 = QRandomGenerator::global()->generateDouble();
+        double r2 = QRandomGenerator::global()->generateDouble();
+        double high = std::min(r1, r2);
+        double low = std::max(r1, r2);
+        if (nLastLow > 0) {
+            double nPercentChange = (low - nLastLow) / nLastLow;
+            if (nPercentChange > 0.3)
+                low = nLastLow*1.3;
+            if (nPercentChange < -0.3)
+                low = nLastLow*0.7;
+        }
+        if (nLastHigh > 0) {
+            double nPercentChange = (high - nLastHigh) / nLastHigh;
+            if (nPercentChange > 0.3)
+                high = nLastHigh*1.3;
+            if (nPercentChange < -0.3)
+                high = nLastHigh*0.7;
+        }
+
+        double open = (QRandomGenerator::global()->generateDouble() * (high-low)) + low;
+        double close = (QRandomGenerator::global()->generateDouble() * (high-low)) + low;
+        mapCandlePoints.emplace(i*(60*60*24), PssCharts::Candle(high, low, open, close));
     }
     m_chart->SetCandleDataPoints(mapCandlePoints);
 
     //Generate some data points to fill the chart
     std::map<uint32_t, double> mapPoints;
-//    double nLastPoint = 0;
-//    for (auto i = 0; i < 100; i++) {
-//        double y = QRandomGenerator::global()->generateDouble();
-//        if (nLastPoint > 0) {
-//            double nPercentChange = (y - nLastPoint) / nLastPoint;
-//            if (nPercentChange > 0.3)
-//                y = nLastPoint*1.3;
-//            if (nPercentChange < -0.3)
-//                y = nLastPoint*0.7;
-//        }
-//        mapPoints.emplace(i*(60*60*24), y);
-//        nLastPoint = y;
-//    }
-    mapPoints.emplace(0*(60*60*24), .284);
-    mapPoints.emplace(33*(60*60*24), .1);
-    mapPoints.emplace(50*(60*60*24), .33);
-    mapPoints.emplace(75*(60*60*24), .215);
-    mapPoints.emplace(100*(60*60*24), .45);
+    double nLastPoint = 0;
+    for (auto i = 0; i < 100; i++) {
+        double y = QRandomGenerator::global()->generateDouble();
+        if (nLastPoint > 0) {
+            double nPercentChange = (y - nLastPoint) / nLastPoint;
+            if (nPercentChange > 0.3)
+                y = nLastPoint*1.3;
+            if (nPercentChange < -0.3)
+                y = nLastPoint*0.7;
+        }
+        mapPoints.emplace(i*(60*60*24), y);
+        nLastPoint = y;
+    }
+    mapPoints.emplace(1, 0.00000001);
+    mapPoints.emplace(100*(60*60*24), 1);
     m_chart->SetDataPoints(mapPoints);
     m_chart->setMinimumSize(QSize(600,400));
     m_chart->show();
@@ -165,6 +187,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->comboboxLineColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxCrosshairColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboBoxChartType, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboBoxUpCandleColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboBoxDownCandleColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
 
     connect(ui->spinboxGridlines, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
@@ -210,6 +234,11 @@ void MainWindow::RedrawChart()
     m_chart->EnableFill(ui->checkboxFillChart->checkState() == Qt::Checked);
     QColor colorFill = static_cast<Qt::GlobalColor>(ui->comboboxChartFillColor->currentIndex()+2);
     m_chart->SetFillBrush(QBrush(colorFill));
+
+    QColor UpCandleColor = static_cast<Qt::GlobalColor>(ui->comboBoxUpCandleColor->currentIndex()+2);
+    m_chart->SetUpCandleBrush(QBrush(UpCandleColor));
+    QColor DownCandleColor = static_cast<Qt::GlobalColor>(ui->comboBoxDownCandleColor->currentIndex()+2);
+    m_chart->SetDownCandleBrush(QBrush(DownCandleColor));
 
     QColor colorBackground = palette().window().color();
     if (ui->checkboxFillBackground->checkState() == Qt::Checked)

@@ -48,7 +48,7 @@ struct Candle {
     double m_low;
     double m_close;
 
-    Candle(double open, double high, double low, double close) {
+    Candle(double high, double low, double open, double close) {
         m_open = open;
         m_high = high;
         m_low = low;
@@ -89,6 +89,8 @@ protected:
     std::pair<uint32_t, Candle> ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle>& pair) const;
     std::pair<uint32_t, double> ConvertFromCandlePlotPoint(const QPointF& point);
     QBrush m_brushBackground;
+    QBrush m_brushUpCandle;
+    QBrush m_brushDownCandle;
     QBrush m_brushLine;
     QBrush m_brushFill;
     bool m_fEnableFill; //! Does the line get filled
@@ -174,7 +176,6 @@ public:
     void SetCandleDataPoints(std::map<uint32_t, Candle>& mapPoints);
     uint32_t Version() const;
     QString VersionString() const;
-    PssCharts::Candle MakeCandle(double open, double high, double low, double close);
 
     AxisLabelSettings* YLabelSettings() { return &m_settingsYLabels; }
     AxisLabelSettings* XLabelSettings() { return &m_settingsXLabels; }
@@ -192,6 +193,10 @@ public:
 
     QPixmap grab(const QRect &rectangle = QRect(QPoint(0, 0), QSize(-1, -1)));
     void mouseMoveEvent(QMouseEvent* event) override;
+
+    // Candlestick
+    void SetUpCandleBrush(const QBrush& brush);
+    void SetDownCandleBrush(const QBrush& brush);
 };
 
 } //namespace
