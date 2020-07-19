@@ -126,8 +126,8 @@ MainWindow::MainWindow(QWidget *parent) :
     for (auto i = 0; i < 100; i++) {
         double r1 = QRandomGenerator::global()->generateDouble();
         double r2 = QRandomGenerator::global()->generateDouble();
-        double high = std::min(r1, r2);
-        double low = std::max(r1, r2);
+        double high = std::max(r1, r2);
+        double low = std::min(r1, r2);
         if (nLastLow > 0) {
             double nPercentChange = (low - nLastLow) / nLastLow;
             if (nPercentChange > 0.3)
@@ -164,8 +164,6 @@ MainWindow::MainWindow(QWidget *parent) :
         mapPoints.emplace(i*(60*60*24), y);
         nLastPoint = y;
     }
-    mapPoints.emplace(1, 0.00000001);
-    mapPoints.emplace(100*(60*60*24), 1);
     m_chart->SetDataPoints(mapPoints);
     m_chart->setMinimumSize(QSize(600,400));
     m_chart->show();

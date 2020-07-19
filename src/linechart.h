@@ -47,12 +47,21 @@ struct Candle {
     double m_high;
     double m_low;
     double m_close;
-
+    Candle() {
+        m_open = 0;
+        m_high = 0;
+        m_low = 0;
+        m_close = 0;
+    }
     Candle(double high, double low, double open, double close) {
         m_open = open;
         m_high = high;
         m_low = low;
         m_close = close;
+    }
+public:
+    bool isNull() {
+        return this->m_open == 0 && this->m_high == 0 && this->m_low == 0 && this->m_close == 0;
     }
 };
 
@@ -87,7 +96,7 @@ protected:
     QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair) const;
     std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point);
     std::pair<uint32_t, Candle> ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle>& pair) const;
-    std::pair<uint32_t, double> ConvertFromCandlePlotPoint(const QPointF& point);
+    uint32_t ConvertCandlePlotPointTime(const QPointF& point);
     QBrush m_brushBackground;
     QBrush m_brushUpCandle;
     QBrush m_brushDownCandle;
