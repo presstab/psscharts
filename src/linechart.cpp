@@ -224,10 +224,9 @@ std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const
 uint32_t LineChart::ConvertCandlePlotPointTime(const QPointF& point)
 {
     QRect rectChart = ChartArea();
-    auto t = rectChart.bottom() - point.y();
-    auto t1 = t / rectChart.height();
-    auto t2 = t1 * (MaxY() - MinY());
-    return t2 + MinY();
+    auto t1 = (point.x() - rectChart.left()) / rectChart.width();
+    auto t2 = t1 * (MaxX() - MinX());
+    return  t2 + MinX();
 }
 
 int LineChart::HeightTopTitleArea() const
@@ -567,13 +566,13 @@ void LineChart::paintEvent(QPaintEvent *event)
     // Draw Candlestick Info
     QPen penLine;
 //    penLine.setBrush(m_brushLine);
-    penLine.setWidth(m_lineWidth);
+//    penLine.setWidth(m_lineWidth);
     painter.setPen(penLine);
     painter.setFont(m_fontYTitle);
     QString strData;
     uint32_t nTime = ConvertCandlePlotPointTime(lposMouse);
     std::map<uint32_t, Candle>::iterator itCandle;
-    itCandle = m_candlePoints.upper_bound(nTime);
+    itCandle = m_candlePoints.lower_bound(nTime);
     Candle currentCandle = itCandle->second;
     if (fMouseInChartArea) {
         strData += "O:" + QString::number(currentCandle.m_open) + "\t";

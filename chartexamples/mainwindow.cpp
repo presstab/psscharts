@@ -90,10 +90,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBoxDownCandleColor->setCurrentIndex(5); //red
 
     ui->comboBoxUpLineColor->addItems(listQtColors);
-    ui->comboBoxUpLineColor->setCurrentIndex(12); //dark green
+    ui->comboBoxUpLineColor->setCurrentIndex(14); //dark cyan
 
     ui->comboBoxDownLineColor->addItems(listQtColors);
-    ui->comboBoxDownLineColor->setCurrentIndex(11); //dark red
+    ui->comboBoxDownLineColor->setCurrentIndex(16); //dark yellow
 
     ui->comboBoxUpTailColor->addItems(listQtColors);
     ui->comboBoxUpTailColor->setCurrentIndex(12); //dark green
