@@ -578,8 +578,7 @@ void LineChart::paintEvent(QPaintEvent *event)
         strData += "O:" + QString::number(currentCandle.m_open) + "\t";
         strData += "H:" + QString::number(currentCandle.m_high) + "\t";
         strData += "L:" + QString::number(currentCandle.m_low) + "\t";
-        strData += "C:" + QString::number(currentCandle.m_close) + "\t";
-        strData += "T:" + QDateTime::fromMSecsSinceEpoch(nTime).toString();
+        strData += "C:" + QString::number(currentCandle.m_close);
     }
     QRect rectInfo = rectFull;
     rectInfo.setBottom(rectFull.top() + HeightTopTitleArea());
