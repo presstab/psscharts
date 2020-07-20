@@ -520,16 +520,8 @@ void LineChart::paintEvent(QPaintEvent *event)
             std::pair<uint32_t, Candle> chartCandle = ConvertToCandlePlotPoint(pair);
             bool isUpCandle = chartCandle.second.m_close > chartCandle.second.m_open;
             if (isUpCandle) {
-                QPointF pointO = QPointF(chartCandle.first - m_rectWidth, chartCandle.second.m_open);
-                QPointF pointC = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_close);
-                QRectF rect(pointO, pointC);
-                QBrush rectBrush = m_brushUpCandle;
-                painter.setPen(penUpCandle);
-                painter.drawRect(rect);
-                painter.fillRect(rect, rectBrush);
-
-                pointO = QPointF(chartCandle.first, chartCandle.second.m_open);
-                pointC = QPointF(chartCandle.first, chartCandle.second.m_close);
+                QPointF pointO = QPointF(chartCandle.first, chartCandle.second.m_open);
+                QPointF pointC = QPointF(chartCandle.first, chartCandle.second.m_close);
                 QPointF pointH = QPointF(chartCandle.first, chartCandle.second.m_high);
                 QPointF pointL = QPointF(chartCandle.first, chartCandle.second.m_low);
 
@@ -538,17 +530,18 @@ void LineChart::paintEvent(QPaintEvent *event)
                 painter.setPen(penUpLine);
                 painter.drawLine(HOline);
                 painter.drawLine(LCline);
-            } else {
-                QPointF pointO = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_open);
-                QPointF pointC = QPointF(chartCandle.first - m_rectWidth, chartCandle.second.m_close);
+
+                pointO = QPointF(chartCandle.first - m_rectWidth, chartCandle.second.m_open);
+                pointC = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_close);
                 QRectF rect(pointO, pointC);
-                QBrush rectBrush = m_brushDownCandle;
-                painter.setPen(penDownCandle);
+                QBrush rectBrush = m_brushUpCandle;
+                painter.setPen(penUpCandle);
                 painter.drawRect(rect);
                 painter.fillRect(rect, rectBrush);
 
-                pointO = QPointF(chartCandle.first, chartCandle.second.m_open);
-                pointC = QPointF(chartCandle.first, chartCandle.second.m_close);
+            } else {
+                QPointF pointO = QPointF(chartCandle.first, chartCandle.second.m_open);
+                QPointF pointC = QPointF(chartCandle.first, chartCandle.second.m_close);
                 QPointF pointH = QPointF(chartCandle.first, chartCandle.second.m_high);
                 QPointF pointL = QPointF(chartCandle.first, chartCandle.second.m_low);
 
@@ -557,6 +550,14 @@ void LineChart::paintEvent(QPaintEvent *event)
                 painter.setPen(penDownLine);
                 painter.drawLine(HCline);
                 painter.drawLine(LOline);
+
+                pointO = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_open);
+                pointC = QPointF(chartCandle.first - m_rectWidth, chartCandle.second.m_close);
+                QRectF rect(pointO, pointC);
+                QBrush rectBrush = m_brushDownCandle;
+                painter.setPen(penDownCandle);
+                painter.drawRect(rect);
+                painter.fillRect(rect, rectBrush);
             }
         }
         painter.save();
@@ -565,15 +566,22 @@ void LineChart::paintEvent(QPaintEvent *event)
 
     // Draw Candlestick Info
     QPen penLine;
-//    penLine.setBrush(m_brushLine);
-//    penLine.setWidth(m_lineWidth);
+    penLine.setBrush(m_brushLine);
+    penLine.setWidth(m_lineWidth);
     painter.setPen(penLine);
     painter.setFont(m_fontYTitle);
     QString strData;
     uint32_t nTime = ConvertCandlePlotPointTime(lposMouse);
-    std::map<uint32_t, Candle>::iterator itCandle;
-    itCandle = m_candlePoints.lower_bound(nTime);
-    Candle currentCandle = itCandle->second;
+    std::map<uint32_t, Candle>::iterator candleUpper = m_candlePoints.upper_bound(nTime);
+    std::map<uint32_t, Candle>::iterator candleLower = m_candlePoints.lower_bound(nTime);
+    int upperDist = std::labs((int)candleUpper->first - (int)nTime);
+    int lowerDist = std::labs((int)candleLower->first - (int)nTime);
+    Candle currentCandle;
+    if (upperDist > lowerDist) {
+        currentCandle = candleLower->second;
+    } else {
+        currentCandle = candleUpper->second;
+    }
     if (fMouseInChartArea) {
         strData += "O:" + QString::number(currentCandle.m_open) + "\t";
         strData += "H:" + QString::number(currentCandle.m_high) + "\t";
