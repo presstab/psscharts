@@ -146,6 +146,11 @@ protected:
 
     //Candlestick stuff
     double m_rectWidth;
+    int m_nCandleLineWidth;
+    QColor m_colorUpCandleLine;
+    QColor m_colorDownCandleLine;
+    QColor m_colorUpTail;
+    QColor m_colorDownTail;
 
 public:
     LineChart(QWidget* parent = nullptr);
@@ -206,6 +211,10 @@ public:
     // Candlestick
     void SetUpCandleBrush(const QBrush& brush);
     void SetDownCandleBrush(const QBrush& brush);
+    void SetCandleLineColor(const QColor& upColor, const QColor& downColor = QColor());
+    void SetTailColor(const QColor& upColor, const QColor& downColor = QColor());
+    void SetCandleLineWidth(int nWidth);
+    void SetCandleWidth(int nWidth);
 };
 
 } //namespace

@@ -68,7 +68,6 @@ LineChart::LineChart(QWidget *parent) : QWidget (parent)
     m_rightMargin = -1;
     m_topTitleHeight = -1;
     m_precision = 100000000;
-    m_rectWidth = 2;
 
     setMouseTracking(true);
 }
@@ -505,10 +504,18 @@ void LineChart::paintEvent(QPaintEvent *event)
         QVector<QLineF> qvecLines;
         QVector<QRectF> qvecRects;
         painter.save();
-        QPen penLine;
-        penLine.setBrush(m_brushLine);
-        penLine.setWidth(m_lineWidth);
-        painter.setPen(penLine);
+        QPen penUpLine;
+        penUpLine.setBrush(m_colorUpTail);
+        penUpLine.setWidth(m_nCandleLineWidth);
+        QPen penDownLine;
+        penDownLine.setBrush(m_colorDownTail);
+        penDownLine.setWidth(m_nCandleLineWidth);
+        QPen penUpCandle;
+        penUpCandle.setBrush(m_colorUpCandleLine);
+        penUpCandle.setWidth(m_nCandleLineWidth);
+        QPen penDownCandle;
+        penDownCandle.setBrush(m_colorDownCandleLine);
+        penDownCandle.setWidth(m_nCandleLineWidth);
         qvecPolygon.append(rectChart.bottomLeft());
         for (const std::pair<uint32_t, Candle>& pair : m_candlePoints) {
             std::pair<uint32_t, Candle> chartCandle = ConvertToCandlePlotPoint(pair);
@@ -518,6 +525,7 @@ void LineChart::paintEvent(QPaintEvent *event)
                 QPointF pointC = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_close);
                 QRectF rect(pointO, pointC);
                 QBrush rectBrush = m_brushUpCandle;
+                painter.setPen(penUpCandle);
                 painter.drawRect(rect);
                 painter.fillRect(rect, rectBrush);
 
@@ -528,6 +536,7 @@ void LineChart::paintEvent(QPaintEvent *event)
 
                 QLineF HOline(pointH, pointO);
                 QLineF LCline(pointL, pointC);
+                painter.setPen(penUpLine);
                 painter.drawLine(HOline);
                 painter.drawLine(LCline);
             } else {
@@ -535,6 +544,7 @@ void LineChart::paintEvent(QPaintEvent *event)
                 QPointF pointC = QPointF(chartCandle.first - m_rectWidth, chartCandle.second.m_close);
                 QRectF rect(pointO, pointC);
                 QBrush rectBrush = m_brushDownCandle;
+                painter.setPen(penDownCandle);
                 painter.drawRect(rect);
                 painter.fillRect(rect, rectBrush);
 
@@ -545,16 +555,20 @@ void LineChart::paintEvent(QPaintEvent *event)
 
                 QLineF HCline(pointH, pointC);
                 QLineF LOline(pointL, pointO);
+                painter.setPen(penDownLine);
                 painter.drawLine(HCline);
                 painter.drawLine(LOline);
             }
         }
-
         painter.save();
         painter.restore();
     }
 
     // Draw Candlestick Info
+    QPen penLine;
+//    penLine.setBrush(m_brushLine);
+    penLine.setWidth(m_lineWidth);
+    painter.setPen(penLine);
     painter.setFont(m_fontYTitle);
     QString strData;
     uint32_t nTime = ConvertCandlePlotPointTime(lposMouse);
@@ -638,6 +652,7 @@ void LineChart::paintEvent(QPaintEvent *event)
         painter.setFont(m_fontTopTitle);
         QRect rectTopTitle = rectFull;
         rectTopTitle.setBottom(rectFull.top() + HeightTopTitleArea());
+        rectTopTitle.setLeft(2*WidthYTitleArea());
         if (m_fIsLineChart) {
             painter.drawText(rectTopTitle, Qt::AlignCenter, m_strTopTitle);
         } else {
@@ -857,6 +872,23 @@ void LineChart::SetDownCandleBrush(const QBrush &brush)
     m_fChangesMade = true;
 }
 
+
+void LineChart::SetCandleLineColor(const QColor& upColor, const QColor& downColor) {
+    m_colorUpCandleLine = upColor;
+    m_colorDownCandleLine = downColor;
+    if(downColor == QColor()) {
+        m_colorDownCandleLine = upColor;
+    }
+}
+
+void LineChart::SetTailColor(const QColor& upColor, const QColor& downColor) {
+    m_colorUpTail = upColor;
+    m_colorDownTail = downColor;
+    if(downColor == QColor()) {
+        m_colorDownTail = upColor;
+    }
+}
+
 void LineChart::SetBackgroundBrush(const QBrush &brush)
 {
     m_brushBackground = brush;
@@ -880,6 +912,18 @@ void LineChart::SetLineBrush(const QBrush &brush)
 void LineChart::SetLineWidth(int nWidth)
 {
     m_lineWidth = nWidth;
+    m_fChangesMade = true;
+}
+
+void LineChart::SetCandleLineWidth(int nWidth)
+{
+    m_nCandleLineWidth = nWidth;
+    m_fChangesMade = true;
+}
+
+void LineChart::SetCandleWidth(int nWidth)
+{
+    m_rectWidth = nWidth;
     m_fChangesMade = true;
 }
 
