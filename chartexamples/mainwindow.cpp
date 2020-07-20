@@ -125,7 +125,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->spinboxGridlines->setValue(5);
     ui->spinboxLineWidth->setValue(3);
     ui->spinboxCandleWidth->setValue(2);
-    ui->spinboxCandleLineWidth->setValue(1);
+    ui->spinboxCandleLineWidth->setValue(2);
 
     //Crosshairs
     ui->checkboxCrosshairs->setChecked(true);

@@ -502,7 +502,6 @@ void LineChart::paintEvent(QPaintEvent *event)
         QVector<QPointF> qvecPolygon;
         QVector<QLineF> qvecLines;
         QVector<QRectF> qvecRects;
-        painter.save();
         QPen penUpLine;
         penUpLine.setBrush(m_colorUpTail);
         penUpLine.setWidth(m_nCandleLineWidth);
@@ -518,13 +517,11 @@ void LineChart::paintEvent(QPaintEvent *event)
         qvecPolygon.append(rectChart.bottomLeft());
         for (const std::pair<uint32_t, Candle>& pair : m_candlePoints) {
             std::pair<uint32_t, Candle> chartCandle = ConvertToCandlePlotPoint(pair);
-            bool isUpCandle = chartCandle.second.m_close > chartCandle.second.m_open;
-            if (isUpCandle) {
-                QPointF pointO = QPointF(chartCandle.first, chartCandle.second.m_open);
-                QPointF pointC = QPointF(chartCandle.first, chartCandle.second.m_close);
-                QPointF pointH = QPointF(chartCandle.first, chartCandle.second.m_high);
-                QPointF pointL = QPointF(chartCandle.first, chartCandle.second.m_low);
-
+            QPointF pointO = QPointF(chartCandle.first, chartCandle.second.m_open);
+            QPointF pointC = QPointF(chartCandle.first, chartCandle.second.m_close);
+            QPointF pointH = QPointF(chartCandle.first, chartCandle.second.m_high);
+            QPointF pointL = QPointF(chartCandle.first, chartCandle.second.m_low);
+            if (chartCandle.second.m_close > chartCandle.second.m_open) {
                 QLineF HOline(pointH, pointO);
                 QLineF LCline(pointL, pointC);
                 painter.setPen(penUpLine);
@@ -538,13 +535,7 @@ void LineChart::paintEvent(QPaintEvent *event)
                 painter.setPen(penUpCandle);
                 painter.drawRect(rect);
                 painter.fillRect(rect, rectBrush);
-
             } else {
-                QPointF pointO = QPointF(chartCandle.first, chartCandle.second.m_open);
-                QPointF pointC = QPointF(chartCandle.first, chartCandle.second.m_close);
-                QPointF pointH = QPointF(chartCandle.first, chartCandle.second.m_high);
-                QPointF pointL = QPointF(chartCandle.first, chartCandle.second.m_low);
-
                 QLineF HCline(pointH, pointC);
                 QLineF LOline(pointL, pointO);
                 painter.setPen(penDownLine);
