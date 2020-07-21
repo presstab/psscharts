@@ -152,6 +152,7 @@ protected:
     QColor m_colorDownCandleLine;
     QColor m_colorUpTail;
     QColor m_colorDownTail;
+    bool m_fFillCandle;
     bool m_fDrawWick;
     bool m_fDrawOutline;
 
@@ -219,6 +220,7 @@ public:
     void SetTailColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetCandleLineWidth(int nWidth);
     void SetCandleWidth(int nWidth);
+    void EnableCandleFill(bool fEnable);
     void EnableWick(bool fEnable);
     void EnableCandleBorder(bool fEnable);
 };

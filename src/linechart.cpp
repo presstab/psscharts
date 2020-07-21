@@ -540,11 +540,13 @@ void LineChart::paintEvent(QPaintEvent *event)
                 QBrush rectBrush = m_brushUpCandle;
                 if(m_fDrawOutline) {
                     painter.setPen(penUpCandle);
-                } else {
-                    painter.setPen(m_brushUpCandle.color());
+                    painter.drawRect(rect);
                 }
-                painter.drawRect(rect);
-                painter.fillRect(rect, rectBrush);
+                if (m_fFillCandle) {
+                    painter.setPen(m_brushUpCandle.color());
+                    painter.drawRect(rect);
+                    painter.fillRect(rect, rectBrush);
+                }
             } else {
                 if(m_fDrawWick) {
                     QLineF HCline(pointH, pointC);
@@ -559,11 +561,13 @@ void LineChart::paintEvent(QPaintEvent *event)
                 QBrush rectBrush = m_brushDownCandle;
                 if(m_fDrawOutline) {
                     painter.setPen(penDownCandle);
-                } else {
-                    painter.setPen(m_brushDownCandle.color());
+                    painter.drawRect(rect);
                 }
-                painter.drawRect(rect);
-                painter.fillRect(rect, rectBrush);
+                if (m_fFillCandle) {
+                    painter.setPen(m_brushDownCandle.color());
+                    painter.drawRect(rect);
+                    painter.fillRect(rect, rectBrush);
+                }
             }
         }
         painter.save();
@@ -884,7 +888,6 @@ void LineChart::SetDownCandleBrush(const QBrush &brush)
     m_fChangesMade = true;
 }
 
-
 void LineChart::SetCandleLineColor(const QColor& upColor, const QColor& downColor) {
     m_colorUpCandleLine = upColor;
     m_colorDownCandleLine = downColor;
@@ -1167,6 +1170,10 @@ void LineChart::SetRightMargin(int margin)
     m_rightMargin = margin;
 }
 
+void LineChart::EnableCandleFill(bool fEnable)
+{
+    m_fFillCandle = fEnable;
+}
 void LineChart::EnableWick(bool fEnable)
 {
     m_fDrawWick = fEnable;

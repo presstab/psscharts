@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>392</width>
-    <height>795</height>
+    <height>760</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -251,33 +251,37 @@
          </widget>
         </item>
         <item row="14" column="0">
-         <widget class="QLabel" name="label_25">
+         <widget class="QLabel" name="label_26">
           <property name="text">
-           <string>Up Candle Color</string>
+           <string>Candle Body</string>
           </property>
          </widget>
         </item>
         <item row="14" column="1">
-         <widget class="QComboBox" name="comboBoxUpCandleColor"/>
+         <layout class="QHBoxLayout" name="horizontalLayout_11">
+          <item>
+           <widget class="QCheckBox" name="checkBoxCandleFill">
+            <property name="text">
+             <string>Enable</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBoxUpCandleFillColor"/>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBoxDownCandleFillColor"/>
+          </item>
+         </layout>
         </item>
         <item row="15" column="0">
-         <widget class="QLabel" name="label_26">
-          <property name="text">
-           <string>Down Candle Color</string>
-          </property>
-         </widget>
-        </item>
-        <item row="15" column="1">
-         <widget class="QComboBox" name="comboBoxDownCandleColor"/>
-        </item>
-        <item row="16" column="0">
          <widget class="QLabel" name="label_14">
           <property name="text">
            <string>Candle Borders</string>
           </property>
          </widget>
         </item>
-        <item row="16" column="1">
+        <item row="15" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_10">
           <item>
            <widget class="QCheckBox" name="checkBoxBorderColor">
@@ -294,14 +298,14 @@
           </item>
          </layout>
         </item>
-        <item row="17" column="0">
+        <item row="16" column="0">
          <widget class="QLabel" name="label_15">
           <property name="text">
            <string>Candle Wick</string>
           </property>
          </widget>
         </item>
-        <item row="17" column="1">
+        <item row="16" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_9">
           <item>
            <widget class="QCheckBox" name="checkBoxWickColor">
@@ -318,24 +322,24 @@
           </item>
          </layout>
         </item>
-        <item row="18" column="0">
+        <item row="17" column="0">
          <widget class="QLabel" name="label_18">
           <property name="text">
            <string>Line Width</string>
           </property>
          </widget>
         </item>
-        <item row="18" column="1">
+        <item row="17" column="1">
          <widget class="QSpinBox" name="spinboxCandleLineWidth"/>
         </item>
-        <item row="19" column="0">
+        <item row="18" column="0">
          <widget class="QLabel" name="label_17">
           <property name="text">
            <string>Candle Width</string>
           </property>
          </widget>
         </item>
-        <item row="19" column="1">
+        <item row="18" column="1">
          <widget class="QSpinBox" name="spinboxCandleWidth"/>
         </item>
        </layout>
