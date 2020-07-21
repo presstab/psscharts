@@ -148,10 +148,13 @@ protected:
     QColor m_colorDownCandleLine;
     QColor m_colorUpTail;
     QColor m_colorDownTail;
+    QColor m_colorUpDash;
+    QColor m_colorDownDash;
     bool m_fFillCandle;
     bool m_fDrawWick;
     bool m_fDrawOutline;
     bool m_fDisplayOHLC;
+    bool m_fDisplayCandleDash;
     QFont m_fontOHLC;
     QString m_strOHLC;
 
@@ -217,6 +220,7 @@ public:
     void SetDownCandleBrush(const QBrush& brush);
     void SetCandleLineColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetTailColor(const QColor& upColor, const QColor& downColor = QColor());
+    void SetDashColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetCandleLineWidth(int nWidth);
     void SetCandleWidth(int nWidth);
     void EnableCandleFill(bool fEnable);
@@ -224,6 +228,7 @@ public:
     void EnableCandleBorder(bool fEnable);
     void SetOLHCFont(const QFont &font);
     void EnableOHLCDisplay(bool fEnable);
+    void EnableCandleDash(bool fEnable);
 };
 
 } //namespace

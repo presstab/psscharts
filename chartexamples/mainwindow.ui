@@ -322,34 +322,34 @@
           </item>
          </layout>
         </item>
-        <item row="18" column="0">
+        <item row="19" column="0">
          <widget class="QLabel" name="label_18">
           <property name="text">
            <string>Line Width</string>
           </property>
          </widget>
         </item>
-        <item row="18" column="1">
+        <item row="19" column="1">
          <widget class="QSpinBox" name="spinboxCandleLineWidth"/>
         </item>
-        <item row="19" column="0">
+        <item row="20" column="0">
          <widget class="QLabel" name="label_17">
           <property name="text">
            <string>Candle Width</string>
           </property>
          </widget>
         </item>
-        <item row="19" column="1">
+        <item row="20" column="1">
          <widget class="QSpinBox" name="spinboxCandleWidth"/>
         </item>
-        <item row="17" column="0">
+        <item row="18" column="0">
          <widget class="QLabel" name="label_13">
           <property name="text">
            <string>OHLC Display</string>
           </property>
          </widget>
         </item>
-        <item row="17" column="1">
+        <item row="18" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_12">
           <item>
            <widget class="QCheckBox" name="checkBoxOHLCDisplay">
@@ -380,6 +380,30 @@
              <string>bold</string>
             </property>
            </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="17" column="0">
+         <widget class="QLabel" name="label_16">
+          <property name="text">
+           <string>Candle Dash</string>
+          </property>
+         </widget>
+        </item>
+        <item row="17" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_13">
+          <item>
+           <widget class="QCheckBox" name="checkboxCandleDash">
+            <property name="text">
+             <string>Enable</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBoxUpCandleDashColor"/>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBoxDownCandleDashColor"/>
           </item>
          </layout>
         </item>

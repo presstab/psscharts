@@ -69,7 +69,7 @@ LineChart::LineChart(QWidget *parent) : QWidget (parent)
     m_rightMargin = -1;
     m_topTitleHeight = -1;
     m_precision = 100000000;
-    m_strOHLC = "O:0\tH:0\tL:0\tC:0";
+    m_strOHLC = "O:0\tH:0\tL:0\tC:0\t0%";
     setMouseTracking(true);
 }
 
@@ -501,76 +501,6 @@ void LineChart::paintEvent(QPaintEvent *event)
         painter.setPen(penLine);
         painter.drawLines(qvecLines);
         painter.restore();
-    } else {
-        //Create the lines that are drawn
-        QVector<QPointF> qvecPolygon;
-        QVector<QLineF> qvecLines;
-        QVector<QRectF> qvecRects;
-        QPen penUpWick;
-        penUpWick.setBrush(m_colorUpTail);
-        penUpWick.setWidth(m_nCandleLineWidth);
-        QPen penDownWick;
-        penDownWick.setBrush(m_colorDownTail);
-        penDownWick.setWidth(m_nCandleLineWidth);
-        QPen penUpOutline;
-        penUpOutline.setBrush(m_colorUpCandleLine);
-        penUpOutline.setWidth(m_nCandleLineWidth);
-        QPen penDownOutline;
-        penDownOutline.setBrush(m_colorDownCandleLine);
-        penDownOutline.setWidth(m_nCandleLineWidth);
-        qvecPolygon.append(rectChart.bottomLeft());
-        for (const std::pair<uint32_t, Candle> pair : m_candlePoints) {
-            std::pair<uint32_t, Candle> chartCandle = ConvertToCandlePlotPoint(pair);
-            QPointF pointO = QPointF(chartCandle.first, chartCandle.second.m_open);
-            QPointF pointC = QPointF(chartCandle.first, chartCandle.second.m_close);
-            QPointF pointH = QPointF(chartCandle.first, chartCandle.second.m_high);
-            QPointF pointL = QPointF(chartCandle.first, chartCandle.second.m_low);
-            if (chartCandle.second.m_close > chartCandle.second.m_open) {
-                if(m_fDrawWick) {
-                    QLineF HOline(pointH, pointO);
-                    QLineF LCline(pointL, pointC);
-                    painter.setPen(penUpWick);
-                    painter.drawLine(HOline);
-                    painter.drawLine(LCline);
-                }
-                pointO = QPointF(chartCandle.first - m_rectWidth, chartCandle.second.m_open);
-                pointC = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_close);
-                QRectF rect(pointO, pointC);
-                QBrush rectBrush = m_brushUpCandle;
-                if(m_fDrawOutline) {
-                    painter.setPen(penUpOutline);
-                    painter.drawRect(rect);
-                }
-                if (m_fFillCandle) {
-                    painter.setPen(m_brushUpCandle.color());
-                    painter.drawRect(rect);
-                    painter.fillRect(rect, rectBrush);
-                }
-            } else {
-                if(m_fDrawWick) {
-                    QLineF HCline(pointH, pointC);
-                    QLineF LOline(pointL, pointO);
-                    painter.setPen(penDownWick);
-                    painter.drawLine(HCline);
-                    painter.drawLine(LOline);
-                }
-                pointO = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_open);
-                pointC = QPointF(chartCandle.first - m_rectWidth, chartCandle.second.m_close);
-                QRectF rect(pointO, pointC);
-                QBrush rectBrush = m_brushDownCandle;
-                if(m_fDrawOutline) {
-                    painter.setPen(penDownOutline);
-                    painter.drawRect(rect);
-                }
-                if (m_fFillCandle) {
-                    painter.setPen(m_brushDownCandle.color());
-                    painter.drawRect(rect);
-                    painter.fillRect(rect, rectBrush);
-                }
-            }
-        }
-        painter.save();
-        painter.restore();
     }
 
     // Draw Candlestick Info
@@ -596,7 +526,8 @@ void LineChart::paintEvent(QPaintEvent *event)
                 m_strOHLC = "O:" + QString::number(currentCandle.m_open) + "\t";
                 m_strOHLC += "H:" + QString::number(currentCandle.m_high) + "\t";
                 m_strOHLC += "L:" + QString::number(currentCandle.m_low) + "\t";
-                m_strOHLC += "C:" + QString::number(currentCandle.m_close);
+                m_strOHLC += "C:" + QString::number(currentCandle.m_close) + "\t";
+                m_strOHLC += QString::number((currentCandle.m_close - currentCandle.m_open)/ currentCandle.m_open)+ "%";
             }
         }
         QRect rectInfo = rectFull;
@@ -650,6 +581,100 @@ void LineChart::paintEvent(QPaintEvent *event)
                 DrawXLabels(painter, {lposMouse.x()}, /*drawIndicatorLine*/false);
             }
         }
+    }
+
+    //Draw Candlesticks
+    if (!m_fIsLineChart) {
+        //Create the lines that are drawn
+        QVector<QPointF> qvecPolygon;
+        QVector<QLineF> qvecLines;
+        QVector<QRectF> qvecRects;
+        QPen penUpWick;
+        penUpWick.setBrush(m_colorUpTail);
+        penUpWick.setWidth(m_nCandleLineWidth);
+        QPen penDownWick;
+        penDownWick.setBrush(m_colorDownTail);
+        penDownWick.setWidth(m_nCandleLineWidth);
+        QPen penUpOutline;
+        penUpOutline.setBrush(m_colorUpCandleLine);
+        penUpOutline.setWidth(m_nCandleLineWidth);
+        QPen penDownOutline;
+        penDownOutline.setBrush(m_colorDownCandleLine);
+        penDownOutline.setWidth(m_nCandleLineWidth);
+        QPen penUpDash;
+        penDownOutline.setBrush(m_colorUpDash);
+        penDownOutline.setWidth(m_nCandleLineWidth);
+        QPen penDownDash;
+        penDownOutline.setBrush(m_colorDownDash);
+        penDownOutline.setWidth(m_nCandleLineWidth);
+        for (const std::pair<uint32_t, Candle> pair : m_candlePoints) {
+            std::pair<uint32_t, Candle> chartCandle = ConvertToCandlePlotPoint(pair);
+            QPointF pointO = QPointF(chartCandle.first, chartCandle.second.m_open);
+            QPointF pointC = QPointF(chartCandle.first, chartCandle.second.m_close);
+            QPointF pointH = QPointF(chartCandle.first, chartCandle.second.m_high);
+            QPointF pointL = QPointF(chartCandle.first, chartCandle.second.m_low);
+            if (chartCandle.second.m_close > chartCandle.second.m_open) {
+                if(m_fDrawWick) {
+                    QLineF HOline(pointH, pointO);
+                    QLineF LCline(pointL, pointC);
+                    painter.setPen(penUpWick);
+                    painter.drawLine(HOline);
+                    painter.drawLine(LCline);
+                }
+                if(m_fDisplayCandleDash) {
+                    QLineF Highline(QPointF(chartCandle.first - m_rectWidth, chartCandle.second.m_high), QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_high));
+                    QLineF Lowline(QPointF(chartCandle.first - m_rectWidth, chartCandle.second.m_low), QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_low));
+                    painter.setPen(penUpDash);
+                    painter.drawLine(Highline);
+                    painter.drawLine(Lowline);
+                }
+                pointO = QPointF(chartCandle.first - m_rectWidth, chartCandle.second.m_open);
+                pointC = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_close);
+                QRectF rect(pointO, pointC);
+                QBrush rectBrush = m_brushUpCandle;
+                if(m_fDrawOutline) {
+                    painter.setPen(penUpOutline);
+                    painter.drawRect(rect);
+                    painter.fillRect(rect, m_brushBackground);
+                }
+                if (m_fFillCandle) {
+                    painter.setPen(m_brushUpCandle.color());
+                    painter.drawRect(rect);
+                    painter.fillRect(rect, rectBrush);
+                }
+            } else {
+                if(m_fDrawWick) {
+                    QLineF HCline(pointH, pointC);
+                    QLineF LOline(pointL, pointO);
+                    painter.setPen(penDownWick);
+                    painter.drawLine(HCline);
+                    painter.drawLine(LOline);
+                }
+                if(m_fDisplayCandleDash) {
+                    QLineF Highline(QPointF(chartCandle.first - m_rectWidth, chartCandle.second.m_high), QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_high));
+                    QLineF Lowline(QPointF(chartCandle.first - m_rectWidth, chartCandle.second.m_low), QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_low));
+                    painter.setPen(penDownDash);
+                    painter.drawLine(Highline);
+                    painter.drawLine(Lowline);
+                }
+                pointO = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_open);
+                pointC = QPointF(chartCandle.first - m_rectWidth, chartCandle.second.m_close);
+                QRectF rect(pointO, pointC);
+                QBrush rectBrush = m_brushDownCandle;
+                if(m_fDrawOutline) {
+                    painter.setPen(penDownOutline);
+                    painter.drawRect(rect);
+                    painter.fillRect(rect, m_brushBackground);
+                }
+                if (m_fFillCandle) {
+                    painter.setPen(m_brushDownCandle.color());
+                    painter.drawRect(rect);
+                    painter.fillRect(rect, rectBrush);
+                }
+            }
+        }
+        painter.save();
+        painter.restore();
     }
 
     //Draw axis
@@ -903,6 +928,14 @@ void LineChart::SetTailColor(const QColor& upColor, const QColor& downColor) {
     m_colorDownTail = downColor;
     if(downColor == QColor()) {
         m_colorDownTail = upColor;
+    }
+}
+
+void LineChart::SetDashColor(const QColor& upColor, const QColor& downColor) {
+    m_colorUpDash = upColor;
+    m_colorDownDash = downColor;
+    if(downColor == QColor()) {
+        m_colorDownDash = upColor;
     }
 }
 
@@ -1197,5 +1230,10 @@ void LineChart::EnableCandleBorder(bool fEnable)
 void LineChart::EnableOHLCDisplay(bool fEnable)
 {
     m_fDisplayOHLC = fEnable;
+}
+
+void LineChart::EnableCandleDash(bool fEnable)
+{
+    m_fDisplayCandleDash = fEnable;
 }
 }//namespace
