@@ -62,6 +62,7 @@ LineChart::LineChart(QWidget *parent) : QWidget (parent)
 
     m_axisSections = 0;
     m_yPadding = 0;
+    m_xPadding = 2;
     m_fEnableFill = true;
     m_fChangesMade = true;
     m_fIsLineChart = false;
@@ -148,6 +149,12 @@ std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const
         //that does not get drawn in. It makes it so the lines don't go right onto the edges.
         rectChart.setBottom(rectChart.bottom() - m_yPadding);
         rectChart.setTop(rectChart.top() + m_yPadding);
+    }
+    if (m_xPadding > 0) {
+        //X padding will make it so that there is an area on the left and right of the ChartArea
+        //that does not get drawn in. It makes it so the lines don't go right onto the edges.
+        rectChart.setLeft(rectChart.left() + m_xPadding);
+        rectChart.setRight(rectChart.right() - m_xPadding);
     }
 
     //compute point-value of X
@@ -363,8 +370,6 @@ void LineChart::ProcessChangedData()
         }
         m_pairYRange.first = 0;
         m_pairYRange.second = 1;
-//        m_pairXRange.first -= m_rectWidth;
-//        m_pairXRange.second += m_rectWidth;
         m_fChangesMade = true;
     }
 }
@@ -522,31 +527,41 @@ void LineChart::paintEvent(QPaintEvent *event)
             QPointF pointH = QPointF(chartCandle.first, chartCandle.second.m_high);
             QPointF pointL = QPointF(chartCandle.first, chartCandle.second.m_low);
             if (chartCandle.second.m_close > chartCandle.second.m_open) {
-                QLineF HOline(pointH, pointO);
-                QLineF LCline(pointL, pointC);
-                painter.setPen(penUpLine);
-                painter.drawLine(HOline);
-                painter.drawLine(LCline);
-
+                if(m_fDrawWick) {
+                    QLineF HOline(pointH, pointO);
+                    QLineF LCline(pointL, pointC);
+                    painter.setPen(penUpLine);
+                    painter.drawLine(HOline);
+                    painter.drawLine(LCline);
+                }
                 pointO = QPointF(chartCandle.first - m_rectWidth, chartCandle.second.m_open);
                 pointC = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_close);
                 QRectF rect(pointO, pointC);
                 QBrush rectBrush = m_brushUpCandle;
-                painter.setPen(penUpCandle);
+                if(m_fDrawOutline) {
+                    painter.setPen(penUpCandle);
+                } else {
+                    painter.setPen(m_brushUpCandle.color());
+                }
                 painter.drawRect(rect);
                 painter.fillRect(rect, rectBrush);
             } else {
-                QLineF HCline(pointH, pointC);
-                QLineF LOline(pointL, pointO);
-                painter.setPen(penDownLine);
-                painter.drawLine(HCline);
-                painter.drawLine(LOline);
-
+                if(m_fDrawWick) {
+                    QLineF HCline(pointH, pointC);
+                    QLineF LOline(pointL, pointO);
+                    painter.setPen(penDownLine);
+                    painter.drawLine(HCline);
+                    painter.drawLine(LOline);
+                }
                 pointO = QPointF(chartCandle.first + m_rectWidth, chartCandle.second.m_open);
                 pointC = QPointF(chartCandle.first - m_rectWidth, chartCandle.second.m_close);
                 QRectF rect(pointO, pointC);
                 QBrush rectBrush = m_brushDownCandle;
-                painter.setPen(penDownCandle);
+                if(m_fDrawOutline) {
+                    painter.setPen(penDownCandle);
+                } else {
+                    painter.setPen(m_brushDownCandle.color());
+                }
                 painter.drawRect(rect);
                 painter.fillRect(rect, rectBrush);
             }
@@ -1111,6 +1126,11 @@ void LineChart::SetYPadding(int nPadding)
     m_yPadding = nPadding;
 }
 
+void LineChart::SetXPadding(int nPadding)
+{
+    m_xPadding = nPadding;
+}
+
 void LineChart::SetAxisLabelsBrush(const QBrush& brush)
 {
     m_brushLabels = brush;
@@ -1147,4 +1167,13 @@ void LineChart::SetRightMargin(int margin)
     m_rightMargin = margin;
 }
 
+void LineChart::EnableWick(bool fEnable)
+{
+    m_fDrawWick = fEnable;
+}
+
+void LineChart::EnableCandleBorder(bool fEnable)
+{
+    m_fDrawOutline = fEnable;
+}
 }//namespace

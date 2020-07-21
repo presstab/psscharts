@@ -123,9 +123,9 @@ protected:
 
     bool m_fDrawXAxis;
     bool m_fDrawYAxis;
-    bool m_fIsLineChart;
 
     int m_yPadding;
+    int m_xPadding;
     int m_rightMargin;
     int m_topTitleHeight;
 
@@ -145,12 +145,15 @@ protected:
     void ProcessChangedData();
 
     //Candlestick stuff
+    bool m_fIsLineChart;
     double m_rectWidth;
     int m_nCandleLineWidth;
     QColor m_colorUpCandleLine;
     QColor m_colorDownCandleLine;
     QColor m_colorUpTail;
     QColor m_colorDownTail;
+    bool m_fDrawWick;
+    bool m_fDrawOutline;
 
 public:
     LineChart(QWidget* parent = nullptr);
@@ -180,6 +183,7 @@ public:
     void SetLabelPrecision(int precision);
     void SetLabelAutoPrecision(bool fEnable);
     void SetYPadding(int nPadding);
+    void SetXPadding(int nPadding);
     void SetYTitle(const QString& strTitle);
     void SetYTitleFont(const QFont& font);
     void SetAxisOnOff(bool fDrawX, bool fDrawY);
@@ -215,6 +219,8 @@ public:
     void SetTailColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetCandleLineWidth(int nWidth);
     void SetCandleWidth(int nWidth);
+    void EnableWick(bool fEnable);
+    void EnableCandleBorder(bool fEnable);
 };
 
 } //namespace

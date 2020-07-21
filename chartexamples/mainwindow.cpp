@@ -89,17 +89,17 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBoxDownCandleColor->addItems(listQtColors);
     ui->comboBoxDownCandleColor->setCurrentIndex(5); //red
 
-    ui->comboBoxUpLineColor->addItems(listQtColors);
-    ui->comboBoxUpLineColor->setCurrentIndex(14); //dark cyan
+    ui->checkBoxBorderColor->setChecked(true);
+    ui->comboBoxUpBorderColor->addItems(listQtColors);
+    ui->comboBoxUpBorderColor->setCurrentIndex(14); //dark cyan
+    ui->comboBoxDownBorderColor->addItems(listQtColors);
+    ui->comboBoxDownBorderColor->setCurrentIndex(16); //dark yellow
 
-    ui->comboBoxDownLineColor->addItems(listQtColors);
-    ui->comboBoxDownLineColor->setCurrentIndex(16); //dark yellow
-
-    ui->comboBoxUpTailColor->addItems(listQtColors);
-    ui->comboBoxUpTailColor->setCurrentIndex(12); //dark green
-
-    ui->comboBoxDownTailColor->addItems(listQtColors);
-    ui->comboBoxDownTailColor->setCurrentIndex(11); //dark red
+    ui->checkBoxWickColor->setChecked(true);
+    ui->comboBoxUpWickColor->addItems(listQtColors);
+    ui->comboBoxUpWickColor->setCurrentIndex(12); //dark green
+    ui->comboBoxDownWickColor->addItems(listQtColors);
+    ui->comboBoxDownWickColor->setCurrentIndex(11); //dark red
 
     //Chart Title
     ui->lineeditChartTitle->setText("PssCharts");
@@ -194,6 +194,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->checkboxChartTitleBold, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkboxYTitleBold, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkboxCrosshairs, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkBoxWickColor, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkBoxBorderColor, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+
     connect(ui->comboboxChartFillColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxBgColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxLineColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
@@ -201,10 +204,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->comboBoxChartType, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboBoxUpCandleColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboBoxDownCandleColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
-    connect(ui->comboBoxUpLineColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
-    connect(ui->comboBoxDownLineColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
-    connect(ui->comboBoxUpTailColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
-    connect(ui->comboBoxDownTailColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboBoxUpWickColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboBoxDownWickColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboBoxUpBorderColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboBoxDownBorderColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
 
     connect(ui->spinboxGridlines, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
@@ -258,12 +261,12 @@ void MainWindow::RedrawChart()
     QColor DownCandleColor = static_cast<Qt::GlobalColor>(ui->comboBoxDownCandleColor->currentIndex()+2);
     m_chart->SetDownCandleBrush(QBrush(DownCandleColor));
 
-    QColor UpLineColor = static_cast<Qt::GlobalColor>(ui->comboBoxUpLineColor->currentIndex()+2);
-    QColor DownLineColor = static_cast<Qt::GlobalColor>(ui->comboBoxDownLineColor->currentIndex()+2);
-    m_chart->SetCandleLineColor(UpLineColor, DownLineColor);
-    QColor UpTailColor = static_cast<Qt::GlobalColor>(ui->comboBoxUpTailColor->currentIndex()+2);
-    QColor DownTailColor = static_cast<Qt::GlobalColor>(ui->comboBoxDownTailColor->currentIndex()+2);
-    m_chart->SetTailColor(UpTailColor, DownTailColor);
+    QColor UpBorderColor = static_cast<Qt::GlobalColor>(ui->comboBoxUpBorderColor->currentIndex()+2);
+    QColor DownBorderColor = static_cast<Qt::GlobalColor>(ui->comboBoxDownBorderColor->currentIndex()+2);
+    m_chart->SetCandleLineColor(UpBorderColor, DownBorderColor);
+    QColor UpWickColor = static_cast<Qt::GlobalColor>(ui->comboBoxUpWickColor->currentIndex()+2);
+    QColor DownWickColor = static_cast<Qt::GlobalColor>(ui->comboBoxDownWickColor->currentIndex()+2);
+    m_chart->SetTailColor(UpWickColor, DownWickColor);
     m_chart->SetCandleLineWidth(ui->spinboxCandleLineWidth->value());
     m_chart->SetCandleWidth(ui->spinboxCandleWidth->value());
 
@@ -276,6 +279,9 @@ void MainWindow::RedrawChart()
     m_chart->SetLineWidth(ui->spinboxLineWidth->value());
     QColor colorLine = static_cast<Qt::GlobalColor>(ui->comboboxLineColor->currentIndex()+2);
     m_chart->SetLineBrush(colorLine);
+
+    m_chart->EnableWick(ui->checkBoxWickColor->checkState() == Qt::Checked);
+    m_chart->EnableCandleBorder(ui->checkBoxBorderColor->checkState() == Qt::Checked);
 
     //Mouse Display
     m_chart->EnableMouseDisplay(ui->checkboxCrosshairs->isChecked());
