@@ -69,7 +69,7 @@ LineChart::LineChart(QWidget *parent) : QWidget (parent)
     m_rightMargin = -1;
     m_topTitleHeight = -1;
     m_precision = 100000000;
-    m_strOHLC = "O:n/a\tH:n/a\tL:n/a\tC:n/a";
+    m_strOHLC = "O:0\tH:0\tL:0\tC:0";
     setMouseTracking(true);
 }
 
@@ -574,7 +574,7 @@ void LineChart::paintEvent(QPaintEvent *event)
     }
 
     // Draw Candlestick Info
-    if (m_fDisplayOHLC) {
+    if (m_fDisplayOHLC && !m_fIsLineChart) {
         QPen penLine;
         penLine.setBrush(m_brushLine);
         penLine.setWidth(m_lineWidth);
