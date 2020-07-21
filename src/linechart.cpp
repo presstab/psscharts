@@ -62,14 +62,14 @@ LineChart::LineChart(QWidget *parent) : QWidget (parent)
 
     m_axisSections = 0;
     m_yPadding = 0;
-    m_xPadding = 2;
+    m_xPadding = 5;
     m_fEnableFill = true;
     m_fChangesMade = true;
     m_fIsLineChart = false;
     m_rightMargin = -1;
     m_topTitleHeight = -1;
     m_precision = 100000000;
-
+    m_strOHLC = "O:n/a\tH:n/a\tL:n/a\tC:n/a";
     setMouseTracking(true);
 }
 
@@ -154,7 +154,6 @@ std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const
         //X padding will make it so that there is an area on the left and right of the ChartArea
         //that does not get drawn in. It makes it so the lines don't go right onto the edges.
         rectChart.setLeft(rectChart.left() + m_xPadding);
-        rectChart.setRight(rectChart.right() - m_xPadding);
     }
 
     //compute point-value of X
@@ -221,7 +220,7 @@ std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const
         dValueClose /= nSpanClose;
         dValueClose = rectChart.bottom() - dValueClose; // Qt uses inverted Y axis
     }
-    return std::pair<uint32_t, PssCharts::Candle>(nValueX, Candle(dValueHigh, dValueLow, dValueOpen, dValueClose));
+    return std::pair<uint32_t, PssCharts::Candle>(nValueX, Candle(dValueOpen, dValueHigh, dValueLow, dValueClose));
 }
 
 /**
@@ -507,20 +506,20 @@ void LineChart::paintEvent(QPaintEvent *event)
         QVector<QPointF> qvecPolygon;
         QVector<QLineF> qvecLines;
         QVector<QRectF> qvecRects;
-        QPen penUpLine;
-        penUpLine.setBrush(m_colorUpTail);
-        penUpLine.setWidth(m_nCandleLineWidth);
-        QPen penDownLine;
-        penDownLine.setBrush(m_colorDownTail);
-        penDownLine.setWidth(m_nCandleLineWidth);
-        QPen penUpCandle;
-        penUpCandle.setBrush(m_colorUpCandleLine);
-        penUpCandle.setWidth(m_nCandleLineWidth);
-        QPen penDownCandle;
-        penDownCandle.setBrush(m_colorDownCandleLine);
-        penDownCandle.setWidth(m_nCandleLineWidth);
+        QPen penUpWick;
+        penUpWick.setBrush(m_colorUpTail);
+        penUpWick.setWidth(m_nCandleLineWidth);
+        QPen penDownWick;
+        penDownWick.setBrush(m_colorDownTail);
+        penDownWick.setWidth(m_nCandleLineWidth);
+        QPen penUpOutline;
+        penUpOutline.setBrush(m_colorUpCandleLine);
+        penUpOutline.setWidth(m_nCandleLineWidth);
+        QPen penDownOutline;
+        penDownOutline.setBrush(m_colorDownCandleLine);
+        penDownOutline.setWidth(m_nCandleLineWidth);
         qvecPolygon.append(rectChart.bottomLeft());
-        for (const std::pair<uint32_t, Candle>& pair : m_candlePoints) {
+        for (const std::pair<uint32_t, Candle> pair : m_candlePoints) {
             std::pair<uint32_t, Candle> chartCandle = ConvertToCandlePlotPoint(pair);
             QPointF pointO = QPointF(chartCandle.first, chartCandle.second.m_open);
             QPointF pointC = QPointF(chartCandle.first, chartCandle.second.m_close);
@@ -530,7 +529,7 @@ void LineChart::paintEvent(QPaintEvent *event)
                 if(m_fDrawWick) {
                     QLineF HOline(pointH, pointO);
                     QLineF LCline(pointL, pointC);
-                    painter.setPen(penUpLine);
+                    painter.setPen(penUpWick);
                     painter.drawLine(HOline);
                     painter.drawLine(LCline);
                 }
@@ -539,7 +538,7 @@ void LineChart::paintEvent(QPaintEvent *event)
                 QRectF rect(pointO, pointC);
                 QBrush rectBrush = m_brushUpCandle;
                 if(m_fDrawOutline) {
-                    painter.setPen(penUpCandle);
+                    painter.setPen(penUpOutline);
                     painter.drawRect(rect);
                 }
                 if (m_fFillCandle) {
@@ -551,7 +550,7 @@ void LineChart::paintEvent(QPaintEvent *event)
                 if(m_fDrawWick) {
                     QLineF HCline(pointH, pointC);
                     QLineF LOline(pointL, pointO);
-                    painter.setPen(penDownLine);
+                    painter.setPen(penDownWick);
                     painter.drawLine(HCline);
                     painter.drawLine(LOline);
                 }
@@ -560,7 +559,7 @@ void LineChart::paintEvent(QPaintEvent *event)
                 QRectF rect(pointO, pointC);
                 QBrush rectBrush = m_brushDownCandle;
                 if(m_fDrawOutline) {
-                    painter.setPen(penDownCandle);
+                    painter.setPen(penDownOutline);
                     painter.drawRect(rect);
                 }
                 if (m_fFillCandle) {
@@ -575,32 +574,35 @@ void LineChart::paintEvent(QPaintEvent *event)
     }
 
     // Draw Candlestick Info
-    QPen penLine;
-    penLine.setBrush(m_brushLine);
-    penLine.setWidth(m_lineWidth);
-    painter.setPen(penLine);
-    painter.setFont(m_fontYTitle);
-    QString strData;
-    uint32_t nTime = ConvertCandlePlotPointTime(lposMouse);
-    std::map<uint32_t, Candle>::iterator candleUpper = m_candlePoints.upper_bound(nTime);
-    std::map<uint32_t, Candle>::iterator candleLower = m_candlePoints.lower_bound(nTime);
-    int upperDist = std::labs((int)candleUpper->first - (int)nTime);
-    int lowerDist = std::labs((int)candleLower->first - (int)nTime);
-    Candle currentCandle;
-    if (upperDist > lowerDist) {
-        currentCandle = candleLower->second;
-    } else {
-        currentCandle = candleUpper->second;
+    if (m_fDisplayOHLC) {
+        QPen penLine;
+        penLine.setBrush(m_brushLine);
+        penLine.setWidth(m_lineWidth);
+        painter.setPen(penLine);
+        painter.setFont(m_fontOHLC);
+        if(fMouseInChartArea) {
+            uint32_t nTime = ConvertCandlePlotPointTime(lposMouse);
+            std::map<uint32_t, Candle>::iterator candleUpper = m_candlePoints.upper_bound(nTime);
+            std::map<uint32_t, Candle>::iterator candleLower = m_candlePoints.lower_bound(nTime);
+            int upperDist = std::labs((int)candleUpper->first - (int)nTime);
+            int lowerDist = std::labs((int)candleLower->first - (int)nTime);
+            Candle currentCandle;
+            if (upperDist > lowerDist) {
+                currentCandle = candleLower->second;
+            } else {
+                currentCandle = candleUpper->second;
+            }
+            if (fMouseInChartArea) {
+                m_strOHLC = "O:" + QString::number(currentCandle.m_open) + "\t";
+                m_strOHLC += "H:" + QString::number(currentCandle.m_high) + "\t";
+                m_strOHLC += "L:" + QString::number(currentCandle.m_low) + "\t";
+                m_strOHLC += "C:" + QString::number(currentCandle.m_close);
+            }
+        }
+        QRect rectInfo = rectFull;
+        rectInfo.setBottom(rectFull.top() + HeightTopTitleArea());
+        painter.drawText(rectInfo, Qt::AlignRight, m_strOHLC);
     }
-    if (fMouseInChartArea) {
-        strData += "O:" + QString::number(currentCandle.m_open) + "\t";
-        strData += "H:" + QString::number(currentCandle.m_high) + "\t";
-        strData += "L:" + QString::number(currentCandle.m_low) + "\t";
-        strData += "C:" + QString::number(currentCandle.m_close);
-    }
-    QRect rectInfo = rectFull;
-    rectInfo.setBottom(rectFull.top() + HeightTopTitleArea());
-    painter.drawText(rectInfo, Qt::AlignRight, strData);
 
     //Draw axis sections next so that they get covered up by chart fill
     if (m_axisSections > 0) {
@@ -939,6 +941,7 @@ void LineChart::SetCandleLineWidth(int nWidth)
 void LineChart::SetCandleWidth(int nWidth)
 {
     m_rectWidth = nWidth;
+//    m_xPadding = 2 * nWidth;
     m_fChangesMade = true;
 }
 
@@ -980,6 +983,12 @@ void LineChart::SetYTitle(const QString &strTitle)
 void LineChart::SetYTitleFont(const QFont &font)
 {
     m_fontYTitle = font;
+    m_fChangesMade = true;
+}
+
+void LineChart::SetOLHCFont(const QFont &font)
+{
+    m_fontOHLC = font;
     m_fChangesMade = true;
 }
 
@@ -1174,6 +1183,7 @@ void LineChart::EnableCandleFill(bool fEnable)
 {
     m_fFillCandle = fEnable;
 }
+
 void LineChart::EnableWick(bool fEnable)
 {
     m_fDrawWick = fEnable;
@@ -1182,5 +1192,10 @@ void LineChart::EnableWick(bool fEnable)
 void LineChart::EnableCandleBorder(bool fEnable)
 {
     m_fDrawOutline = fEnable;
+}
+
+void LineChart::EnableOHLCDisplay(bool fEnable)
+{
+    m_fDisplayOHLC = fEnable;
 }
 }//namespace

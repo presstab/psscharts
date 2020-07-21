@@ -114,6 +114,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->checkboxDrawXTitle->setChecked(true);
     ui->checkboxDrawYTitle->setChecked(true);
 
+    // OHLC Display
+    ui->spinboxOHLCFontSize->setValue(12);
+    ui->checkBoxOHLCDisplay->setCheckState(Qt::Checked);
+
     //Axis gridlines
     ui->checkboxDrawXAxisLine->setChecked(true);
     ui->checkBoxDrawYAxisLine->setChecked(true);
@@ -159,7 +163,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
         double open = (QRandomGenerator::global()->generateDouble() * (high-low)) + low;
         double close = (QRandomGenerator::global()->generateDouble() * (high-low)) + low;
-        mapCandlePoints.emplace(i*(60*60*24), PssCharts::Candle(high, low, open, close));
+        mapCandlePoints.emplace(i*(60*60*24), PssCharts::Candle(open, high, low, close));
     }
     m_chart->SetCandleDataPoints(mapCandlePoints);
 
@@ -197,6 +201,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->checkBoxWickColor, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkBoxBorderColor, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkBoxCandleFill, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkboxOHLCBold, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkBoxOHLCDisplay, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
 
     connect(ui->comboboxChartFillColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxBgColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
@@ -218,6 +224,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->spinboxCrosshairWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxCandleWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxCandleLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
+    connect(ui->spinboxOHLCFontSize, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
 }
 
 MainWindow::~MainWindow()
@@ -243,6 +250,13 @@ void MainWindow::RedrawChart()
     fontYTitle.setPointSize(ui->spinboxYTitleFontSize->value());
     fontYTitle.setBold(ui->checkboxYTitleBold->isChecked());
     m_chart->SetYTitleFont(fontYTitle);
+
+    //OHLC Display
+    m_chart->EnableOHLCDisplay(ui->checkBoxOHLCDisplay->checkState() == Qt::Checked);
+    QFont fontOHLC;
+    fontOHLC.setPointSize(ui->spinboxOHLCFontSize->value());
+    fontOHLC.setBold(ui->checkboxOHLCBold->isChecked());
+    m_chart->SetOLHCFont(fontOHLC);
 
     //Axis Labels
     m_chart->SetLabelPrecision(ui->spinboxYLabelPrecision->value());

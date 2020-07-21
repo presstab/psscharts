@@ -53,15 +53,11 @@ struct Candle {
         m_low = 0;
         m_close = 0;
     }
-    Candle(double high, double low, double open, double close) {
+    Candle(double open, double high, double low, double close) {
         m_open = open;
         m_high = high;
         m_low = low;
         m_close = close;
-    }
-public:
-    bool isNull() {
-        return this->m_open == 0 && this->m_high == 0 && this->m_low == 0 && this->m_close == 0;
     }
 };
 
@@ -155,6 +151,9 @@ protected:
     bool m_fFillCandle;
     bool m_fDrawWick;
     bool m_fDrawOutline;
+    bool m_fDisplayOHLC;
+    QFont m_fontOHLC;
+    QString m_strOHLC;
 
 public:
     LineChart(QWidget* parent = nullptr);
@@ -223,6 +222,8 @@ public:
     void EnableCandleFill(bool fEnable);
     void EnableWick(bool fEnable);
     void EnableCandleBorder(bool fEnable);
+    void SetOLHCFont(const QFont &font);
+    void EnableOHLCDisplay(bool fEnable);
 };
 
 } //namespace
