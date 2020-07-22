@@ -145,31 +145,29 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Generate some data points to fill the chart
     std::map<uint32_t, PssCharts::Candle> mapCandlePoints;
-    double nLastHigh = 0;
-    double nLastLow = 0;
+    PssCharts::Candle candlePrev;
     for (auto i = 0; i < 100; i++) {
-        double r1 = QRandomGenerator::global()->generateDouble();
-        double r2 = QRandomGenerator::global()->generateDouble();
-        double high = std::max(r1, r2);
-        double low = std::min(r1, r2);
-        if (nLastLow > 0) {
-            double nPercentChange = (low - nLastLow) / nLastLow;
-            if (nPercentChange > 0.3)
-                low = nLastLow*1.3;
-            if (nPercentChange < -0.3)
-                low = nLastLow*0.7;
+        double nMax = candlePrev.m_high > 0 ? candlePrev.m_high * 1.3 : 0.5;
+        double high = QRandomGenerator::global()->bounded(nMax);
+        double nMax_min = candlePrev.m_close * 0.7;
+        if (high < nMax_min) {
+            high = nMax_min + QRandomGenerator::global()->bounded(nMax - nMax_min);
         }
-        if (nLastHigh > 0) {
-            double nPercentChange = (high - nLastHigh) / nLastHigh;
-            if (nPercentChange > 0.3)
-                high = nLastHigh*1.3;
-            if (nPercentChange < -0.3)
-                high = nLastHigh*0.7;
+        double low = QRandomGenerator::global()->bounded(high);
+        if (low < high * 0.7) {
+            low = high * 0.7;
         }
-
-        double open = (QRandomGenerator::global()->generateDouble() * (high-low)) + low;
-        double close = (QRandomGenerator::global()->generateDouble() * (high-low)) + low;
-        mapCandlePoints.emplace(i*(60*60*24), PssCharts::Candle(open, high, low, close));
+        double open = QRandomGenerator::global()->bounded(high);
+        if (!qFuzzyCompare(candlePrev.m_close, 0)) {
+            open = candlePrev.m_close;
+        }
+        double close = QRandomGenerator::global()->bounded(high);
+        if (close < low) {
+            close = low + QRandomGenerator::global()->bounded(high-(high*0.3));
+        }
+        PssCharts::Candle candle(open, high, low, close);
+        mapCandlePoints.emplace(i*(60*60*24), candle);
+        candlePrev = candle;
     }
     m_chart->SetCandleDataPoints(mapCandlePoints);
 

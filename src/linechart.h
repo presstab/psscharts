@@ -54,10 +54,21 @@ struct Candle {
         m_close = 0;
     }
     Candle(double open, double high, double low, double close) {
+        double max = std::max(std::max(open, high), std::max(low, close));
+        double min = std::min(std::min(open, high), std::min(low, close));
+        if (high != max) {
+            throw "High is not the maximum value";
+        }
+        if (min != low) {
+            throw "Low is not the minimum value";
+        }
         m_open = open;
         m_high = high;
         m_low = low;
         m_close = close;
+    }
+    bool isNull() {
+        return this->m_low == 0.0 && this->m_high == 0.0 && this->m_low == 0.0 && this->m_close == 0.0;
     }
 };
 
@@ -91,8 +102,6 @@ protected:
     std::pair<double, double> m_pairXRange; // min, max
     QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair) const;
     std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point);
-    std::pair<uint32_t, Candle> ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle>& pair) const;
-    uint32_t ConvertCandlePlotPointTime(const QPointF& point);
     QBrush m_brushBackground;
     QBrush m_brushLine;
     QBrush m_brushFill;
@@ -119,7 +128,6 @@ protected:
     bool m_fDrawYAxis;
 
     int m_yPadding;
-    int m_xPadding;
     int m_rightMargin;
     int m_topTitleHeight;
 
@@ -140,7 +148,7 @@ protected:
 
     //Candlestick stuff
     bool m_fIsLineChart;
-    double m_rectWidth;
+    double m_candleWidth;
     int m_nCandleLineWidth;
     QColor m_colorUpCandle;
     QColor m_colorDownCandle;
@@ -157,6 +165,10 @@ protected:
     bool m_fDisplayCandleDash;
     QFont m_fontOHLC;
     QString m_strOHLC;
+    int m_nCandleSpacing;
+    int m_nCandles;
+    uint32_t m_nMinTime;
+    uint32_t m_nMaxTime;
 
 public:
     LineChart(QWidget* parent = nullptr);
@@ -228,6 +240,8 @@ public:
     void SetOLHCFont(const QFont &font);
     void EnableOHLCDisplay(bool fEnable);
     void EnableCandleDash(bool fEnable);
+    std::pair<uint32_t, Candle> ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle>& pair);
+    uint32_t ConvertCandlePlotPointTime(const QPointF& point);
 };
 
 } //namespace
