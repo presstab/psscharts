@@ -54,12 +54,10 @@ struct Candle {
         m_close = 0;
     }
     Candle(double open, double high, double low, double close) {
-        double max = std::max(std::max(open, high), std::max(low, close));
-        double min = std::min(std::min(open, high), std::min(low, close));
-        if (high != max) {
+        if (high < std::max(open, low, close)) {
             throw "High is not the maximum value";
         }
-        if (min != low) {
+        if (low > std::min(open, high, close)) {
             throw "Low is not the minimum value";
         }
         m_open = open;
