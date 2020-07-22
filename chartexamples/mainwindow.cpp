@@ -157,14 +157,8 @@ MainWindow::MainWindow(QWidget *parent) :
         if (low < high * 0.7) {
             low = high * 0.7;
         }
-        double open = QRandomGenerator::global()->bounded(high);
-        if (!qFuzzyCompare(candlePrev.m_close, 0)) {
-            open = candlePrev.m_close;
-        }
-        double close = QRandomGenerator::global()->bounded(high);
-        if (close < low) {
-            close = low + QRandomGenerator::global()->bounded(high-(high*0.3));
-        }
+        double open = (QRandomGenerator::global()->generateDouble() * (high-low)) + low;
+        double close = (QRandomGenerator::global()->generateDouble() * (high-low)) + low;
         PssCharts::Candle candle(open, high, low, close);
         mapCandlePoints.emplace(i*(60*60*24), candle);
         candlePrev = candle;

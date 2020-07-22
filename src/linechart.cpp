@@ -224,6 +224,7 @@ std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const
         dValueClose = rectChart.bottom() - dValueClose; // Qt uses inverted Y axis
     }
     Candle candle;
+    // Have to manually add values to avoid exception since Qt uses inverted Y axis
     candle.m_open = dValueOpen;
     candle.m_high = dValueHigh;
     candle.m_low = dValueLow;
