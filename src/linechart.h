@@ -94,8 +94,6 @@ protected:
     std::pair<uint32_t, Candle> ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle>& pair) const;
     uint32_t ConvertCandlePlotPointTime(const QPointF& point);
     QBrush m_brushBackground;
-    QBrush m_brushUpCandle;
-    QBrush m_brushDownCandle;
     QBrush m_brushLine;
     QBrush m_brushFill;
     bool m_fEnableFill; //! Does the line get filled
@@ -144,6 +142,8 @@ protected:
     bool m_fIsLineChart;
     double m_rectWidth;
     int m_nCandleLineWidth;
+    QColor m_colorUpCandle;
+    QColor m_colorDownCandle;
     QColor m_colorUpCandleLine;
     QColor m_colorDownCandleLine;
     QColor m_colorUpTail;
@@ -216,8 +216,7 @@ public:
     void mouseMoveEvent(QMouseEvent* event) override;
 
     // Candlestick
-    void SetUpCandleBrush(const QBrush& brush);
-    void SetDownCandleBrush(const QBrush& brush);
+    void SetCandleBodyColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetCandleLineColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetTailColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetDashColor(const QColor& upColor, const QColor& downColor = QColor());

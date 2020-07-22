@@ -281,9 +281,8 @@ void MainWindow::RedrawChart()
     m_chart->SetFillBrush(QBrush(colorFill));
 
     QColor UpCandleColor = static_cast<Qt::GlobalColor>(ui->comboBoxUpCandleFillColor->currentIndex()+2);
-    m_chart->SetUpCandleBrush(QBrush(UpCandleColor));
     QColor DownCandleColor = static_cast<Qt::GlobalColor>(ui->comboBoxDownCandleFillColor->currentIndex()+2);
-    m_chart->SetDownCandleBrush(QBrush(DownCandleColor));
+    m_chart->SetCandleBodyColor(UpCandleColor, DownCandleColor);
 
     QColor UpBorderColor = static_cast<Qt::GlobalColor>(ui->comboBoxUpBorderColor->currentIndex()+2);
     QColor DownBorderColor = static_cast<Qt::GlobalColor>(ui->comboBoxDownBorderColor->currentIndex()+2);
