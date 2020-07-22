@@ -157,14 +157,14 @@ std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const
     double nValueX = ((pair.first - MinX()) / nValueMaxX);
     nValueX *= nWidth;
     nValueX += rectChart.left() + (2*m_nCandles + 1) * m_candleWidth;
-    if(nValueX > nWidth) {
+//    if(nValueX > nWidth) {
 //        m_pairXRange = std::pair<double, double>(m_nMinTime, m_nMaxTime);
-        return std::pair<uint32_t, PssCharts::Candle>();
-    } else {
-        m_nCandles++;
+//        return std::pair<uint32_t, PssCharts::Candle>();
+//    } else {
+//        m_nCandles++;
 //        m_nMinTime = std::min(m_nMinTime, pair.first);
 //        m_nMaxTime = std::max(m_nMaxTime, pair.first);
-    }
+//    }
 
     //compute point-value of Open
     int nHeight = rectChart.height();
@@ -613,14 +613,14 @@ void LineChart::paintEvent(QPaintEvent *event)
             QPointF pointH = QPointF(chartCandle.first, chartCandle.second.m_high);
             QPointF pointL = QPointF(chartCandle.first, chartCandle.second.m_low);
             QPointF pointC = QPointF(chartCandle.first, chartCandle.second.m_close);
-            if(chartCandle.second.m_close > chartCandle.second.m_open) {
+            if(chartCandle.second.m_open > chartCandle.second.m_close) {
                 if(m_fDrawWick) {
-                    QLineF HOline(pointH, pointO);
-                    QLineF LCline(pointL, pointC);
+                    QLineF HCline(pointH, pointC);
+                    QLineF LOline(pointL, pointO);
                     penCandle.setColor(m_colorUpTail);
                     painter.setPen(penCandle);
-                    painter.drawLine(HOline);
-                    painter.drawLine(LCline);
+                    painter.drawLine(HCline);
+                    painter.drawLine(LOline);
                 }
                 if(m_fDisplayCandleDash) {
                     QLineF Highline(QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_high), QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_high));
@@ -630,8 +630,8 @@ void LineChart::paintEvent(QPaintEvent *event)
                     painter.drawLine(Highline);
                     painter.drawLine(Lowline);
                 }
-                pointO = QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_open);
-                pointC = QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_close);
+                pointO = QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_open);
+                pointC = QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_close);
                 QRectF rect(pointO, pointC);
                 QBrush rectBrush = m_colorUpCandle;
                 if(m_fDrawOutline) {
@@ -651,12 +651,12 @@ void LineChart::paintEvent(QPaintEvent *event)
                 }
             } else {
                 if(m_fDrawWick) {
-                    QLineF HCline(pointH, pointC);
-                    QLineF LOline(pointL, pointO);
+                    QLineF HOline(pointH, pointO);
+                    QLineF LCline(pointL, pointC);
                     penCandle.setColor(m_colorDownTail);
                     painter.setPen(penCandle);
-                    painter.drawLine(HCline);
-                    painter.drawLine(LOline);
+                    painter.drawLine(HOline);
+                    painter.drawLine(LCline);
                 }
                 if(m_fDisplayCandleDash) {
                     QLineF Highline(QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_high), QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_high));
@@ -666,8 +666,8 @@ void LineChart::paintEvent(QPaintEvent *event)
                     painter.drawLine(Highline);
                     painter.drawLine(Lowline);
                 }
-                pointO = QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_open);
-                pointC = QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_close);
+                pointO = QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_open);
+                pointC = QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_close);
                 QRectF rect(pointO, pointC);
                 QBrush rectBrush = m_colorDownCandle;
                 if(m_fDrawOutline) {
