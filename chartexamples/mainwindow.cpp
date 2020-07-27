@@ -50,8 +50,8 @@ QStringList listQtColors = {
 };
 
 QStringList listChartFormats = {
-    "Line",
-    "Candlestick"
+    "Candlestick",
+    "Line"
 };
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -69,6 +69,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     setWindowTitle(QString("PssCharts %1").arg(m_chart->VersionString()));
 
+    //Chart Formats
+    ui->comboBoxChartType->addItems(listChartFormats);
+    ui->comboBoxChartType->setCurrentIndex(0); //candlestick
+
     ui->comboboxChartFillColor->addItems(listQtColors);
     ui->comboboxChartFillColor->setCurrentIndex(8); //cyan
     ui->checkboxFillChart->setChecked(true);
@@ -80,9 +84,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboboxLineColor->addItems(listQtColors);
     ui->comboboxLineColor->setCurrentIndex(0); //black
 
-    ui->comboBoxChartType->addItems(listChartFormats);
-    ui->comboBoxChartType->setCurrentIndex(1); //line
-
+    // Candlestick Colors
     ui->checkBoxCandleFill->setChecked(true);
     ui->comboBoxUpCandleFillColor->addItems(listQtColors);
     ui->comboBoxUpCandleFillColor->setCurrentIndex(6); //green
@@ -101,7 +103,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBoxDownWickColor->addItems(listQtColors);
     ui->comboBoxDownWickColor->setCurrentIndex(11); //dark red
 
-    ui->checkboxCandleDash->setChecked(true);
+    ui->checkboxCandleDash->setChecked(false);
     ui->comboBoxUpCandleDashColor->addItems(listQtColors);
     ui->comboBoxUpCandleDashColor->setCurrentIndex(12); //dark green
     ui->comboBoxDownCandleDashColor->addItems(listQtColors);
@@ -121,7 +123,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->checkboxDrawYTitle->setChecked(true);
 
     // OHLC Display
-    ui->spinboxOHLCFontSize->setValue(12);
+    ui->spinboxOHLCFontSize->setValue(8);
     ui->checkBoxOHLCDisplay->setCheckState(Qt::Checked);
 
     //Axis gridlines
@@ -252,13 +254,6 @@ void MainWindow::RedrawChart()
     fontYTitle.setBold(ui->checkboxYTitleBold->isChecked());
     m_chart->SetYTitleFont(fontYTitle);
 
-    //OHLC Display
-    m_chart->EnableOHLCDisplay(ui->checkBoxOHLCDisplay->checkState() == Qt::Checked);
-    QFont fontOHLC;
-    fontOHLC.setPointSize(ui->spinboxOHLCFontSize->value());
-    fontOHLC.setBold(ui->checkboxOHLCBold->isChecked());
-    m_chart->SetOLHCFont(fontOHLC);
-
     //Axis Labels
     m_chart->SetLabelPrecision(ui->spinboxYLabelPrecision->value());
     m_chart->SetAxisLabelsOnOff(ui->checkboxDrawXTitle->checkState() == Qt::Checked, ui->checkboxDrawYTitle->checkState() == Qt::Checked);
@@ -272,36 +267,42 @@ void MainWindow::RedrawChart()
     QColor colorFill = static_cast<Qt::GlobalColor>(ui->comboboxChartFillColor->currentIndex()+2);
     m_chart->SetFillBrush(QBrush(colorFill));
 
+    QColor colorBackground = palette().window().color();
+    if (ui->checkboxFillBackground->checkState() == Qt::Checked)
+        colorBackground = static_cast<Qt::GlobalColor>(ui->comboboxBgColor->currentIndex()+2);
+    m_chart->SetBackgroundBrush(QBrush(colorBackground));
+
+    //Candlestick Data
     QColor UpCandleColor = static_cast<Qt::GlobalColor>(ui->comboBoxUpCandleFillColor->currentIndex()+2);
     QColor DownCandleColor = static_cast<Qt::GlobalColor>(ui->comboBoxDownCandleFillColor->currentIndex()+2);
     m_chart->SetCandleBodyColor(UpCandleColor, DownCandleColor);
-
     QColor UpBorderColor = static_cast<Qt::GlobalColor>(ui->comboBoxUpBorderColor->currentIndex()+2);
     QColor DownBorderColor = static_cast<Qt::GlobalColor>(ui->comboBoxDownBorderColor->currentIndex()+2);
     m_chart->SetCandleLineColor(UpBorderColor, DownBorderColor);
     QColor UpWickColor = static_cast<Qt::GlobalColor>(ui->comboBoxUpWickColor->currentIndex()+2);
     QColor DownWickColor = static_cast<Qt::GlobalColor>(ui->comboBoxDownWickColor->currentIndex()+2);
     m_chart->SetTailColor(UpWickColor, DownWickColor);
-    m_chart->SetCandleLineWidth(ui->spinboxCandleLineWidth->value());
-    m_chart->SetCandleWidth(ui->spinboxCandleWidth->value());
     QColor UpDashColor = static_cast<Qt::GlobalColor>(ui->comboBoxUpCandleDashColor->currentIndex()+2);
     QColor DownDashColor = static_cast<Qt::GlobalColor>(ui->comboBoxDownCandleDashColor->currentIndex()+2);
     m_chart->SetDashColor(UpDashColor, DownDashColor);
+    m_chart->SetCandleLineWidth(ui->spinboxCandleLineWidth->value());
+    m_chart->SetCandleWidth(ui->spinboxCandleWidth->value());
+    m_chart->EnableCandleFill(ui->checkBoxCandleFill->checkState() == Qt::Checked);
+    m_chart->EnableWick(ui->checkBoxWickColor->checkState() == Qt::Checked);
+    m_chart->EnableCandleBorder(ui->checkBoxBorderColor->checkState() == Qt::Checked);
+    m_chart->EnableCandleDash(ui->checkboxCandleDash->checkState() == Qt::Checked);
 
-    QColor colorBackground = palette().window().color();
-    if (ui->checkboxFillBackground->checkState() == Qt::Checked)
-        colorBackground = static_cast<Qt::GlobalColor>(ui->comboboxBgColor->currentIndex()+2);
-    m_chart->SetBackgroundBrush(QBrush(colorBackground));
+    //OHLC Display
+    m_chart->EnableOHLCDisplay(ui->checkBoxOHLCDisplay->checkState() == Qt::Checked);
+    QFont fontOHLC;
+    fontOHLC.setPointSize(ui->spinboxOHLCFontSize->value());
+    fontOHLC.setBold(ui->checkboxOHLCBold->isChecked());
+    m_chart->SetOLHCFont(fontOHLC);
 
     //Line Color
     m_chart->SetLineWidth(ui->spinboxLineWidth->value());
     QColor colorLine = static_cast<Qt::GlobalColor>(ui->comboboxLineColor->currentIndex()+2);
     m_chart->SetLineBrush(colorLine);
-
-    m_chart->EnableCandleFill(ui->checkBoxCandleFill->checkState() == Qt::Checked);
-    m_chart->EnableWick(ui->checkBoxWickColor->checkState() == Qt::Checked);
-    m_chart->EnableCandleBorder(ui->checkBoxBorderColor->checkState() == Qt::Checked);
-    m_chart->EnableCandleDash(ui->checkboxCandleDash->checkState() == Qt::Checked);
 
     //Mouse Display
     m_chart->EnableMouseDisplay(ui->checkboxCrosshairs->isChecked());

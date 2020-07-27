@@ -70,6 +70,7 @@ LineChart::LineChart(QWidget *parent) : QWidget (parent)
     m_topTitleHeight = -1;
     m_precision = 100000000;
     m_strOHLC = "O:0\tH:0\tL:0\tC:0\t0%";
+
     setMouseTracking(true);
 }
 
@@ -158,8 +159,9 @@ std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const
     double nValueMaxX = (MaxX() - MinX());
     double nValueX = ((pair.first - MinX()) / nValueMaxX);
     nValueX *= nWidth;
-    nValueX += rectChart.left() + (2*m_nCandles + 1) * m_candleWidth;
+    nValueX += rectChart.left() + (2*m_nCandles + 1) * m_candleWidth; // factor in space candles take
     if(nValueX > nWidth) {
+        // outside of chart
         return std::pair<uint32_t, PssCharts::Candle>();
     } else {
         m_nCandles++;
@@ -167,11 +169,11 @@ std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const
 
     //compute point-value of Open
     int nHeight = rectChart.height();
-    uint64_t open1 = pair.second.m_open * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
+    uint64_t nOpen = pair.second.m_open * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
     uint64_t nMaxOpen = MaxY()*m_precision;
     uint64_t nMinOpen = MinY()*m_precision;
     uint64_t nSpanOpen = (nMaxOpen - nMinOpen);
-    uint64_t nValueOpen = (open1 - nMinOpen);
+    uint64_t nValueOpen = (nOpen - nMinOpen);
     nValueOpen *= nHeight;
     double dValueOpen = nValueOpen;
     if (nSpanOpen == 0) {
@@ -180,12 +182,13 @@ std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const
         dValueOpen /= nSpanOpen;
         dValueOpen = rectChart.bottom() - dValueOpen; // Qt uses inverted Y axis
     }
+
     //compute point-value of High
-    uint64_t high1 = pair.second.m_high * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
+    uint64_t nHigh = pair.second.m_high * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
     uint64_t nMaxHigh = MaxY()*m_precision;
     uint64_t nMinHigh = MinY()*m_precision;
     uint64_t nSpanHigh = (nMaxHigh - nMinHigh);
-    uint64_t nValueHigh = (high1 - nMinHigh);
+    uint64_t nValueHigh = (nHigh - nMinHigh);
     nValueHigh *= nHeight;
     double dValueHigh = nValueHigh;
     if (nSpanHigh == 0) {
@@ -194,12 +197,13 @@ std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const
         dValueHigh /= nSpanHigh;
         dValueHigh = rectChart.bottom() - dValueHigh; // Qt uses inverted Y axis
     }
+
     //compute point-value of Low
-    uint64_t Low1 = pair.second.m_low * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
+    uint64_t nLow = pair.second.m_low * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
     uint64_t nMaxLow = MaxY()*m_precision;
     uint64_t nMinLow = MinY()*m_precision;
     uint64_t nSpanLow = (nMaxLow - nMinLow);
-    uint64_t nValueLow = (Low1 - nMinLow);
+    uint64_t nValueLow = (nLow - nMinLow);
     nValueLow *= nHeight;
     double dValueLow = nValueLow;
     if (nSpanLow == 0) {
@@ -208,12 +212,13 @@ std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const
         dValueLow /= nSpanLow;
         dValueLow = rectChart.bottom() - dValueLow; // Qt uses inverted Y axis
     }
+
     //compute point-value of Close
-    uint64_t Close1 = pair.second.m_close * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
+    uint64_t nClose = pair.second.m_close * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
     uint64_t nMaxClose = MaxY()*m_precision;
     uint64_t nMinClose = MinY()*m_precision;
     uint64_t nSpanClose = (nMaxClose - nMinClose);
-    uint64_t nValueClose = (Close1 - nMinClose);
+    uint64_t nValueClose = (nClose - nMinClose);
     nValueClose *= nHeight;
     double dValueClose = nValueClose;
     if (nSpanClose == 0) {
@@ -222,8 +227,9 @@ std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const
         dValueClose /= nSpanClose;
         dValueClose = rectChart.bottom() - dValueClose; // Qt uses inverted Y axis
     }
-    Candle candle;
+
     // Have to manually add values to avoid exception since Qt uses inverted Y axis
+    Candle candle;
     candle.m_open = dValueOpen;
     candle.m_high = dValueHigh;
     candle.m_low = dValueLow;
@@ -375,6 +381,7 @@ void LineChart::ProcessChangedData()
             if (fFirstRun || candle.second.m_high > m_pairYRange.second)
                 m_pairYRange.second = candle.second.m_high;
             fFirstRun = false;
+            // determine if candles are out of bounds
             QRect rectChart = ChartArea();
             int nWidth = rectChart.width();
             double nValueX = (2*(m_nCandles + m_nCandleSpacing) + 1) * m_candleWidth;
@@ -384,7 +391,8 @@ void LineChart::ProcessChangedData()
                 m_nCandles++;
             }
         }
-        double buffer = (m_pairYRange.second - m_pairYRange.first) / 20;
+        // Add y-axis buffer for candlestick data
+        double buffer = m_yPadding * (m_pairYRange.second - m_pairYRange.first) / 20;
         m_pairYRange.first -= buffer;
         m_pairYRange.second += buffer;
         m_fChangesMade = true;
@@ -466,6 +474,7 @@ void LineChart::paintEvent(QPaintEvent *event)
         }
      }
 
+    // Draw Line Chart
     if (m_fIsLineChart) {
         //Create the lines that are drawn
         QVector<QPointF> qvecPolygon;
@@ -530,6 +539,7 @@ void LineChart::paintEvent(QPaintEvent *event)
         painter.setFont(m_fontOHLC);
         if(fMouseInChartArea) {
             uint32_t nTime = ConvertCandlePlotPointTime(lposMouse);
+            // Calculate the candle the mouse if closest to and change OHLC
             std::map<uint32_t, Candle>::iterator candleUpper = m_candlePoints.upper_bound(nTime);
             std::map<uint32_t, Candle>::iterator candleLower = m_candlePoints.lower_bound(nTime);
             int upperDist = std::labs((int)candleUpper->first - (int)nTime);
@@ -540,13 +550,11 @@ void LineChart::paintEvent(QPaintEvent *event)
             } else {
                 currentCandle = candleUpper->second;
             }
-            if (fMouseInChartArea) {
-                m_strOHLC = "O:" + QString::number(currentCandle.m_open) + "\t";
-                m_strOHLC += "H:" + QString::number(currentCandle.m_high) + "\t";
-                m_strOHLC += "L:" + QString::number(currentCandle.m_low) + "\t";
-                m_strOHLC += "C:" + QString::number(currentCandle.m_close) + "\t";
-                m_strOHLC += QString::number((currentCandle.m_close - currentCandle.m_open)/ currentCandle.m_open)+ "%";
-            }
+            m_strOHLC = "O:" + QString::number(currentCandle.m_open) + "\t";
+            m_strOHLC += "H:" + QString::number(currentCandle.m_high) + "\t";
+            m_strOHLC += "L:" + QString::number(currentCandle.m_low) + "\t";
+            m_strOHLC += "C:" + QString::number(currentCandle.m_close) + "\t";
+            m_strOHLC += QString::number((currentCandle.m_close - currentCandle.m_open)/ currentCandle.m_open)+ "%";
         }
         QRect rectInfo = rectFull;
         rectInfo.setBottom(rectFull.top() + HeightTopTitleArea());
@@ -989,7 +997,6 @@ void LineChart::SetCandleLineWidth(int nWidth)
 void LineChart::SetCandleWidth(int nWidth)
 {
     m_candleWidth = nWidth;
-//    m_xPadding = 2 * nWidth;
     m_fChangesMade = true;
 }
 
@@ -1186,11 +1193,6 @@ void LineChart::SetYPadding(int nPadding)
     m_yPadding = nPadding;
 }
 
-void LineChart::SetXPadding(int nPadding)
-{
-    m_nCandleSpacing = nPadding;
-}
-
 void LineChart::SetAxisLabelsBrush(const QBrush& brush)
 {
     m_brushLabels = brush;
@@ -1242,14 +1244,14 @@ void LineChart::EnableCandleBorder(bool fEnable)
     m_fDrawOutline = fEnable;
 }
 
-void LineChart::EnableOHLCDisplay(bool fEnable)
-{
-    m_fDisplayOHLC = fEnable;
-}
-
 void LineChart::EnableCandleDash(bool fEnable)
 {
     m_fDisplayCandleDash = fEnable;
+}
+
+void LineChart::EnableOHLCDisplay(bool fEnable)
+{
+    m_fDisplayOHLC = fEnable;
 }
 
 }//namespace

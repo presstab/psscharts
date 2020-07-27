@@ -54,12 +54,12 @@ struct Candle {
         m_close = 0;
     }
     Candle(double open, double high, double low, double close) {
-//        if (high < std::max(open, low, close)) {
-//            throw "High is not the maximum value";
-//        }
-//        if (low > std::min(open, high, close)) {
-//            throw "Low is not the minimum value";
-//        }
+        if (high < std::max(open, std::max(low, close))) {
+            throw "High is not the maximum value";
+        }
+        if (low > std::min(open, std::min(high, close))) {
+            throw "Low is not the minimum value";
+        }
         m_open = open;
         m_high = high;
         m_low = low;
@@ -146,8 +146,15 @@ protected:
 
     //Candlestick stuff
     bool m_fIsLineChart;
+    bool m_fFillCandle;
+    bool m_fDrawWick;
+    bool m_fDrawOutline;
+    bool m_fDisplayOHLC;
+    bool m_fDisplayCandleDash;
     double m_candleWidth;
     int m_nCandleLineWidth;
+    int m_nCandleSpacing;
+    int m_nCandles;
     QColor m_colorUpCandle;
     QColor m_colorDownCandle;
     QColor m_colorUpCandleLine;
@@ -156,17 +163,8 @@ protected:
     QColor m_colorDownTail;
     QColor m_colorUpDash;
     QColor m_colorDownDash;
-    bool m_fFillCandle;
-    bool m_fDrawWick;
-    bool m_fDrawOutline;
-    bool m_fDisplayOHLC;
-    bool m_fDisplayCandleDash;
     QFont m_fontOHLC;
     QString m_strOHLC;
-    int m_nCandleSpacing;
-    int m_nCandles;
-    uint32_t m_nMinTime;
-    uint32_t m_nMaxTime;
 
 public:
     LineChart(QWidget* parent = nullptr);
@@ -196,15 +194,12 @@ public:
     void SetLabelPrecision(int precision);
     void SetLabelAutoPrecision(bool fEnable);
     void SetYPadding(int nPadding);
-    void SetXPadding(int nPadding);
     void SetYTitle(const QString& strTitle);
     void SetYTitleFont(const QFont& font);
     void SetAxisOnOff(bool fDrawX, bool fDrawY);
     void SetAxisLabelsOnOff(bool fDrawXLabels, bool fDrawYLabels);
     void SetAxisSectionCount(uint32_t nCount);
     void SetAxisSeparatorPen(const QPen& pen);
-    void SetChartType(const QString& type);
-    void SetCandleDataPoints(std::map<uint32_t, Candle>& mapPoints);
     uint32_t Version() const;
     QString VersionString() const;
 
@@ -226,6 +221,8 @@ public:
     void mouseMoveEvent(QMouseEvent* event) override;
 
     // Candlestick
+    void SetChartType(const QString& type);
+    void SetCandleDataPoints(std::map<uint32_t, Candle>& mapPoints);
     void SetCandleBodyColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetCandleLineColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetTailColor(const QColor& upColor, const QColor& downColor = QColor());
@@ -235,9 +232,9 @@ public:
     void EnableCandleFill(bool fEnable);
     void EnableWick(bool fEnable);
     void EnableCandleBorder(bool fEnable);
-    void SetOLHCFont(const QFont &font);
-    void EnableOHLCDisplay(bool fEnable);
     void EnableCandleDash(bool fEnable);
+    void EnableOHLCDisplay(bool fEnable);
+    void SetOLHCFont(const QFont &font);
     std::pair<uint32_t, Candle> ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle>& pair);
     uint32_t ConvertCandlePlotPointTime(const QPointF& point);
 };
