@@ -62,7 +62,7 @@ LineChart::LineChart(QWidget *parent) : QWidget (parent)
 
     m_axisSections = 0;
     m_yPadding = 0;
-    m_nCandleSpacing = 5;
+    m_nCandleSpacing = 2;
     m_fEnableFill = true;
     m_fChangesMade = true;
     m_fIsLineChart = false;
@@ -143,6 +143,7 @@ std::pair<uint32_t, double> LineChart::ConvertFromPlotPoint(const QPointF& point
  */
 std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle> &pair)
 {
+    ProcessChangedData();
     QRect rectChart = ChartArea();
     if (m_yPadding > 0) {
         //Y padding will make it so that there is an area on the top and bottom of the ChartArea
@@ -152,19 +153,17 @@ std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const
     }
 
     //compute point-value of X
+    m_nCandles = 0;
     int nWidth = rectChart.width();
     double nValueMaxX = (MaxX() - MinX());
     double nValueX = ((pair.first - MinX()) / nValueMaxX);
     nValueX *= nWidth;
     nValueX += rectChart.left() + (2*m_nCandles + 1) * m_candleWidth;
-//    if(nValueX > nWidth) {
-//        m_pairXRange = std::pair<double, double>(m_nMinTime, m_nMaxTime);
-//        return std::pair<uint32_t, PssCharts::Candle>();
-//    } else {
-//        m_nCandles++;
-//        m_nMinTime = std::min(m_nMinTime, pair.first);
-//        m_nMaxTime = std::max(m_nMaxTime, pair.first);
-//    }
+    if(nValueX > nWidth) {
+        return std::pair<uint32_t, PssCharts::Candle>();
+    } else {
+        m_nCandles++;
+    }
 
     //compute point-value of Open
     int nHeight = rectChart.height();
@@ -364,6 +363,7 @@ void LineChart::ProcessChangedData()
         }
         m_fChangesMade = true;
     } else {
+        m_nCandles = 0;
         for (const auto& candle : m_candlePoints) {
             //Set min and max for x and y
             if (fFirstRun || candle.first < m_pairXRange.first)
@@ -375,6 +375,14 @@ void LineChart::ProcessChangedData()
             if (fFirstRun || candle.second.m_high > m_pairYRange.second)
                 m_pairYRange.second = candle.second.m_high;
             fFirstRun = false;
+            QRect rectChart = ChartArea();
+            int nWidth = rectChart.width();
+            double nValueX = (2*(m_nCandles + m_nCandleSpacing) + 1) * m_candleWidth;
+            if(nValueX > nWidth) {
+                break;
+            } else {
+                m_nCandles++;
+            }
         }
         double buffer = (m_pairYRange.second - m_pairYRange.first) / 20;
         m_pairYRange.first -= buffer;
@@ -601,9 +609,6 @@ void LineChart::paintEvent(QPaintEvent *event)
         QVector<QRectF> qvecRects;
         QPen penCandle;
         penCandle.setWidth(m_nCandleLineWidth);
-        m_nCandles = 0;/*
-        m_nMaxTime = 0;
-        m_nMinTime = UINT_MAX;*/
         for (const std::pair<uint32_t, Candle> pair : m_candlePoints) {
             std::pair<uint32_t, Candle> chartCandle = ConvertToCandlePlotPoint(pair);
             if (chartCandle.second.isNull()) {
