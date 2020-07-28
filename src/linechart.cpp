@@ -62,11 +62,14 @@ LineChart::LineChart(QWidget *parent) : QWidget (parent)
 
     m_axisSections = 0;
     m_yPadding = 0;
+    m_nCandleSpacing = 2;
     m_fEnableFill = true;
     m_fChangesMade = true;
+    m_fIsLineChart = false;
     m_rightMargin = -1;
     m_topTitleHeight = -1;
     m_precision = 100000000;
+    m_strOHLC = "O:0\tH:0\tL:0\tC:0\t0%";
 
     setMouseTracking(true);
 }
@@ -132,6 +135,118 @@ std::pair<uint32_t, double> LineChart::ConvertFromPlotPoint(const QPointF& point
     pairValues.first = t2 + MinX();
 
     return pairValues;
+}
+
+/**
+ * @brief LineChart::ConvertToPlotPoint: convert a datapoint into the actual point it will be painted to
+ * @param pair
+ * @return
+ */
+std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle> &pair)
+{
+    ProcessChangedData();
+    QRect rectChart = ChartArea();
+    if (m_yPadding > 0) {
+        //Y padding will make it so that there is an area on the top and bottom of the ChartArea
+        //that does not get drawn in. It makes it so the lines don't go right onto the edges.
+        rectChart.setBottom(rectChart.bottom() - m_yPadding);
+        rectChart.setTop(rectChart.top() + m_yPadding);
+    }
+
+    //compute point-value of X
+    m_nCandles = 0;
+    int nWidth = rectChart.width();
+    double nValueMaxX = (MaxX() - MinX());
+    double nValueX = ((pair.first - MinX()) / nValueMaxX);
+    nValueX *= nWidth;
+    nValueX += rectChart.left() + (2*m_nCandles + 1) * m_candleWidth; // factor in space candles take
+    if(nValueX > nWidth) {
+        // outside of chart
+        return std::pair<uint32_t, PssCharts::Candle>();
+    } else {
+        m_nCandles++;
+    }
+
+    //compute point-value of Open
+    int nHeight = rectChart.height();
+    uint64_t nOpen = pair.second.m_open * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
+    uint64_t nMaxOpen = MaxY()*m_precision;
+    uint64_t nMinOpen = MinY()*m_precision;
+    uint64_t nSpanOpen = (nMaxOpen - nMinOpen);
+    uint64_t nValueOpen = (nOpen - nMinOpen);
+    nValueOpen *= nHeight;
+    double dValueOpen = nValueOpen;
+    if (nSpanOpen == 0) {
+        dValueOpen = rectChart.top() + (nHeight/2);
+    } else {
+        dValueOpen /= nSpanOpen;
+        dValueOpen = rectChart.bottom() - dValueOpen; // Qt uses inverted Y axis
+    }
+
+    //compute point-value of High
+    uint64_t nHigh = pair.second.m_high * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
+    uint64_t nMaxHigh = MaxY()*m_precision;
+    uint64_t nMinHigh = MinY()*m_precision;
+    uint64_t nSpanHigh = (nMaxHigh - nMinHigh);
+    uint64_t nValueHigh = (nHigh - nMinHigh);
+    nValueHigh *= nHeight;
+    double dValueHigh = nValueHigh;
+    if (nSpanHigh == 0) {
+        dValueHigh = rectChart.top() + (nHeight/2);
+    } else {
+        dValueHigh /= nSpanHigh;
+        dValueHigh = rectChart.bottom() - dValueHigh; // Qt uses inverted Y axis
+    }
+
+    //compute point-value of Low
+    uint64_t nLow = pair.second.m_low * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
+    uint64_t nMaxLow = MaxY()*m_precision;
+    uint64_t nMinLow = MinY()*m_precision;
+    uint64_t nSpanLow = (nMaxLow - nMinLow);
+    uint64_t nValueLow = (nLow - nMinLow);
+    nValueLow *= nHeight;
+    double dValueLow = nValueLow;
+    if (nSpanLow == 0) {
+        dValueLow = rectChart.top() + (nHeight/2);
+    } else {
+        dValueLow /= nSpanLow;
+        dValueLow = rectChart.bottom() - dValueLow; // Qt uses inverted Y axis
+    }
+
+    //compute point-value of Close
+    uint64_t nClose = pair.second.m_close * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
+    uint64_t nMaxClose = MaxY()*m_precision;
+    uint64_t nMinClose = MinY()*m_precision;
+    uint64_t nSpanClose = (nMaxClose - nMinClose);
+    uint64_t nValueClose = (nClose - nMinClose);
+    nValueClose *= nHeight;
+    double dValueClose = nValueClose;
+    if (nSpanClose == 0) {
+        dValueClose = rectChart.top() + (nHeight/2);
+    } else {
+        dValueClose /= nSpanClose;
+        dValueClose = rectChart.bottom() - dValueClose; // Qt uses inverted Y axis
+    }
+
+    // Have to manually add values to avoid exception since Qt uses inverted Y axis
+    Candle candle;
+    candle.m_open = dValueOpen;
+    candle.m_high = dValueHigh;
+    candle.m_low = dValueLow;
+    candle.m_close = dValueClose;
+    return std::pair<uint32_t, PssCharts::Candle>(nValueX, candle);
+}
+
+/**
+ * @brief LineChart::ConvertFromPlotPoint: get the timestamp for a candle on the chart
+ * @return
+ */
+uint32_t LineChart::ConvertCandlePlotPointTime(const QPointF& point)
+{
+    QRect rectChart = ChartArea();
+    auto t1 = (point.x() - rectChart.left()) / rectChart.width();
+    auto t2 = t1 * (MaxX() - MinX());
+    return  t2 + MinX();
 }
 
 int LineChart::HeightTopTitleArea() const
@@ -228,24 +343,60 @@ void LineChart::SetDataPoints(const std::map<uint32_t, double>& mapPoints)
     ProcessChangedData();
 }
 
+void LineChart::SetCandleDataPoints(std::map<uint32_t, Candle>& mapPoints)
+{
+    m_candlePoints = mapPoints;
+    ProcessChangedData();
+}
+
 void LineChart::ProcessChangedData()
 {
     m_pairXRange = {0, 0};
     m_pairYRange = {0, 0};
     bool fFirstRun = true;
-    for (const auto& pair : m_mapPoints) {
-        //Set min and max for x and y
-        if (fFirstRun || pair.first < m_pairXRange.first)
-            m_pairXRange.first = pair.first;
-        if (fFirstRun || pair.first > m_pairXRange.second)
-            m_pairXRange.second = pair.first;
-        if (fFirstRun || pair.second < m_pairYRange.first)
-            m_pairYRange.first = pair.second;
-        if (fFirstRun || pair.second > m_pairYRange.second)
-            m_pairYRange.second = pair.second;
-        fFirstRun = false;
+    if(m_fIsLineChart) {
+        for (const auto& pair : m_mapPoints) {
+            //Set min and max for x and y
+            if (fFirstRun || pair.first < m_pairXRange.first)
+                m_pairXRange.first = pair.first;
+            if (fFirstRun || pair.first > m_pairXRange.second)
+                m_pairXRange.second = pair.first;
+            if (fFirstRun || pair.second < m_pairYRange.first)
+                m_pairYRange.first = pair.second;
+            if (fFirstRun || pair.second > m_pairYRange.second)
+                m_pairYRange.second = pair.second;
+            fFirstRun = false;
+        }
+        m_fChangesMade = true;
+    } else {
+        m_nCandles = 0;
+        for (const auto& candle : m_candlePoints) {
+            //Set min and max for x and y
+            if (fFirstRun || candle.first < m_pairXRange.first)
+                m_pairXRange.first = candle.first;
+            if (fFirstRun || candle.first > m_pairXRange.second)
+                m_pairXRange.second = candle.first;
+            if (fFirstRun || candle.second.m_low < m_pairYRange.first)
+                m_pairYRange.first = candle.second.m_low;
+            if (fFirstRun || candle.second.m_high > m_pairYRange.second)
+                m_pairYRange.second = candle.second.m_high;
+            fFirstRun = false;
+            // determine if candles are out of bounds
+            QRect rectChart = ChartArea();
+            int nWidth = rectChart.width();
+            double nValueX = (2*(m_nCandles + m_nCandleSpacing) + 1) * m_candleWidth;
+            if(nValueX > nWidth) {
+                break;
+            } else {
+                m_nCandles++;
+            }
+        }
+        // Add y-axis buffer for candlestick data
+        double buffer = m_yPadding * (m_pairYRange.second - m_pairYRange.first) / 20;
+        m_pairYRange.first -= buffer;
+        m_pairYRange.second += buffer;
+        m_fChangesMade = true;
     }
-    m_fChangesMade = true;
 }
 
 /**
@@ -323,42 +474,92 @@ void LineChart::paintEvent(QPaintEvent *event)
         }
      }
 
-    //Create the lines that are drawn
-    QVector<QPointF> qvecPolygon;
-    QVector<QLineF> qvecLines;
+    // Draw Line Chart
+    if (m_fIsLineChart) {
+        //Create the lines that are drawn
+        QVector<QPointF> qvecPolygon;
+        QVector<QLineF> qvecLines;
 
-    qvecPolygon.append(rectChart.bottomLeft());
-    bool fFirstRun = true;
-    QPointF pointPrev;
-    bool fMouseSet = false;
-    for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
-        QPointF point = ConvertToPlotPoint(pair);
-        qvecPolygon.append(point);
-        if (fFirstRun) {
+        qvecPolygon.append(rectChart.bottomLeft());
+        bool fFirstRun = true;
+        QPointF pointPrev;
+        bool fMouseSet = false;
+        for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
+            QPointF point = ConvertToPlotPoint(pair);
+            qvecPolygon.append(point);
+            if (fFirstRun) {
+                pointPrev = point;
+                fFirstRun = false;
+                continue;
+            }
+
+            QLineF line(pointPrev, point);
+            qvecLines.append(line);
             pointPrev = point;
-            fFirstRun = false;
-            continue;
-        }
 
-        QLineF line(pointPrev, point);
-        qvecLines.append(line);
-        pointPrev = point;
-
-        if (fMouseInChartArea && !fMouseSet) {
-            //Find the line that the mouse x point would belong on
-            if (lposMouse.x() >= line.x1() && lposMouse.x() <= line.x2()) {
-                double nLineSlope = 0;
-                double nLineYIntercept = 0;
-                GetLineEquation(line, nLineSlope, nLineYIntercept);
-                double y = nLineSlope * lposMouse.x() + nLineYIntercept;
-                m_mousedisplay.SetDot(QPointF(lposMouse.x(), y));
-                fMouseSet = true;
+            if (fMouseInChartArea && !fMouseSet) {
+                //Find the line that the mouse x point would belong on
+                if (lposMouse.x() >= line.x1() && lposMouse.x() <= line.x2()) {
+                    double nLineSlope = 0;
+                    double nLineYIntercept = 0;
+                    GetLineEquation(line, nLineSlope, nLineYIntercept);
+                    double y = nLineSlope * lposMouse.x() + nLineYIntercept;
+                    m_mousedisplay.SetDot(QPointF(lposMouse.x(), y));
+                    fMouseSet = true;
+                }
             }
         }
+
+        // Cleanly close the polygon
+        qvecPolygon.append(QPointF(rectChart.right(), rectChart.bottom()));
+
+        if (m_fEnableFill) {
+            //Fill in the chart area - Note: this is the most computational part of the painting
+            QPolygonF polygon(qvecPolygon);
+            painter.setBrush(m_brushFill);
+            painter.drawConvexPolygon(polygon); //supposedly faster than "drawPolygon()"
+        }
+
+        //Draw the lines
+        painter.save();
+        QPen penLine;
+        penLine.setBrush(m_brushLine);
+        penLine.setWidth(m_lineWidth);
+        painter.setPen(penLine);
+        painter.drawLines(qvecLines);
+        painter.restore();
     }
 
-    // Cleanly close the polygon
-    qvecPolygon.append(QPointF(rectChart.right(), rectChart.bottom()));
+    // Draw Candlestick Info
+    if (m_fDisplayOHLC && !m_fIsLineChart) {
+        QPen penLine;
+        penLine.setBrush(m_brushLine);
+        penLine.setWidth(m_lineWidth);
+        painter.setPen(penLine);
+        painter.setFont(m_fontOHLC);
+        if(fMouseInChartArea) {
+            uint32_t nTime = ConvertCandlePlotPointTime(lposMouse);
+            // Calculate the candle the mouse if closest to and change OHLC
+            std::map<uint32_t, Candle>::iterator candleUpper = m_candlePoints.upper_bound(nTime);
+            std::map<uint32_t, Candle>::iterator candleLower = m_candlePoints.lower_bound(nTime);
+            int upperDist = std::labs((int)candleUpper->first - (int)nTime);
+            int lowerDist = std::labs((int)candleLower->first - (int)nTime);
+            Candle currentCandle;
+            if (upperDist > lowerDist) {
+                currentCandle = candleLower->second;
+            } else {
+                currentCandle = candleUpper->second;
+            }
+            m_strOHLC = "O:" + QString::number(currentCandle.m_open) + "\t";
+            m_strOHLC += "H:" + QString::number(currentCandle.m_high) + "\t";
+            m_strOHLC += "L:" + QString::number(currentCandle.m_low) + "\t";
+            m_strOHLC += "C:" + QString::number(currentCandle.m_close) + "\t";
+            m_strOHLC += QString::number((currentCandle.m_close - currentCandle.m_open)/ currentCandle.m_open)+ "%";
+        }
+        QRect rectInfo = rectFull;
+        rectInfo.setBottom(rectFull.top() + HeightTopTitleArea());
+        painter.drawText(rectInfo, Qt::AlignRight, m_strOHLC);
+    }
 
     //Draw axis sections next so that they get covered up by chart fill
     if (m_axisSections > 0) {
@@ -408,21 +609,100 @@ void LineChart::paintEvent(QPaintEvent *event)
         }
     }
 
-    if (m_fEnableFill) {
-        //Fill in the chart area - Note: this is the most computational part of the painting
-        QPolygonF polygon(qvecPolygon);
-        painter.setBrush(m_brushFill);
-        painter.drawConvexPolygon(polygon); //supposedly faster than "drawPolygon()"
+    //Draw Candlesticks
+    if (!m_fIsLineChart) {
+        //Create the lines that are drawn
+        QVector<QPointF> qvecPolygon;
+        QVector<QLineF> qvecLines;
+        QVector<QRectF> qvecRects;
+        QPen penCandle;
+        penCandle.setWidth(m_nCandleLineWidth);
+        for (const std::pair<uint32_t, Candle> pair : m_candlePoints) {
+            std::pair<uint32_t, Candle> chartCandle = ConvertToCandlePlotPoint(pair);
+            if (chartCandle.second.isNull()) {
+                break;
+            }
+            QPointF pointO = QPointF(chartCandle.first, chartCandle.second.m_open);
+            QPointF pointH = QPointF(chartCandle.first, chartCandle.second.m_high);
+            QPointF pointL = QPointF(chartCandle.first, chartCandle.second.m_low);
+            QPointF pointC = QPointF(chartCandle.first, chartCandle.second.m_close);
+            if(chartCandle.second.m_open > chartCandle.second.m_close) {
+                if(m_fDrawWick) {
+                    QLineF HCline(pointH, pointC);
+                    QLineF LOline(pointL, pointO);
+                    penCandle.setColor(m_colorUpTail);
+                    painter.setPen(penCandle);
+                    painter.drawLine(HCline);
+                    painter.drawLine(LOline);
+                }
+                if(m_fDisplayCandleDash) {
+                    QLineF Highline(QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_high), QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_high));
+                    QLineF Lowline(QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_low), QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_low));
+                    penCandle.setColor(m_colorUpDash);
+                    painter.setPen(penCandle);
+                    painter.drawLine(Highline);
+                    painter.drawLine(Lowline);
+                }
+                pointO = QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_open);
+                pointC = QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_close);
+                QRectF rect(pointO, pointC);
+                QBrush rectBrush = m_colorUpCandle;
+                if(m_fDrawOutline) {
+                    penCandle.setColor(m_colorUpCandleLine);
+                    painter.setPen(penCandle);
+                    painter.drawRect(rect);
+                    if (m_fFillCandle) {
+                        painter.fillRect(rect, rectBrush);
+                    } else {
+                        painter.fillRect(rect, m_brushBackground);
+                    }
+                } else if (m_fFillCandle) {
+                    penCandle.setColor(m_colorUpCandle);
+                    painter.setPen(penCandle);
+                    painter.drawRect(rect);
+                    painter.fillRect(rect, rectBrush);
+                }
+            } else {
+                if(m_fDrawWick) {
+                    QLineF HOline(pointH, pointO);
+                    QLineF LCline(pointL, pointC);
+                    penCandle.setColor(m_colorDownTail);
+                    painter.setPen(penCandle);
+                    painter.drawLine(HOline);
+                    painter.drawLine(LCline);
+                }
+                if(m_fDisplayCandleDash) {
+                    QLineF Highline(QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_high), QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_high));
+                    QLineF Lowline(QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_low), QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_low));
+                    penCandle.setColor(m_colorDownDash);
+                    painter.setPen(penCandle);
+                    painter.drawLine(Highline);
+                    painter.drawLine(Lowline);
+                }
+                pointO = QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_open);
+                pointC = QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_close);
+                QRectF rect(pointO, pointC);
+                QBrush rectBrush = m_colorDownCandle;
+                if(m_fDrawOutline) {
+                    penCandle.setColor(m_colorDownCandleLine);
+                    painter.setPen(penCandle);
+                    painter.drawRect(rect);
+                    if (m_fFillCandle) {
+                        painter.fillRect(rect, rectBrush);
+                    } else {
+                        painter.fillRect(rect, m_brushBackground);
+                    }
+                } else if (m_fFillCandle) {
+                    penCandle.setColor(m_colorDownCandle);
+                    painter.setPen(penCandle);
+                    painter.drawRect(rect);
+                    painter.fillRect(rect, rectBrush);
+                }
+            }
+        }
+        painter.save();
+        painter.restore();
     }
-
-    //Draw the lines
-    painter.save();
-    QPen penLine;
-    penLine.setBrush(m_brushLine);
-    penLine.setWidth(m_lineWidth);
-    painter.setPen(penLine);
-    painter.drawLines(qvecLines);
-    painter.restore();
 
     //Draw axis
     if (m_fDrawXAxis) {
@@ -442,7 +722,12 @@ void LineChart::paintEvent(QPaintEvent *event)
         painter.setFont(m_fontTopTitle);
         QRect rectTopTitle = rectFull;
         rectTopTitle.setBottom(rectFull.top() + HeightTopTitleArea());
-        painter.drawText(rectTopTitle, Qt::AlignCenter, m_strTopTitle);
+        rectTopTitle.setLeft(2*WidthYTitleArea());
+        if (m_fIsLineChart) {
+            painter.drawText(rectTopTitle, Qt::AlignCenter, m_strTopTitle);
+        } else {
+            painter.drawText(rectTopTitle, Qt::AlignLeft, m_strTopTitle);
+        }
         painter.restore();
     }
 
@@ -476,46 +761,47 @@ void LineChart::paintEvent(QPaintEvent *event)
         painter.drawLine(QLineF(posTop, posBottom));
 
         //Draw a dot on the line series where the mouse X point is
-        QPainterPath pathDot;
-        QPointF pointCircleCenter(m_mousedisplay.DotPos());
-        pathDot.addEllipse(pointCircleCenter, 5, 5);
-        painter.setBrush(m_brushLine.color());
-        painter.fillPath(pathDot, m_brushLine.color());
+        if(m_fIsLineChart) {
+            QPainterPath pathDot;
+            QPointF pointCircleCenter(m_mousedisplay.DotPos());
+            pathDot.addEllipse(pointCircleCenter, 5, 5);
+            painter.setBrush(m_brushLine.color());
+            painter.fillPath(pathDot, m_brushLine.color());
 
-        //Add a border to the dot
-//        QPen pen;
-//        pen.setColor(m_mousedisplay.LabelBackgroundColor());
-//        pen.setWidth(2);
-//        painter.setPen(pen);
-//        painter.drawPath(pathDot);
+            //Add a border to the dot
+    //        QPen pen;
+    //        pen.setColor(m_mousedisplay.LabelBackgroundColor());
+    //        pen.setWidth(2);
+    //        painter.setPen(pen);
+    //        painter.drawPath(pathDot);
 
-        //Draw a small tooltip looking item showing the point's data (x,y)
-        auto pairData = ConvertFromPlotPoint(pointCircleCenter);
-        const uint32_t& nX = pairData.first;
-        const double& nY = pairData.second;
-        QString strLabel = "(";
-        if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
-            strLabel += TimeStampToString(nX);
-        } else {
-            strLabel += PrecisionToString(nX, m_settingsXLabels.Precision());
+            //Draw a small tooltip looking item showing the point's data (x,y)
+            auto pairData = ConvertFromPlotPoint(pointCircleCenter);
+            const uint32_t& nX = pairData.first;
+            const double& nY = pairData.second;
+            QString strLabel = "(";
+            if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
+                strLabel += TimeStampToString(nX);
+            } else {
+                strLabel += PrecisionToString(nX, m_settingsXLabels.Precision());
+            }
+            strLabel += ", ";
+            strLabel += PrecisionToString(nY, m_settingsYLabels.Precision());
+            strLabel += ")";
+
+            //Create the background of the tooltip
+            QRect rectDraw = MouseOverTooltipRect(painter, rectFull, pointCircleCenter, strLabel);
+
+            QPainterPath pathBackground;
+            pathBackground.addRoundedRect(rectDraw, 5, 5);
+            painter.fillPath(pathBackground, m_mousedisplay.LabelBackgroundColor());
+
+            //Draw the text of the tooltip
+            painter.setBrush(m_brushLabels);
+            painter.setPen(Qt::black);
+            painter.drawText(rectDraw, Qt::AlignCenter, strLabel);
         }
-        strLabel += ", ";
-        strLabel += PrecisionToString(nY, m_settingsYLabels.Precision());
-        strLabel += ")";
-
-        //Create the background of the tooltip
-        QRect rectDraw = MouseOverTooltipRect(painter, rectFull, pointCircleCenter, strLabel);
-
-        QPainterPath pathBackground;
-        pathBackground.addRoundedRect(rectDraw, 5, 5);
-        painter.fillPath(pathBackground, m_mousedisplay.LabelBackgroundColor());
-
-        //Draw the text of the tooltip
-        painter.setBrush(m_brushLabels);
-        painter.setPen(Qt::black);
-        painter.drawText(rectDraw, Qt::AlignCenter, strLabel);
     }
-
     m_fChangesMade = false;
 }
 
@@ -640,6 +926,42 @@ void LineChart::mouseMoveEvent(QMouseEvent *event)
     repaint();
 }
 
+void LineChart::SetCandleBodyColor(const QColor &upColor, const QColor &downColor) {
+    m_colorUpCandle = upColor;
+    m_colorDownCandle = downColor;
+    if(downColor == QColor()) {
+        m_colorDownCandleLine = upColor;
+    }
+    m_fChangesMade = true;
+}
+
+void LineChart::SetCandleLineColor(const QColor& upColor, const QColor& downColor) {
+    m_colorUpCandleLine = upColor;
+    m_colorDownCandleLine = downColor;
+    if(downColor == QColor()) {
+        m_colorDownCandleLine = upColor;
+    }
+    m_fChangesMade = true;
+}
+
+void LineChart::SetTailColor(const QColor& upColor, const QColor& downColor) {
+    m_colorUpTail = upColor;
+    m_colorDownTail = downColor;
+    if(downColor == QColor()) {
+        m_colorDownTail = upColor;
+    }
+    m_fChangesMade = true;
+}
+
+void LineChart::SetDashColor(const QColor& upColor, const QColor& downColor) {
+    m_colorUpDash = upColor;
+    m_colorDownDash = downColor;
+    if(downColor == QColor()) {
+        m_colorDownDash = upColor;
+    }
+    m_fChangesMade = true;
+}
+
 void LineChart::SetBackgroundBrush(const QBrush &brush)
 {
     m_brushBackground = brush;
@@ -663,6 +985,18 @@ void LineChart::SetLineBrush(const QBrush &brush)
 void LineChart::SetLineWidth(int nWidth)
 {
     m_lineWidth = nWidth;
+    m_fChangesMade = true;
+}
+
+void LineChart::SetCandleLineWidth(int nWidth)
+{
+    m_nCandleLineWidth = nWidth;
+    m_fChangesMade = true;
+}
+
+void LineChart::SetCandleWidth(int nWidth)
+{
+    m_candleWidth = nWidth;
     m_fChangesMade = true;
 }
 
@@ -707,6 +1041,12 @@ void LineChart::SetYTitleFont(const QFont &font)
     m_fChangesMade = true;
 }
 
+void LineChart::SetOLHCFont(const QFont &font)
+{
+    m_fontOHLC = font;
+    m_fChangesMade = true;
+}
+
 void LineChart::SetAxisOnOff(bool fDrawX, bool fDrawY)
 {
     m_fDrawXAxis = fDrawX;
@@ -743,6 +1083,11 @@ void LineChart::SetAxisSeparatorPen(const QPen &pen)
 {
     m_penAxisSeparater = pen;
     m_fChangesMade = true;
+}
+
+void LineChart::SetChartType(const QString &type)
+{
+    m_fIsLineChart = type == "Line";
 }
 
 uint32_t LineChart::Version() const
@@ -882,6 +1227,31 @@ void LineChart::SetLabelAutoPrecision(bool fEnable)
 void LineChart::SetRightMargin(int margin)
 {
     m_rightMargin = margin;
+}
+
+void LineChart::EnableCandleFill(bool fEnable)
+{
+    m_fFillCandle = fEnable;
+}
+
+void LineChart::EnableWick(bool fEnable)
+{
+    m_fDrawWick = fEnable;
+}
+
+void LineChart::EnableCandleBorder(bool fEnable)
+{
+    m_fDrawOutline = fEnable;
+}
+
+void LineChart::EnableCandleDash(bool fEnable)
+{
+    m_fDisplayCandleDash = fEnable;
+}
+
+void LineChart::EnableOHLCDisplay(bool fEnable)
+{
+    m_fDisplayOHLC = fEnable;
 }
 
 }//namespace

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>496</width>
-    <height>421</height>
+    <width>421</width>
+    <height>713</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,27 +23,78 @@
       <item>
        <layout class="QFormLayout" name="formLayout">
         <item row="0" column="0">
+         <widget class="QLabel" name="label_12">
+          <property name="text">
+           <string>Chart Type</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="comboBoxChartType"/>
+        </item>
+        <item row="1" column="0" colspan="2">
+         <widget class="Line" name="line_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
          <widget class="QLabel" name="label">
           <property name="text">
            <string>Chart Title</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
+        <item row="2" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <item>
+           <widget class="QLineEdit" name="lineeditChartTitle"/>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="spinboxTitleFontSize"/>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkboxChartTitleBold">
+            <property name="text">
+             <string>bold</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="3" column="0">
          <widget class="QLabel" name="label_2">
           <property name="text">
            <string>Y Title</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="0">
+        <item row="3" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item>
+           <widget class="QLineEdit" name="lineeditYTitle"/>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="spinboxYTitleFontSize"/>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkboxYTitleBold">
+            <property name="text">
+             <string>bold</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="4" column="0">
          <widget class="QLabel" name="label_3">
           <property name="text">
            <string>Draw Axis Labels</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
+        <item row="4" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
            <widget class="QCheckBox" name="checkboxDrawXTitle">
@@ -61,14 +112,24 @@
           </item>
          </layout>
         </item>
-        <item row="4" column="0">
+        <item row="5" column="0">
+         <widget class="QLabel" name="label_10">
+          <property name="text">
+           <string>Axis Label Precision</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QSpinBox" name="spinboxYLabelPrecision"/>
+        </item>
+        <item row="6" column="0">
          <widget class="QLabel" name="label_4">
           <property name="text">
            <string>Draw Axis Line</string>
           </property>
          </widget>
         </item>
-        <item row="4" column="1">
+        <item row="6" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
            <widget class="QCheckBox" name="checkboxDrawXAxisLine">
@@ -86,41 +147,24 @@
           </item>
          </layout>
         </item>
-        <item row="6" column="0">
-         <widget class="QLabel" name="label_5">
-          <property name="text">
-           <string>Fill Chart</string>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="0">
-         <widget class="QLabel" name="label_6">
-          <property name="text">
-           <string>Line Width</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="0">
+        <item row="7" column="0">
          <widget class="QLabel" name="label_7">
           <property name="text">
            <string>Gridline Count</string>
           </property>
          </widget>
         </item>
-        <item row="5" column="1">
+        <item row="7" column="1">
          <widget class="QSpinBox" name="spinboxGridlines"/>
         </item>
-        <item row="8" column="1">
-         <widget class="QSpinBox" name="spinboxLineWidth"/>
-        </item>
-        <item row="9" column="0">
-         <widget class="QLabel" name="label_8">
+        <item row="8" column="0">
+         <widget class="QLabel" name="label_5">
           <property name="text">
-           <string>Line Color</string>
+           <string>Fill Chart</string>
           </property>
          </widget>
         </item>
-        <item row="6" column="1">
+        <item row="8" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
            <widget class="QCheckBox" name="checkboxFillChart">
@@ -134,14 +178,14 @@
           </item>
          </layout>
         </item>
-        <item row="7" column="0">
+        <item row="9" column="0">
          <widget class="QLabel" name="label_9">
           <property name="text">
            <string>Fill Background</string>
           </property>
          </widget>
         </item>
-        <item row="7" column="1">
+        <item row="9" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_5">
           <item>
            <widget class="QCheckBox" name="checkboxFillBackground">
@@ -155,61 +199,34 @@
           </item>
          </layout>
         </item>
-        <item row="9" column="1">
-         <widget class="QComboBox" name="comboboxLineColor"/>
-        </item>
-        <item row="0" column="1">
-         <layout class="QHBoxLayout" name="horizontalLayout_6">
-          <item>
-           <widget class="QLineEdit" name="lineeditChartTitle"/>
-          </item>
-          <item>
-           <widget class="QSpinBox" name="spinboxTitleFontSize"/>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkboxChartTitleBold">
-            <property name="text">
-             <string>bold</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="1" column="1">
-         <layout class="QHBoxLayout" name="horizontalLayout_7">
-          <item>
-           <widget class="QLineEdit" name="lineeditYTitle"/>
-          </item>
-          <item>
-           <widget class="QSpinBox" name="spinboxYTitleFontSize"/>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkboxYTitleBold">
-            <property name="text">
-             <string>bold</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="label_10">
+        <item row="10" column="0">
+         <widget class="QLabel" name="label_6">
           <property name="text">
-           <string>Axis Label Precision</string>
+           <string>Line Width</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="1">
-         <widget class="QSpinBox" name="spinboxYLabelPrecision"/>
+        <item row="10" column="1">
+         <widget class="QSpinBox" name="spinboxLineWidth"/>
         </item>
-        <item row="10" column="0">
+        <item row="11" column="0">
+         <widget class="QLabel" name="label_8">
+          <property name="text">
+           <string>Line Color</string>
+          </property>
+         </widget>
+        </item>
+        <item row="11" column="1">
+         <widget class="QComboBox" name="comboboxLineColor"/>
+        </item>
+        <item row="12" column="0">
          <widget class="QLabel" name="label_11">
           <property name="text">
            <string>Crosshairs</string>
           </property>
          </widget>
         </item>
-        <item row="10" column="1">
+        <item row="12" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_8">
           <item>
            <widget class="QCheckBox" name="checkboxCrosshairs">
@@ -226,6 +243,170 @@
           </item>
          </layout>
         </item>
+        <item row="13" column="0" colspan="2">
+         <widget class="Line" name="line">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="14" column="0">
+         <widget class="QLabel" name="label_13">
+          <property name="text">
+           <string>OHLC Display</string>
+          </property>
+         </widget>
+        </item>
+        <item row="14" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_12">
+          <item>
+           <widget class="QCheckBox" name="checkBoxOHLCDisplay">
+            <property name="text">
+             <string>Enable</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="spinboxOHLCFontSize"/>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkboxOHLCBold">
+            <property name="text">
+             <string>bold</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="15" column="0">
+         <widget class="QLabel" name="label_26">
+          <property name="text">
+           <string>Candle Body</string>
+          </property>
+         </widget>
+        </item>
+        <item row="15" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_11">
+          <item>
+           <widget class="QCheckBox" name="checkBoxCandleFill">
+            <property name="text">
+             <string>Enable</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBoxUpCandleFillColor"/>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBoxDownCandleFillColor"/>
+          </item>
+         </layout>
+        </item>
+        <item row="16" column="0">
+         <widget class="QLabel" name="label_14">
+          <property name="text">
+           <string>Candle Borders</string>
+          </property>
+         </widget>
+        </item>
+        <item row="16" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_10">
+          <item>
+           <widget class="QCheckBox" name="checkBoxBorderColor">
+            <property name="text">
+             <string>Enable</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBoxUpBorderColor"/>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBoxDownBorderColor"/>
+          </item>
+         </layout>
+        </item>
+        <item row="17" column="0">
+         <widget class="QLabel" name="label_15">
+          <property name="text">
+           <string>Candle Wick</string>
+          </property>
+         </widget>
+        </item>
+        <item row="17" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_9">
+          <item>
+           <widget class="QCheckBox" name="checkBoxWickColor">
+            <property name="text">
+             <string>Enable</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBoxUpWickColor"/>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBoxDownWickColor"/>
+          </item>
+         </layout>
+        </item>
+        <item row="18" column="0">
+         <widget class="QLabel" name="label_16">
+          <property name="text">
+           <string>Candle Dash</string>
+          </property>
+         </widget>
+        </item>
+        <item row="18" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_13">
+          <item>
+           <widget class="QCheckBox" name="checkboxCandleDash">
+            <property name="text">
+             <string>Enable</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBoxUpCandleDashColor"/>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBoxDownCandleDashColor"/>
+          </item>
+         </layout>
+        </item>
+        <item row="19" column="0">
+         <widget class="QLabel" name="label_17">
+          <property name="text">
+           <string>Candle Width</string>
+          </property>
+         </widget>
+        </item>
+        <item row="19" column="1">
+         <widget class="QSpinBox" name="spinboxCandleWidth"/>
+        </item>
+        <item row="20" column="0">
+         <widget class="QLabel" name="label_18">
+          <property name="text">
+           <string>Line Width</string>
+          </property>
+         </widget>
+        </item>
+        <item row="20" column="1">
+         <widget class="QSpinBox" name="spinboxCandleLineWidth"/>
+        </item>
        </layout>
       </item>
      </layout>
@@ -237,8 +418,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>496</width>
-     <height>21</height>
+     <width>421</width>
+     <height>22</height>
     </rect>
    </property>
   </widget>
