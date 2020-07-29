@@ -33,6 +33,7 @@ SOFTWARE.
 #include <QPointF>
 #include <QString>
 #include <QWidget>
+#include <QWheelEvent>
 
 #include <list>
 #include <set>
@@ -148,13 +149,16 @@ protected:
     std::pair<uint32_t, Candle> ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle>& pair);
     uint32_t ConvertCandlePlotPointTime(const QPointF& point);
     std::map<uint32_t, Candle> ConvertLineToCandlestickData(const std::map<uint32_t, double> lineChartData, uint32_t candleTimePeriod);
+    void wheelEvent(QWheelEvent *event) override;
     bool m_fIsLineChart;
     bool m_fFillCandle;
     bool m_fDrawWick;
     bool m_fDrawOutline;
     bool m_fDisplayCandleDash;
     bool m_fDisplayOHLC;
-    double m_candleWidth;
+    double m_nCandleWidth;
+    double m_nCandleMaxWidth;
+    double m_nCandleMinWidth;
     int m_nCandleLineWidth;
     int m_nCandleSpacing;
     int m_nCandles;
@@ -240,6 +244,8 @@ public:
     void EnableCandleDash(bool fEnable);
     void EnableOHLCDisplay(bool fEnable);
     void SetOLHCFont(const QFont &font);
+signals:
+    void candleWidthChanged(int dValue);
 };
 
 } //namespace

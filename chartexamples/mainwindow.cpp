@@ -136,7 +136,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->spinboxGridlines->setValue(5);
     ui->spinboxLineWidth->setValue(3);
+
+    ui->spinboxCandleWidth->setMinimum(1);
+    ui->spinboxCandleWidth->setMaximum(20);
     ui->spinboxCandleWidth->setValue(2);
+    ui->spinboxCandleLineWidth->setMinimum(1);
+    ui->spinboxCandleLineWidth->setMaximum(20);
     ui->spinboxCandleLineWidth->setValue(2);
 
     //Crosshairs
@@ -228,6 +233,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->spinboxCandleWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxCandleLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxOHLCFontSize, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
+
+    connect(m_chart, &PssCharts::LineChart::candleWidthChanged, this, &MainWindow::ChangeCandleWidth);
 }
 
 MainWindow::~MainWindow()
@@ -312,4 +319,8 @@ void MainWindow::RedrawChart()
     display->SetColor(colorCrosshair);
 
     m_chart->repaint();
+}
+
+void MainWindow::ChangeCandleWidth(int dChange) {
+    ui->spinboxCandleWidth->setValue(ui->spinboxCandleWidth->value() + dChange);
 }

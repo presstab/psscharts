@@ -64,7 +64,9 @@ LineChart::LineChart(QWidget *parent) : QWidget (parent)
     m_yPadding = 0;
     m_nCandleSpacing = 2;
     m_nCandleLineWidth = 2;
-    m_candleWidth = 8;
+    m_nCandleWidth = 8;
+    m_nCandleMaxWidth = 20;
+    m_nCandleMinWidth = 1;
     m_nCandleTimePeriod = 60;
     m_fEnableFill = true;
     m_fChangesMade = true;
@@ -175,7 +177,7 @@ std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const
     double nValueMaxX = (MaxX() - MinX());
     double nValueX = ((pair.first - MinX()) / nValueMaxX);
     nValueX *= nWidth;
-    nValueX += rectChart.left() + (2*m_nCandles + 1) * m_candleWidth; // factor in space candles take
+    nValueX += rectChart.left() + (2*m_nCandles + 1) * m_nCandleWidth; // factor in space candles take
     if(nValueX > nWidth) {
         // outside of chart
         return std::pair<uint32_t, PssCharts::Candle>();
@@ -427,7 +429,7 @@ void LineChart::ProcessChangedData()
             // determine if candles are out of bounds
             QRect rectChart = ChartArea();
             int nWidth = rectChart.width();
-            double nValueX = (2*m_nCandles + 1) * m_candleWidth + 2*m_nCandleSpacing;
+            double nValueX = (2*m_nCandles + 1) * m_nCandleWidth + 2*m_nCandleSpacing;
             if(nValueX > nWidth) {
                 break;
             } else {
@@ -680,15 +682,15 @@ void LineChart::paintEvent(QPaintEvent *event)
                     painter.drawLine(LOline);
                 }
                 if(m_fDisplayCandleDash) {
-                    QLineF Highline(QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_high), QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_high));
-                    QLineF Lowline(QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_low), QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_low));
+                    QLineF Highline(QPointF(chartCandle.first - m_nCandleWidth, chartCandle.second.m_high), QPointF(chartCandle.first + m_nCandleWidth, chartCandle.second.m_high));
+                    QLineF Lowline(QPointF(chartCandle.first - m_nCandleWidth, chartCandle.second.m_low), QPointF(chartCandle.first + m_nCandleWidth, chartCandle.second.m_low));
                     penCandle.setColor(m_colorUpDash);
                     painter.setPen(penCandle);
                     painter.drawLine(Highline);
                     painter.drawLine(Lowline);
                 }
-                pointO = QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_open);
-                pointC = QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_close);
+                pointO = QPointF(chartCandle.first + m_nCandleWidth, chartCandle.second.m_open);
+                pointC = QPointF(chartCandle.first - m_nCandleWidth, chartCandle.second.m_close);
                 QRectF rect(pointO, pointC);
                 QBrush rectBrush = m_colorUpCandle;
                 if(m_fDrawOutline) {
@@ -716,15 +718,15 @@ void LineChart::paintEvent(QPaintEvent *event)
                     painter.drawLine(LCline);
                 }
                 if(m_fDisplayCandleDash) {
-                    QLineF Highline(QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_high), QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_high));
-                    QLineF Lowline(QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_low), QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_low));
+                    QLineF Highline(QPointF(chartCandle.first - m_nCandleWidth, chartCandle.second.m_high), QPointF(chartCandle.first + m_nCandleWidth, chartCandle.second.m_high));
+                    QLineF Lowline(QPointF(chartCandle.first - m_nCandleWidth, chartCandle.second.m_low), QPointF(chartCandle.first + m_nCandleWidth, chartCandle.second.m_low));
                     penCandle.setColor(m_colorDownDash);
                     painter.setPen(penCandle);
                     painter.drawLine(Highline);
                     painter.drawLine(Lowline);
                 }
-                pointO = QPointF(chartCandle.first - m_candleWidth, chartCandle.second.m_open);
-                pointC = QPointF(chartCandle.first + m_candleWidth, chartCandle.second.m_close);
+                pointO = QPointF(chartCandle.first - m_nCandleWidth, chartCandle.second.m_open);
+                pointC = QPointF(chartCandle.first + m_nCandleWidth, chartCandle.second.m_close);
                 QRectF rect(pointO, pointC);
                 QBrush rectBrush = m_colorDownCandle;
                 if(m_fDrawOutline) {
@@ -1040,7 +1042,7 @@ void LineChart::SetCandleLineWidth(int nWidth)
 
 void LineChart::SetCandleWidth(int nWidth)
 {
-    m_candleWidth = nWidth;
+    m_nCandleWidth = nWidth;
     m_fChangesMade = true;
 }
 
@@ -1302,6 +1304,21 @@ void LineChart::EnableCandleDash(bool fEnable)
 void LineChart::EnableOHLCDisplay(bool fEnable)
 {
     m_fDisplayOHLC = fEnable;
+}
+
+void LineChart::wheelEvent(QWheelEvent *event)
+{
+    if(!m_fIsLineChart) {
+        int dCandleWidth = event->angleDelta().y()/120;
+        if ((m_nCandleWidth > m_nCandleMinWidth && dCandleWidth < 0)
+                || (m_nCandleWidth < m_nCandleMaxWidth && dCandleWidth > 0)) {
+            m_nCandleWidth += dCandleWidth;
+            m_fChangesMade = true;
+            emit candleWidthChanged(dCandleWidth);
+        }
+    } else {
+        QWidget::wheelEvent(event);
+    }
 }
 
 }//namespace
