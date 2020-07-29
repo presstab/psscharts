@@ -91,7 +91,7 @@ class LineChart : public QWidget
 private:
     static const uint32_t VERSION_MAJOR = 0;
     static const uint32_t VERSION_MINOR = 0;
-    static const uint32_t VERSION_REVISION = 4;
+    static const uint32_t VERSION_REVISION = 5;
     static const uint32_t VERSION_BUILD = 0;
 
 protected:
