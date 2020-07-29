@@ -33,6 +33,7 @@ SOFTWARE.
 #include <QPointF>
 #include <QString>
 #include <QWidget>
+#include <QWheelEvent>
 
 #include <list>
 #include <set>
@@ -88,10 +89,10 @@ class LineChart : public QWidget
     Q_OBJECT
 
 private:
-    const uint32_t VERSION_MAJOR = 0;
-    const uint32_t VERSION_MINOR = 0;
-    const uint32_t VERSION_REVISION = 3;
-    const uint32_t VERSION_BUILD = 0;
+    static const uint32_t VERSION_MAJOR = 0;
+    static const uint32_t VERSION_MINOR = 0;
+    static const uint32_t VERSION_REVISION = 5;
+    static const uint32_t VERSION_BUILD = 0;
 
 protected:
     std::map<uint32_t, double> m_mapPoints;
@@ -145,16 +146,23 @@ protected:
     void ProcessChangedData();
 
     //Candlestick stuff
+    std::pair<uint32_t, Candle> ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle>& pair);
+    uint32_t ConvertCandlePlotPointTime(const QPointF& point);
+    std::map<uint32_t, Candle> ConvertLineToCandlestickData(const std::map<uint32_t, double> lineChartData, uint32_t candleTimePeriod);
+    void wheelEvent(QWheelEvent *event) override;
     bool m_fIsLineChart;
     bool m_fFillCandle;
     bool m_fDrawWick;
     bool m_fDrawOutline;
-    bool m_fDisplayOHLC;
     bool m_fDisplayCandleDash;
-    double m_candleWidth;
+    bool m_fDisplayOHLC;
+    double m_nCandleWidth;
+    double m_nCandleMaxWidth;
+    double m_nCandleMinWidth;
     int m_nCandleLineWidth;
     int m_nCandleSpacing;
     int m_nCandles;
+    uint32_t m_nCandleTimePeriod;
     QColor m_colorUpCandle;
     QColor m_colorDownCandle;
     QColor m_colorUpCandleLine;
@@ -200,8 +208,8 @@ public:
     void SetAxisLabelsOnOff(bool fDrawXLabels, bool fDrawYLabels);
     void SetAxisSectionCount(uint32_t nCount);
     void SetAxisSeparatorPen(const QPen& pen);
-    uint32_t Version() const;
-    QString VersionString() const;
+    static uint32_t Version();
+    static QString VersionString();
 
     AxisLabelSettings* YLabelSettings() { return &m_settingsYLabels; }
     AxisLabelSettings* XLabelSettings() { return &m_settingsXLabels; }
@@ -229,14 +237,15 @@ public:
     void SetDashColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetCandleLineWidth(int nWidth);
     void SetCandleWidth(int nWidth);
+    void SetCandleTimePeriod(uint32_t nTime);
     void EnableCandleFill(bool fEnable);
     void EnableWick(bool fEnable);
     void EnableCandleBorder(bool fEnable);
     void EnableCandleDash(bool fEnable);
     void EnableOHLCDisplay(bool fEnable);
     void SetOLHCFont(const QFont &font);
-    std::pair<uint32_t, Candle> ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle>& pair);
-    uint32_t ConvertCandlePlotPointTime(const QPointF& point);
+signals:
+    void candleWidthChanged(int dChange);
 };
 
 } //namespace
