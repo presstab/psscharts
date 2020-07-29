@@ -245,7 +245,7 @@ public:
     void EnableOHLCDisplay(bool fEnable);
     void SetOLHCFont(const QFont &font);
 signals:
-    void candleWidthChanged(int dValue);
+    void candleWidthChanged(int dChange);
 };
 
 } //namespace

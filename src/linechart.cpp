@@ -177,8 +177,8 @@ std::pair<uint32_t, PssCharts::Candle> LineChart::ConvertToCandlePlotPoint(const
     double nValueMaxX = (MaxX() - MinX());
     double nValueX = ((pair.first - MinX()) / nValueMaxX);
     nValueX *= nWidth;
-    nValueX += rectChart.left() + (2*m_nCandles + 1) * m_nCandleWidth; // factor in space candles take
-    if(nValueX > nWidth) {
+    nValueX += rectChart.left() - (2*m_nCandles + 1) * m_nCandleWidth; // factor in space candles take
+    if(nValueX < rectChart.left()) {
         // outside of chart
         return std::pair<uint32_t, PssCharts::Candle>();
     } else {
@@ -415,17 +415,8 @@ void LineChart::ProcessChangedData()
         m_fChangesMade = true;
     } else {
         m_nCandles = 0;
-        for (const auto& candle : m_candlePoints) {
-            //Set min and max for x and y
-            if (fFirstRun || candle.first < m_pairXRange.first)
-                m_pairXRange.first = candle.first;
-            if (fFirstRun || candle.first > m_pairXRange.second)
-                m_pairXRange.second = candle.first;
-            if (fFirstRun || candle.second.m_low < m_pairYRange.first)
-                m_pairYRange.first = candle.second.m_low;
-            if (fFirstRun || candle.second.m_high > m_pairYRange.second)
-                m_pairYRange.second = candle.second.m_high;
-            fFirstRun = false;
+        std::map<uint32_t, Candle>::reverse_iterator rit;
+        for (rit = m_candlePoints.rbegin(); rit != m_candlePoints.rend(); ++rit) {
             // determine if candles are out of bounds
             QRect rectChart = ChartArea();
             int nWidth = rectChart.width();
@@ -435,6 +426,17 @@ void LineChart::ProcessChangedData()
             } else {
                 m_nCandles++;
             }
+
+            //Set min and max for x and y
+            if (fFirstRun || rit->first < m_pairXRange.first)
+                m_pairXRange.first = rit->first;
+            if (fFirstRun || rit->first > m_pairXRange.second)
+                m_pairXRange.second = rit->first;
+            if (fFirstRun || rit->second.m_low < m_pairYRange.first)
+                m_pairYRange.first = rit->second.m_low;
+            if (fFirstRun || rit->second.m_high > m_pairYRange.second)
+                m_pairYRange.second = rit->second.m_high;
+            fFirstRun = false;
         }
         // Add y-axis buffer for candlestick data
         double buffer = m_yPadding * (m_pairYRange.second - m_pairYRange.first) / 20;
@@ -663,10 +665,11 @@ void LineChart::paintEvent(QPaintEvent *event)
         QPen penCandle;
         penCandle.setWidth(m_nCandleLineWidth);
         ProcessChangedData();
-        for (const std::pair<uint32_t, Candle> pair : m_candlePoints) {
-            std::pair<uint32_t, Candle> chartCandle = ConvertToCandlePlotPoint(pair);
+        std::map<uint32_t, Candle>::reverse_iterator rit;
+        for (rit = m_candlePoints.rbegin(); rit != m_candlePoints.rend(); ++rit) {
+            std::pair<uint32_t, Candle> chartCandle = ConvertToCandlePlotPoint(*rit);
             if (chartCandle.second.isNull()) {
-                break;
+                continue;
             }
             QPointF pointO = QPointF(chartCandle.first, chartCandle.second.m_open);
             QPointF pointH = QPointF(chartCandle.first, chartCandle.second.m_high);
@@ -1172,7 +1175,11 @@ QRect LineChart::ChartArea() const
     rectChart.setTop(rectFull.top() + HeightTopTitleArea());
     rectChart.setBottom(rectFull.bottom() - HeightXLabelArea());
     rectChart.setLeft(rectFull.left() + WidthYTitleArea() + WidthYLabelArea());
-    rectChart.setRight(rectFull.right() - WidthRightMargin());
+    if (m_fIsLineChart) {
+        rectChart.setRight(rectFull.right() - WidthRightMargin());
+    } else {
+        rectChart.setRight(rectFull.right());
+    }
 
     return rectChart;
 }
