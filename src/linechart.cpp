@@ -1143,6 +1143,8 @@ void LineChart::SetAxisSeparatorPen(const QPen &pen)
 void LineChart::SetChartType(const QString &type)
 {
     m_fIsLineChart = type == "Line";
+    m_fChangesMade = true;
+    ProcessChangedData();
 }
 
 uint32_t LineChart::Version()
