@@ -669,7 +669,7 @@ void LineChart::paintEvent(QPaintEvent *event)
         for (rit = m_candlePoints.rbegin(); rit != m_candlePoints.rend(); ++rit) {
             std::pair<uint32_t, Candle> chartCandle = ConvertToCandlePlotPoint(*rit);
             if (chartCandle.second.isNull()) {
-                continue;
+                break;
             }
             QPointF pointO = QPointF(chartCandle.first, chartCandle.second.m_open);
             QPointF pointH = QPointF(chartCandle.first, chartCandle.second.m_high);
