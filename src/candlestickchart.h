@@ -22,9 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef LINECHART_H
-#define LINECHART_H
+#ifndef CANDLESTICKCHART_H
+#define CANDLESTICKCHART_H
 
+#include "psschart.h"
 #include "axislabelsettings.h"
 #include "mousedisplay.h"
 
@@ -40,8 +41,6 @@ SOFTWARE.
 
 class QColor;
 class QPaintEvent;
-
-namespace PssCharts {
 
 struct Candle {
     double m_open;
@@ -71,20 +70,9 @@ struct Candle {
     }
 };
 
-enum class AxisLabelType
-{
-    AX_NO_LABEL,
-    AX_TIMESTAMP,
-    AX_NUMBER
-};
+namespace PssCharts {
 
-enum class ChartType
-{
-    LINE,
-    CANDLESTICK
-};
-
-class LineChart : public QWidget
+class CandlestickChart : public QWidget
 {
     Q_OBJECT
 
@@ -99,56 +87,15 @@ protected:
     std::map<uint32_t, Candle> m_candlePoints;
     std::pair<double, double> m_pairYRange; // min, max
     std::pair<double, double> m_pairXRange; // min, max
-    QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair) const;
-    std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point);
-    QBrush m_brushBackground;
-    QBrush m_brushLine;
-    QBrush m_brushFill;
-    bool m_fEnableFill; //! Does the line get filled
-    QBrush m_brushLabels;
-    QPen m_penAxisSeparater;
-    int m_lineWidth;
-    uint32_t m_precision;
-    MouseDisplay m_mousedisplay;
+    std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point) override;
 
-    //Top Title
-    QString m_strTopTitle; //! Chart main title
-    QFont m_fontTopTitle;
-
-    //Y-Title
-    QString m_strTitleY; //! Title for Y-axis
-    QFont m_fontYTitle;
-
-    //Axis Tick Labels
-    AxisLabelSettings m_settingsYLabels;
-    AxisLabelSettings m_settingsXLabels;
-
-    bool m_fDrawXAxis;
-    bool m_fDrawYAxis;
-
-    int m_yPadding;
-    int m_rightMargin;
-    int m_topTitleHeight;
-
-    uint32_t m_axisSections; // Split the axis into this many sections
-
-    QPixmap m_pixmapCache;
-    bool m_fChangesMade; // Have changes been made since the last paint
-
-    int HeightTopTitleArea() const;
-    int HeightXLabelArea() const;
-    QRect MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const;
-
-    int WidthYTitleArea() const;
-    int WidthYLabelArea() const;
-    int WidthRightMargin() const;
-
-    void ProcessChangedData();
+    void ProcessChangedData() override;
 
     //Candlestick stuff
     std::pair<uint32_t, Candle> ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle>& pair);
     uint32_t ConvertCandlePlotPointTime(const QPointF& point);
     std::map<uint32_t, Candle> ConvertLineToCandlestickData(const std::map<uint32_t, double> lineChartData, uint32_t candleTimePeriod);
+    QRect ChartArea() const;
     void wheelEvent(QWheelEvent *event) override;
     bool m_fIsLineChart;
     bool m_fFillCandle;
@@ -173,61 +120,14 @@ protected:
     QColor m_colorDownDash;
     QFont m_fontOHLC;
     QString m_strOHLC;
+    PssChart* m_pssChart;
 
 public:
-    LineChart(QWidget* parent = nullptr);
-    bool ChangesMade() const { return m_fChangesMade; }
-    void AddDataPoint(const uint32_t& x, const double& y);
-    void DrawXLabels(QPainter& painter, const std::vector<int>& vXPoints, bool fDrawIndicatorLine);
+    CandlestickChart(QWidget* parent = nullptr);
     void DrawYLabels(QPainter& painter, const std::vector<int>& vYPoints, bool isMouseDisplay);
-    void EnableMouseDisplay(bool fEnable);
-    void RemoveDataPoint(const uint32_t& x);
-    void SetDataPoints(const std::map<uint32_t, double>& mapPoints);
     void paintEvent(QPaintEvent *event) override;
-    void SetBackgroundBrush(const QBrush& brush);
-    void SetFillBrush(const QBrush& brush);
-    void EnableFill(bool fEnable);
-    void SetLineBrush(const QBrush& brush);
-    void SetLineWidth(int nWidth);
-    void SetRightMargin(int margin);
-    void SetTopTitleHeight(int height);
-    void SetTopTitle(const QString& strTitle);
-    void SetTopTitleFont(const QFont& font);
-    void SetAxisLabelsBrush(const QBrush& brush);
-    void SetXLabelType(AxisLabelType labelType);
-    void SetYLabelType(AxisLabelType labelType);
-    void SetYLabelWidth(int width);
-    void SetYLabelFont(const QFont& font);
-    void SetXLabelHeight(int height);
-    void SetLabelPrecision(int precision);
-    void SetLabelAutoPrecision(bool fEnable);
-    void SetYPadding(int nPadding);
-    void SetYTitle(const QString& strTitle);
-    void SetYTitleFont(const QFont& font);
-    void SetAxisOnOff(bool fDrawX, bool fDrawY);
-    void SetAxisLabelsOnOff(bool fDrawXLabels, bool fDrawYLabels);
-    void SetAxisSectionCount(uint32_t nCount);
-    void SetAxisSeparatorPen(const QPen& pen);
-    void GetLineEquation(const QLineF& line, double& nSlope, double& nYIntercept);
-    static uint32_t Version();
-    static QString VersionString();
-
-    AxisLabelSettings* YLabelSettings() { return &m_settingsYLabels; }
-    AxisLabelSettings* XLabelSettings() { return &m_settingsXLabels; }
-    MouseDisplay* GetMouseDisplay() { return &m_mousedisplay; }
-
-    QRect ChartArea() const;
-    QRect YLabelArea() const;
-    QRect XLabelArea() const;
-    const double& MaxX() const;
-    const double& MaxY() const;
-    const double& MinX() const;
-    const double& MinY() const;
-
-    QBrush BackgroundBrush() const;
 
     QPixmap grab(const QRect &rectangle = QRect(QPoint(0, 0), QSize(-1, -1)));
-    void mouseMoveEvent(QMouseEvent* event) override;
 
     // Candlestick
     void SetChartType(const QString& type);
@@ -250,4 +150,4 @@ signals:
 };
 
 } //namespace
-#endif // LINECHART_H
+#endif // CANDLESTICKCHART_H

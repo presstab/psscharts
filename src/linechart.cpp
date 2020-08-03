@@ -452,7 +452,7 @@ void LineChart::ProcessChangedData()
  * @param nSlope[out]
  * @param nYIntercept[out]
  */
-void GetLineEquation(const QLineF& line, double& nSlope, double& nYIntercept)
+void LineChart::GetLineEquation(const QLineF& line, double& nSlope, double& nYIntercept)
 {
     nSlope = (line.y2() - line.y1()) / (line.x2() - line.x1());
     nYIntercept = line.y1() - (nSlope * line.x1());

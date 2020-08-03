@@ -1,4 +1,4 @@
-/*
+﻿/*
 MIT License
 
 Copyright (c) 2020 Paddington Software Services
@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef LINECHART_H
-#define LINECHART_H
+#ifndef PSSCHART_H
+#define PSSCHART_H
 
 #include "axislabelsettings.h"
 #include "mousedisplay.h"
@@ -43,34 +43,6 @@ class QPaintEvent;
 
 namespace PssCharts {
 
-struct Candle {
-    double m_open;
-    double m_high;
-    double m_low;
-    double m_close;
-    Candle() {
-        m_open = 0;
-        m_high = 0;
-        m_low = 0;
-        m_close = 0;
-    }
-    Candle(double open, double high, double low, double close) {
-        if (high < std::max(open, std::max(low, close))) {
-            throw "High is not the maximum value";
-        }
-        if (low > std::min(open, std::min(high, close))) {
-            throw "Low is not the minimum value";
-        }
-        m_open = open;
-        m_high = high;
-        m_low = low;
-        m_close = close;
-    }
-    bool isNull() {
-        return this->m_low == 0.0 && this->m_high == 0.0 && this->m_low == 0.0 && this->m_close == 0.0;
-    }
-};
-
 enum class AxisLabelType
 {
     AX_NO_LABEL,
@@ -84,7 +56,7 @@ enum class ChartType
     CANDLESTICK
 };
 
-class LineChart : public QWidget
+class PssChart : public QWidget
 {
     Q_OBJECT
 
@@ -95,16 +67,12 @@ private:
     static const uint32_t VERSION_BUILD = 0;
 
 protected:
-    std::map<uint32_t, double> m_mapPoints;
-    std::map<uint32_t, Candle> m_candlePoints;
+    ChartType m_chartType;
+
     std::pair<double, double> m_pairYRange; // min, max
     std::pair<double, double> m_pairXRange; // min, max
-    QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair) const;
-    std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point);
+    virtual std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point) {return std::pair<uint32_t, double>(point.x(),point.y());};
     QBrush m_brushBackground;
-    QBrush m_brushLine;
-    QBrush m_brushFill;
-    bool m_fEnableFill; //! Does the line get filled
     QBrush m_brushLabels;
     QPen m_penAxisSeparater;
     int m_lineWidth;
@@ -137,58 +105,21 @@ protected:
 
     int HeightTopTitleArea() const;
     int HeightXLabelArea() const;
-    QRect MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const;
 
     int WidthYTitleArea() const;
     int WidthYLabelArea() const;
     int WidthRightMargin() const;
 
-    void ProcessChangedData();
-
-    //Candlestick stuff
-    std::pair<uint32_t, Candle> ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle>& pair);
-    uint32_t ConvertCandlePlotPointTime(const QPointF& point);
-    std::map<uint32_t, Candle> ConvertLineToCandlestickData(const std::map<uint32_t, double> lineChartData, uint32_t candleTimePeriod);
-    void wheelEvent(QWheelEvent *event) override;
-    bool m_fIsLineChart;
-    bool m_fFillCandle;
-    bool m_fDrawWick;
-    bool m_fDrawOutline;
-    bool m_fDisplayCandleDash;
-    bool m_fDisplayOHLC;
-    double m_nCandleWidth;
-    double m_nCandleMaxWidth;
-    double m_nCandleMinWidth;
-    int m_nCandleLineWidth;
-    int m_nCandleSpacing;
-    int m_nCandles;
-    uint32_t m_nCandleTimePeriod;
-    QColor m_colorUpCandle;
-    QColor m_colorDownCandle;
-    QColor m_colorUpCandleLine;
-    QColor m_colorDownCandleLine;
-    QColor m_colorUpTail;
-    QColor m_colorDownTail;
-    QColor m_colorUpDash;
-    QColor m_colorDownDash;
-    QFont m_fontOHLC;
-    QString m_strOHLC;
+    virtual void ProcessChangedData() {return;};
 
 public:
-    LineChart(QWidget* parent = nullptr);
+    PssChart(ChartType type, QWidget* parent = nullptr);
     bool ChangesMade() const { return m_fChangesMade; }
-    void AddDataPoint(const uint32_t& x, const double& y);
     void DrawXLabels(QPainter& painter, const std::vector<int>& vXPoints, bool fDrawIndicatorLine);
     void DrawYLabels(QPainter& painter, const std::vector<int>& vYPoints, bool isMouseDisplay);
     void EnableMouseDisplay(bool fEnable);
-    void RemoveDataPoint(const uint32_t& x);
-    void SetDataPoints(const std::map<uint32_t, double>& mapPoints);
-    void paintEvent(QPaintEvent *event) override;
+    void SetChartType(const QString& type);
     void SetBackgroundBrush(const QBrush& brush);
-    void SetFillBrush(const QBrush& brush);
-    void EnableFill(bool fEnable);
-    void SetLineBrush(const QBrush& brush);
-    void SetLineWidth(int nWidth);
     void SetRightMargin(int margin);
     void SetTopTitleHeight(int height);
     void SetTopTitle(const QString& strTitle);
@@ -208,7 +139,6 @@ public:
     void SetAxisLabelsOnOff(bool fDrawXLabels, bool fDrawYLabels);
     void SetAxisSectionCount(uint32_t nCount);
     void SetAxisSeparatorPen(const QPen& pen);
-    void GetLineEquation(const QLineF& line, double& nSlope, double& nYIntercept);
     static uint32_t Version();
     static QString VersionString();
 
@@ -228,26 +158,7 @@ public:
 
     QPixmap grab(const QRect &rectangle = QRect(QPoint(0, 0), QSize(-1, -1)));
     void mouseMoveEvent(QMouseEvent* event) override;
-
-    // Candlestick
-    void SetChartType(const QString& type);
-    void SetCandleDataPoints(std::map<uint32_t, Candle>& mapPoints);
-    void SetCandleBodyColor(const QColor& upColor, const QColor& downColor = QColor());
-    void SetCandleLineColor(const QColor& upColor, const QColor& downColor = QColor());
-    void SetTailColor(const QColor& upColor, const QColor& downColor = QColor());
-    void SetDashColor(const QColor& upColor, const QColor& downColor = QColor());
-    void SetCandleLineWidth(int nWidth);
-    void SetCandleWidth(int nWidth);
-    void SetCandleTimePeriod(uint32_t nTime);
-    void EnableCandleFill(bool fEnable);
-    void EnableWick(bool fEnable);
-    void EnableCandleBorder(bool fEnable);
-    void EnableCandleDash(bool fEnable);
-    void EnableOHLCDisplay(bool fEnable);
-    void SetOLHCFont(const QFont &font);
-signals:
-    void candleWidthChanged(int dChange);
 };
 
 } //namespace
-#endif // LINECHART_H
+#endif // PSSCHART_H
