@@ -255,7 +255,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::RedrawChart()
 {
-    m_chartType = PssCharts::Chart::ChartTypeFromString(ui->comboBoxChartType->currentText().toStdString());
+    m_chartType = PssCharts::ChartTypeFromString(ui->comboBoxChartType->currentText().toStdString());
     switch (m_chartType) {
         case PssCharts::ChartType::LINE:{
             m_candleChart->setVisible(false);
