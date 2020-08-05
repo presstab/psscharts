@@ -52,8 +52,9 @@ enum class AxisLabelType
 
 enum class ChartType
 {
-    LINE,
-    CANDLESTICK
+    ERROR = -1,
+    LINE = 0,
+    CANDLESTICK = 1
 };
 
 class PssChart : public QWidget
@@ -71,7 +72,7 @@ protected:
 
     std::pair<double, double> m_pairYRange; // min, max
     std::pair<double, double> m_pairXRange; // min, max
-    virtual std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point) {return std::pair<uint32_t, double>(point.x(),point.y());};
+    virtual std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point) {return std::pair<uint32_t, double>(point.x(),point.y());}
     QBrush m_brushBackground;
     QBrush m_brushLabels;
     QPen m_penAxisSeparater;
@@ -110,7 +111,7 @@ protected:
     int WidthYLabelArea() const;
     int WidthRightMargin() const;
 
-    virtual void ProcessChangedData() {return;};
+    virtual void ProcessChangedData() {return;}
 
 public:
     PssChart(QWidget* parent = nullptr);
@@ -119,7 +120,7 @@ public:
     void DrawXLabels(QPainter& painter, const std::vector<int>& vXPoints, bool fDrawIndicatorLine);
     void DrawYLabels(QPainter& painter, const std::vector<int>& vYPoints, bool isMouseDisplay);
     void EnableMouseDisplay(bool fEnable);
-    void SetChartType(const QString& type);
+    void SetChartType(const ChartType& type);
     void SetBackgroundBrush(const QBrush& brush);
     void SetRightMargin(int margin);
     void SetTopTitleHeight(int height);
@@ -159,6 +160,9 @@ public:
 
     QPixmap grab(const QRect &rectangle = QRect(QPoint(0, 0), QSize(-1, -1)));
     void mouseMoveEvent(QMouseEvent* event) override;
+
+    static std::string ChartTypeToString(const ChartType type);
+    static ChartType ChartTypeFromString(std::string strType);
 };
 
 } //namespace

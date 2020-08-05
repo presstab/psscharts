@@ -42,6 +42,8 @@ SOFTWARE.
 class QColor;
 class QPaintEvent;
 
+namespace PssCharts {
+
 struct Candle {
     double m_open;
     double m_high;
@@ -70,8 +72,6 @@ struct Candle {
     }
 };
 
-namespace PssCharts {
-
 class CandlestickChart : public PssChart
 {
     Q_OBJECT
@@ -83,32 +83,33 @@ private:
     static const uint32_t VERSION_BUILD = 0;
 
 protected:
-    std::map<uint32_t, double> m_mapPoints;
-    std::map<uint32_t, Candle> m_candlePoints;
-    std::pair<double, double> m_pairYRange; // min, max
-    std::pair<double, double> m_pairXRange; // min, max
+    std::map<uint32_t, Candle> m_mapPoints;
     std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point) override;
 
     void ProcessChangedData() override;
 
-    //Candlestick stuff
     std::pair<uint32_t, Candle> ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle>& pair);
     uint32_t ConvertCandlePlotPointTime(const QPointF& point);
     std::map<uint32_t, Candle> ConvertLineToCandlestickData(const std::map<uint32_t, double> lineChartData, uint32_t candleTimePeriod);
-    QRect ChartArea() const;
+
     void wheelEvent(QWheelEvent *event) override;
+    void paintEvent(QPaintEvent *event) override;
+
     bool m_fIsLineChart;
     bool m_fFillCandle;
     bool m_fDrawWick;
     bool m_fDrawOutline;
     bool m_fDisplayCandleDash;
     bool m_fDisplayOHLC;
+
     double m_nCandleWidth;
     double m_nCandleMaxWidth;
     double m_nCandleMinWidth;
+
     int m_nCandleLineWidth;
     int m_nCandleSpacing;
     int m_nCandles;
+
     uint32_t m_nCandleTimePeriod;
     QColor m_colorUpCandle;
     QColor m_colorDownCandle;
@@ -120,18 +121,19 @@ protected:
     QColor m_colorDownDash;
     QFont m_fontOHLC;
     QString m_strOHLC;
-    PssChart* m_pssChart;
 
 public:
     CandlestickChart(QWidget* parent = nullptr);
-    void DrawYLabels(QPainter& painter, const std::vector<int>& vYPoints, bool isMouseDisplay);
-    void paintEvent(QPaintEvent *event) override;
 
-    QPixmap grab(const QRect &rectangle = QRect(QPoint(0, 0), QSize(-1, -1)));
+    QRect ChartArea() const;
 
-    // Candlestick
-    void SetChartType(const QString& type);
-    void SetCandleDataPoints(std::map<uint32_t, Candle>& mapPoints);
+    void EnableCandleFill(bool fEnable);
+    void EnableWick(bool fEnable);
+    void EnableCandleBorder(bool fEnable);
+    void EnableCandleDash(bool fEnable);
+    void EnableOHLCDisplay(bool fEnable);
+
+    void SetDataPoints(std::map<uint32_t, Candle>& mapPoints);
     void SetCandleBodyColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetCandleLineColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetTailColor(const QColor& upColor, const QColor& downColor = QColor());
@@ -139,12 +141,8 @@ public:
     void SetCandleLineWidth(int nWidth);
     void SetCandleWidth(int nWidth);
     void SetCandleTimePeriod(uint32_t nTime);
-    void EnableCandleFill(bool fEnable);
-    void EnableWick(bool fEnable);
-    void EnableCandleBorder(bool fEnable);
-    void EnableCandleDash(bool fEnable);
-    void EnableOHLCDisplay(bool fEnable);
     void SetOLHCFont(const QFont &font);
+
 signals:
     void candleWidthChanged(int dChange);
 };

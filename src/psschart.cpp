@@ -88,6 +88,38 @@ PssChart::PssChart(ChartType type, QWidget* parent) : QWidget (parent)
     setMouseTracking(true);
 }
 
+std::string convertToUpper(std::string const &strInput)
+{
+    std::string strOutput = "";
+    std::locale locale;
+    for (std::string::size_type i = 0; i < strInput.length(); ++i)
+        strOutput += std::toupper(strInput[i], locale);
+
+    return strOutput;
+}
+
+std::string PssChart::ChartTypeToString(const ChartType type)
+{
+    switch (type) {
+        case ChartType::LINE:
+            return "LINE";
+        case ChartType::CANDLESTICK:
+            return "CANDLESTICK";
+        default:
+            return "ERROR";
+    }
+}
+ChartType PssChart::ChartTypeFromString(std::string strType)
+{
+    strType = convertToUpper(strType);
+    if(strType == "LINE")
+        return ChartType::LINE;
+    else if(strType == "CANDLESTICK")
+        return ChartType::CANDLESTICK;
+    else
+        return ChartType::ERROR;
+}
+
 int PssChart::HeightTopTitleArea() const
 {
     if (m_topTitleHeight != -1)
@@ -342,8 +374,9 @@ void PssChart::SetAxisSeparatorPen(const QPen &pen)
     m_fChangesMade = true;
 }
 
-void PssChart::SetChartType(const QString &type)
+void PssChart::SetChartType(const ChartType &type)
 {
+    m_chartType = type;
     m_fChangesMade = true;
     ProcessChangedData();
 }

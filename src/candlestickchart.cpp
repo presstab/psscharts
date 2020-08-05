@@ -252,9 +252,9 @@ std::map<uint32_t, Candle> CandlestickChart::ConvertLineToCandlestickData(const 
     return candleData;
 }
 
-void CandlestickChart::SetCandleDataPoints(std::map<uint32_t, Candle>& mapPoints)
+void CandlestickChart::SetDataPoints(std::map<uint32_t, Candle>& mapPoints)
 {
-    m_candlePoints = mapPoints;
+    m_mapPoints = mapPoints;
     ProcessChangedData();
 }
 
@@ -265,7 +265,7 @@ void CandlestickChart::ProcessChangedData()
     bool fFirstRun = true;
     m_nCandles = 0;
     std::map<uint32_t, Candle>::reverse_iterator rit;
-    for (rit = m_candlePoints.rbegin(); rit != m_candlePoints.rend(); ++rit) {
+    for (rit = m_mapPoints.rbegin(); rit != m_mapPoints.rend(); ++rit) {
         // determine if candles are out of bounds
         QRect rectChart = ChartArea();
         int nWidth = rectChart.width();
@@ -366,8 +366,8 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
         if(fMouseInChartArea) {
             uint32_t nTime = ConvertCandlePlotPointTime(lposMouse);
             // Calculate the candle the mouse is closest to and change OHLC
-            std::map<uint32_t, Candle>::iterator candleUpper = m_candlePoints.upper_bound(nTime - m_nCandleTimePeriod);
-            std::map<uint32_t, Candle>::iterator candleLower = m_candlePoints.lower_bound(nTime - m_nCandleTimePeriod);
+            std::map<uint32_t, Candle>::iterator candleUpper = m_mapPoints.upper_bound(nTime - m_nCandleTimePeriod);
+            std::map<uint32_t, Candle>::iterator candleLower = m_mapPoints.lower_bound(nTime - m_nCandleTimePeriod);
             int upperDist = std::abs(static_cast<int>(candleUpper->first) - static_cast<int>(nTime));
             int lowerDist = std::abs(static_cast<int>(candleLower->first) - static_cast<int>(nTime));
             Candle currentCandle;
@@ -415,9 +415,9 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
             painter.setFont(m_settingsYLabels.font);
             painter.setBrush(m_brushLabels);
             painter.setPen(m_brushLabels.color());
-            m_pssChart->DrawYLabels(painter, vYPoints, /*isMouseDisplay*/false);
+            DrawYLabels(painter, vYPoints, /*isMouseDisplay*/false);
             if (m_mousedisplay.IsEnabled() && fMouseInChartArea) {
-                m_pssChart->DrawYLabels(painter, {lposMouse.y()}, /*isMouseDisplay*/true);
+                DrawYLabels(painter, {lposMouse.y()}, /*isMouseDisplay*/true);
             }
         }
 
@@ -440,7 +440,7 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
     penCandle.setWidth(m_nCandleLineWidth);
     ProcessChangedData();
     std::map<uint32_t, Candle>::reverse_iterator rit;
-    for (rit = m_candlePoints.rbegin(); rit != m_candlePoints.rend(); ++rit) {
+    for (rit = m_mapPoints.rbegin(); rit != m_mapPoints.rend(); ++rit) {
         std::pair<uint32_t, Candle> chartCandle = ConvertToCandlePlotPoint(*rit);
         if (chartCandle.second.isNull()) {
             break;
