@@ -113,6 +113,7 @@ protected:
     virtual void ProcessChangedData() {return;};
 
 public:
+    PssChart(QWidget* parent = nullptr);
     PssChart(ChartType type, QWidget* parent = nullptr);
     bool ChangesMade() const { return m_fChangesMade; }
     void DrawXLabels(QPainter& painter, const std::vector<int>& vXPoints, bool fDrawIndicatorLine);

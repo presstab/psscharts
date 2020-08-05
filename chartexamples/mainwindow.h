@@ -33,6 +33,7 @@ class MainWindow;
 
 namespace PssCharts {
 class LineChart;
+class CandlestickChart;
 }
 
 class MainWindow : public QMainWindow
@@ -41,6 +42,7 @@ class MainWindow : public QMainWindow
 private:
     Ui::MainWindow *ui;
     PssCharts::LineChart* m_chart;
+    PssCharts::CandlestickChart* m_candleChart;
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);

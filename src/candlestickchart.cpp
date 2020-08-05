@@ -54,13 +54,12 @@ SOFTWARE.
 */
 namespace PssCharts {
 
-CandlestickChart::CandlestickChart(QWidget *parent) : QWidget (parent)
+CandlestickChart::CandlestickChart(QWidget *parent) : PssChart (ChartType::CANDLESTICK, parent)
 {
     setAutoFillBackground(true);
     m_settingsXLabels.SetNull();
     m_settingsYLabels.SetNull();
 
-//    m_pssChart = parent;
     m_axisSections = 0;
     m_yPadding = 0;
     m_nCandleSpacing = 2;

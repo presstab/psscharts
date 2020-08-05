@@ -72,7 +72,7 @@ struct Candle {
 
 namespace PssCharts {
 
-class CandlestickChart : public QWidget
+class CandlestickChart : public PssChart
 {
     Q_OBJECT
 

@@ -54,12 +54,30 @@ SOFTWARE.
 */
 namespace PssCharts {
 
-PssChart::PssChart(ChartType type, QWidget *parent) : QWidget (parent)
+PssChart::PssChart(QWidget *parent) : QWidget (parent)
 {
     setAutoFillBackground(true);
     m_settingsXLabels.SetNull();
     m_settingsYLabels.SetNull();
 
+    m_chartType = ChartType::LINE;
+    m_axisSections = 0;
+    m_yPadding = 0;
+    m_fChangesMade = true;
+    m_rightMargin = -1;
+    m_topTitleHeight = -1;
+    m_precision = 100000000;
+
+    setMouseTracking(true);
+}
+
+PssChart::PssChart(ChartType type, QWidget* parent) : QWidget (parent)
+{
+    setAutoFillBackground(true);
+    m_settingsXLabels.SetNull();
+    m_settingsYLabels.SetNull();
+
+    m_chartType = type;
     m_axisSections = 0;
     m_yPadding = 0;
     m_fChangesMade = true;
