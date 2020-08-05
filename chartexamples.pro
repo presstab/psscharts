@@ -29,7 +29,7 @@ SOURCES += \
         chartexamples/mainwindow.cpp \
         src/candlestickchart.cpp \
         src/linechart.cpp \
-        src/psschart.cpp \
+        src/chart.cpp \
         src/stringutil.cpp \
         src/mousedisplay.cpp
 
@@ -37,7 +37,7 @@ HEADERS += \
         chartexamples/mainwindow.h \
         src/candlestickchart.h \
         src/linechart.h \
-        src/psschart.h \
+        src/chart.h \
         src/stringutil.h \
         src/axislabelsettings.h \
         src/mousedisplay.h
