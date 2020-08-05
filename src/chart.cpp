@@ -98,7 +98,7 @@ std::string convertToUpper(std::string const &strInput)
     return strOutput;
 }
 
-std::string Chart::ChartTypeToString(const ChartType type)
+std::string ChartTypeToString(const ChartType type)
 {
     switch (type) {
         case ChartType::LINE:
@@ -109,7 +109,7 @@ std::string Chart::ChartTypeToString(const ChartType type)
             return "ERROR";
     }
 }
-ChartType Chart::ChartTypeFromString(std::string strType)
+ChartType ChartTypeFromString(std::string strType)
 {
     strType = convertToUpper(strType);
     if(strType == "LINE")

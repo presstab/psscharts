@@ -258,6 +258,16 @@ void CandlestickChart::SetDataPoints(std::map<uint32_t, Candle>& mapPoints)
     ProcessChangedData();
 }
 
+void CandlestickChart::SetDataPoints(std::map<uint32_t, double>& mapPoints, uint32_t candleTimePeriod)
+{
+    if(candleTimePeriod) {
+        m_nCandleTimePeriod = candleTimePeriod;
+    }
+    m_mapPoints = ConvertLineToCandlestickData(mapPoints, m_nCandleTimePeriod);
+    ProcessChangedData();
+}
+
+
 void CandlestickChart::ProcessChangedData()
 {
     m_pairXRange = {0, 0};

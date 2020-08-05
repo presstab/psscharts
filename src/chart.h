@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef PSSCHART_H
-#define PSSCHART_H
+#ifndef CHART_H
+#define CHART_H
 
 #include "axislabelsettings.h"
 #include "mousedisplay.h"
@@ -56,6 +56,9 @@ enum class ChartType
     LINE = 0,
     CANDLESTICK = 1
 };
+
+std::string ChartTypeToString(const ChartType type);
+ChartType ChartTypeFromString(std::string strType);
 
 class Chart : public QWidget
 {
@@ -161,9 +164,8 @@ public:
     QPixmap grab(const QRect &rectangle = QRect(QPoint(0, 0), QSize(-1, -1)));
     void mouseMoveEvent(QMouseEvent* event) override;
 
-    static std::string ChartTypeToString(const ChartType type);
-    static ChartType ChartTypeFromString(std::string strType);
+
 };
 
 } //namespace
-#endif // PSSCHART_H
+#endif // CHART_H

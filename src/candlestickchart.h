@@ -134,6 +134,7 @@ public:
     void EnableOHLCDisplay(bool fEnable);
 
     void SetDataPoints(std::map<uint32_t, Candle>& mapPoints);
+    void SetDataPoints(std::map<uint32_t, double>& mapPoints, uint32_t candleTimePeriod = 0);
     void SetCandleBodyColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetCandleLineColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetTailColor(const QColor& upColor, const QColor& downColor = QColor());
