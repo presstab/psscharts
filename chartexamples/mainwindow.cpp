@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "src/psschart.h"
+#include "src/chart.h"
 #include "src/linechart.h"
 #include "src/candlestickchart.h"
 

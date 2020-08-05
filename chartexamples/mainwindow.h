@@ -26,7 +26,7 @@ SOFTWARE.
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "src/psschart.h"
+#include "src/chart.h"
 
 namespace Ui {
 class MainWindow;

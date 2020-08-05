@@ -25,7 +25,7 @@ SOFTWARE.
 #ifndef LINECHART_H
 #define LINECHART_H
 
-#include "psschart.h"
+#include "chart.h"
 #include "axislabelsettings.h"
 #include "mousedisplay.h"
 

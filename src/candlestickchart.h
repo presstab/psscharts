@@ -25,7 +25,7 @@ SOFTWARE.
 #ifndef CANDLESTICKCHART_H
 #define CANDLESTICKCHART_H
 
-#include "psschart.h"
+#include "chart.h"
 #include "axislabelsettings.h"
 #include "mousedisplay.h"
 
