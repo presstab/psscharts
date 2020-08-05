@@ -57,7 +57,7 @@ enum class ChartType
     CANDLESTICK = 1
 };
 
-class PssChart : public QWidget
+class Chart : public QWidget
 {
     Q_OBJECT
 
@@ -114,8 +114,8 @@ protected:
     virtual void ProcessChangedData() {return;}
 
 public:
-    PssChart(QWidget* parent = nullptr);
-    PssChart(ChartType type, QWidget* parent = nullptr);
+    Chart(QWidget* parent = nullptr);
+    Chart(ChartType type, QWidget* parent = nullptr);
     bool ChangesMade() const { return m_fChangesMade; }
     void DrawXLabels(QPainter& painter, const std::vector<int>& vXPoints, bool fDrawIndicatorLine);
     void DrawYLabels(QPainter& painter, const std::vector<int>& vYPoints, bool isMouseDisplay);

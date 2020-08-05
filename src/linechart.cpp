@@ -54,7 +54,7 @@ SOFTWARE.
 */
 namespace PssCharts {
 
-LineChart::LineChart(QWidget *parent) : PssChart(ChartType::LINE, parent)
+LineChart::LineChart(QWidget *parent) : Chart(ChartType::LINE, parent)
 {
     setAutoFillBackground(true);
     m_settingsXLabels.SetNull();

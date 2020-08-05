@@ -44,7 +44,7 @@ class QPaintEvent;
 
 namespace PssCharts {
 
-class LineChart : public PssChart
+class LineChart : public Chart
 {
     Q_OBJECT
 

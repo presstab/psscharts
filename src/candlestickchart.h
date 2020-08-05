@@ -72,7 +72,7 @@ struct Candle {
     }
 };
 
-class CandlestickChart : public PssChart
+class CandlestickChart : public Chart
 {
     Q_OBJECT
 

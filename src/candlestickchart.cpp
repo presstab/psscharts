@@ -54,7 +54,7 @@ SOFTWARE.
 */
 namespace PssCharts {
 
-CandlestickChart::CandlestickChart(QWidget *parent) : PssChart (ChartType::CANDLESTICK, parent)
+CandlestickChart::CandlestickChart(QWidget *parent) : Chart (ChartType::CANDLESTICK, parent)
 {
     setAutoFillBackground(true);
     m_settingsXLabels.SetNull();

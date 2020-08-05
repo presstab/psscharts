@@ -54,7 +54,7 @@ SOFTWARE.
 */
 namespace PssCharts {
 
-PssChart::PssChart(QWidget *parent) : QWidget (parent)
+Chart::Chart(QWidget *parent) : QWidget (parent)
 {
     setAutoFillBackground(true);
     m_settingsXLabels.SetNull();
@@ -71,7 +71,7 @@ PssChart::PssChart(QWidget *parent) : QWidget (parent)
     setMouseTracking(true);
 }
 
-PssChart::PssChart(ChartType type, QWidget* parent) : QWidget (parent)
+Chart::Chart(ChartType type, QWidget* parent) : QWidget (parent)
 {
     setAutoFillBackground(true);
     m_settingsXLabels.SetNull();
@@ -98,7 +98,7 @@ std::string convertToUpper(std::string const &strInput)
     return strOutput;
 }
 
-std::string PssChart::ChartTypeToString(const ChartType type)
+std::string Chart::ChartTypeToString(const ChartType type)
 {
     switch (type) {
         case ChartType::LINE:
@@ -109,7 +109,7 @@ std::string PssChart::ChartTypeToString(const ChartType type)
             return "ERROR";
     }
 }
-ChartType PssChart::ChartTypeFromString(std::string strType)
+ChartType Chart::ChartTypeFromString(std::string strType)
 {
     strType = convertToUpper(strType);
     if(strType == "LINE")
@@ -120,7 +120,7 @@ ChartType PssChart::ChartTypeFromString(std::string strType)
         return ChartType::ERROR;
 }
 
-int PssChart::HeightTopTitleArea() const
+int Chart::HeightTopTitleArea() const
 {
     if (m_topTitleHeight != -1)
         return m_topTitleHeight;
@@ -131,12 +131,12 @@ int PssChart::HeightTopTitleArea() const
     return 30;
 }
 
-void PssChart::SetTopTitleHeight(int height)
+void Chart::SetTopTitleHeight(int height)
 {
     m_topTitleHeight = height;
 }
 
-int PssChart::HeightXLabelArea() const
+int Chart::HeightXLabelArea() const
 {
     if (m_settingsXLabels.fDynamicSizing && m_settingsXLabels.sizeDynamicDimension.height() > 0)
         return m_settingsXLabels.sizeDynamicDimension.height();
@@ -149,19 +149,19 @@ int PssChart::HeightXLabelArea() const
     return 30; //fallback
 }
 
-void PssChart::SetXLabelHeight(int height)
+void Chart::SetXLabelHeight(int height)
 {
     m_settingsXLabels.nDimension = height;
 }
 
-int PssChart::WidthYTitleArea() const
+int Chart::WidthYTitleArea() const
 {
     if (m_strTitleY.isEmpty())
         return 0;
     return 30;
 }
 
-int PssChart::WidthYLabelArea() const
+int Chart::WidthYLabelArea() const
 {
     if (m_settingsYLabels.fDynamicSizing && m_settingsYLabels.sizeDynamicDimension.width() > 0)
         return  m_settingsYLabels.sizeDynamicDimension.width();
@@ -172,7 +172,7 @@ int PssChart::WidthYLabelArea() const
     return m_settingsYLabels.nDimension;
 }
 
-int PssChart::WidthRightMargin() const
+int Chart::WidthRightMargin() const
 {
     if (m_rightMargin != -1)
         return m_rightMargin;
@@ -191,12 +191,12 @@ int PssChart::WidthRightMargin() const
     return 0;
 }
 
-void PssChart::EnableMouseDisplay(bool fEnable)
+void Chart::EnableMouseDisplay(bool fEnable)
 {
     m_mousedisplay.SetEnabled(fEnable);
 }
 
-void PssChart::DrawXLabels(QPainter& painter, const std::vector<int>& vXPoints, bool fDrawIndicatorLine)
+void Chart::DrawXLabels(QPainter& painter, const std::vector<int>& vXPoints, bool fDrawIndicatorLine)
 {
     QFontMetrics fm(painter.font());
 
@@ -236,7 +236,7 @@ void PssChart::DrawXLabels(QPainter& painter, const std::vector<int>& vXPoints, 
     }
 }
 
-void PssChart::DrawYLabels(QPainter &painter, const std::vector<int> &vYPoints, bool isMouseDisplay)
+void Chart::DrawYLabels(QPainter &painter, const std::vector<int> &vYPoints, bool isMouseDisplay)
 {
     QFontMetrics fm(painter.font());
 
@@ -269,7 +269,7 @@ void PssChart::DrawYLabels(QPainter &painter, const std::vector<int> &vYPoints, 
     }
 }
 
-QPixmap PssChart::grab(const QRect &rectangle)
+QPixmap Chart::grab(const QRect &rectangle)
 {
     auto rectValid = rectangle.height() != -1;
     bool fRectSizeMatch = (rectValid ? rectangle.size() == m_pixmapCache.size() : true);
@@ -281,13 +281,13 @@ QPixmap PssChart::grab(const QRect &rectangle)
     return m_pixmapCache;
 }
 
-void PssChart::mouseMoveEvent(QMouseEvent *event)
+void Chart::mouseMoveEvent(QMouseEvent *event)
 {
     QWidget::mouseMoveEvent(event);
     repaint();
 }
 
-void PssChart::SetBackgroundBrush(const QBrush &brush)
+void Chart::SetBackgroundBrush(const QBrush &brush)
 {
     m_brushBackground = brush;
     QPalette palette = this->palette();
@@ -295,48 +295,48 @@ void PssChart::SetBackgroundBrush(const QBrush &brush)
     m_fChangesMade = true;
 }
 
-void PssChart::SetTopTitle(const QString &strTitle)
+void Chart::SetTopTitle(const QString &strTitle)
 {
     m_strTopTitle = strTitle;
     m_fChangesMade = true;
 }
 
-void PssChart::SetTopTitleFont(const QFont &font)
+void Chart::SetTopTitleFont(const QFont &font)
 {
     m_fontTopTitle = font;
     m_fChangesMade = true;
 }
 
-void PssChart::SetXLabelType(AxisLabelType labelType)
+void Chart::SetXLabelType(AxisLabelType labelType)
 {
     m_settingsXLabels.labeltype = labelType;
     m_fChangesMade = true;
 }
 
-void PssChart::SetYLabelType(AxisLabelType labelType)
+void Chart::SetYLabelType(AxisLabelType labelType)
 {
     m_settingsYLabels.labeltype = labelType;
     m_fChangesMade = true;
 }
 
-void PssChart::SetYLabelWidth(int width)
+void Chart::SetYLabelWidth(int width)
 {
     m_settingsYLabels.nDimension = width;
 }
 
-void PssChart::SetYTitle(const QString &strTitle)
+void Chart::SetYTitle(const QString &strTitle)
 {
     m_strTitleY = strTitle;
     m_fChangesMade = true;
 }
 
-void PssChart::SetYTitleFont(const QFont &font)
+void Chart::SetYTitleFont(const QFont &font)
 {
     m_fontYTitle = font;
     m_fChangesMade = true;
 }
 
-void PssChart::SetAxisOnOff(bool fDrawX, bool fDrawY)
+void Chart::SetAxisOnOff(bool fDrawX, bool fDrawY)
 {
     m_fDrawXAxis = fDrawX;
     m_fDrawYAxis = fDrawY;
@@ -348,7 +348,7 @@ void PssChart::SetAxisOnOff(bool fDrawX, bool fDrawY)
  * @param fDrawXLabels
  * @param fDrawYLabels
  */
-void PssChart::SetAxisLabelsOnOff(bool fDrawXLabels, bool fDrawYLabels)
+void Chart::SetAxisLabelsOnOff(bool fDrawXLabels, bool fDrawYLabels)
 {
     m_settingsXLabels.fEnabled = fDrawXLabels;
     m_settingsYLabels.fEnabled = fDrawYLabels;
@@ -358,7 +358,7 @@ void PssChart::SetAxisLabelsOnOff(bool fDrawXLabels, bool fDrawYLabels)
  * @brief PssChart::SetAxisSectionCount: Set the number of vertical dividers that are displayed.
  * @param nCount
  */
-void PssChart::SetAxisSectionCount(uint32_t nCount)
+void Chart::SetAxisSectionCount(uint32_t nCount)
 {
     m_axisSections = nCount;
     m_fChangesMade = true;
@@ -368,20 +368,20 @@ void PssChart::SetAxisSectionCount(uint32_t nCount)
  * @brief PssChart::SetAxisSeparatorPen: The pen that is used to draw divider lines for the axis sections.
  * @param pen
  */
-void PssChart::SetAxisSeparatorPen(const QPen &pen)
+void Chart::SetAxisSeparatorPen(const QPen &pen)
 {
     m_penAxisSeparater = pen;
     m_fChangesMade = true;
 }
 
-void PssChart::SetChartType(const ChartType &type)
+void Chart::SetChartType(const ChartType &type)
 {
     m_chartType = type;
     m_fChangesMade = true;
     ProcessChangedData();
 }
 
-uint32_t PssChart::Version()
+uint32_t Chart::Version()
 {
     uint32_t nVersion = 0;
     nVersion |= VERSION_BUILD;
@@ -391,7 +391,7 @@ uint32_t PssChart::Version()
     return nVersion;
 }
 
-QString PssChart::VersionString()
+QString Chart::VersionString()
 {
     return QString("v%1.%2.%3.%4")
             .arg(QString::number(VERSION_MAJOR))
@@ -404,7 +404,7 @@ QString PssChart::VersionString()
  * @brief PssChart::ChartArea : Get the area of the widget that is dedicated to the chart itself
  * @return
  */
-QRect PssChart::ChartArea() const
+QRect Chart::ChartArea() const
 {
     QRect rectFull = this->rect();
     QRect rectChart = rectFull;
@@ -420,7 +420,7 @@ QRect PssChart::ChartArea() const
  * area and the left side of the ChartArea.
  * @return
  */
-QRect PssChart::YLabelArea() const
+QRect Chart::YLabelArea() const
 {
     QRect rectFull = this->rect();
     QRect rectChart = ChartArea();
@@ -438,7 +438,7 @@ QRect PssChart::YLabelArea() const
  * of the PssChart QWidget and the bottom of the ChartArea.
  * @return
  */
-QRect PssChart::XLabelArea() const
+QRect Chart::XLabelArea() const
 {
     QRect rectXLabels;
     QRect rectFull = this->rect();
@@ -448,42 +448,42 @@ QRect PssChart::XLabelArea() const
     return rectXLabels;
 }
 
-const double &PssChart::MaxX() const
+const double &Chart::MaxX() const
 {
     return m_pairXRange.second;
 }
 
-const double &PssChart::MaxY() const
+const double &Chart::MaxY() const
 {
     return m_pairYRange.second;
 }
 
-const double &PssChart::MinX() const
+const double &Chart::MinX() const
 {
     return m_pairXRange.first;
 }
 
-const double &PssChart::MinY() const
+const double &Chart::MinY() const
 {
     return m_pairYRange.first;
 }
 
-QBrush PssChart::BackgroundBrush() const
+QBrush Chart::BackgroundBrush() const
 {
     return m_brushBackground;
 }
 
-void PssChart::SetYLabelFont(const QFont& font)
+void Chart::SetYLabelFont(const QFont& font)
 {
     m_settingsYLabels.font = font;
 }
 
-void PssChart::SetYPadding(int nPadding)
+void Chart::SetYPadding(int nPadding)
 {
     m_yPadding = nPadding;
 }
 
-void PssChart::SetAxisLabelsBrush(const QBrush& brush)
+void Chart::SetAxisLabelsBrush(const QBrush& brush)
 {
     m_brushLabels = brush;
 }
@@ -492,19 +492,19 @@ void PssChart::SetAxisLabelsBrush(const QBrush& brush)
  * Set the precision that the axis labels will print their numbers at.
  * @param precision
  */
-void PssChart::SetLabelPrecision(int precision)
+void Chart::SetLabelPrecision(int precision)
 {
     m_settingsYLabels.SetPrecision(precision, /*disableAuto*/true);
     m_settingsXLabels.SetPrecision(precision, /*disableAuto*/true);
 }
 
-void PssChart::SetLabelAutoPrecision(bool fEnable)
+void Chart::SetLabelAutoPrecision(bool fEnable)
 {
     m_settingsYLabels.SetAutoPrecision(fEnable);
     m_settingsXLabels.SetAutoPrecision(fEnable);
 }
 
-void PssChart::SetRightMargin(int margin)
+void Chart::SetRightMargin(int margin)
 {
     m_rightMargin = margin;
 }
