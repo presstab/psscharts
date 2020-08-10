@@ -163,7 +163,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //Generate some data points to fill the chart
     std::map<uint32_t, double> mapPoints;
     double nLastPoint = 0;
-    for (auto i = 0; i < 100; i++) {
+    for (auto i = 0; i < 365; i++) {
         double y = QRandomGenerator::global()->generateDouble();
         if (nLastPoint > 0) {
             double nPercentChange = (y - nLastPoint) / nLastPoint;
@@ -178,7 +178,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_lineChart->SetDataPoints(mapPoints);
     m_lineChart->setMinimumSize(QSize(600,400));
     m_lineChart->hide();
-    m_candleChart->SetDataPoints(mapPoints, 4*60*60*24);
+    m_candleChart->SetDataPoints(mapPoints, 7*60*60*24);
     m_candleChart->setMinimumSize(QSize(600,400));
     m_candleChart->show();
     RedrawChart();
