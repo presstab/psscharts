@@ -141,6 +141,7 @@ public:
     void SetDashColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetCandleLineWidth(int nWidth);
     void SetCandleWidth(int nWidth);
+    void SetCandleWidth(int nWidth, int nMinWidth, int nMaxWidth);
     void SetCandleTimePeriod(uint32_t nTime);
     void SetOLHCFont(const QFont &font);
 

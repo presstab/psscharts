@@ -267,7 +267,6 @@ void CandlestickChart::SetDataPoints(std::map<uint32_t, double>& mapPoints, uint
     ProcessChangedData();
 }
 
-
 void CandlestickChart::ProcessChangedData()
 {
     m_pairXRange = {0, 0};
@@ -366,36 +365,6 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
             }
         }
      }
-
-    // Draw Candlestick Info
-    if (m_fDisplayOHLC) {
-        QPen penLine;
-        penLine.setWidth(m_lineWidth);
-        painter.setPen(penLine);
-        painter.setFont(m_fontOHLC);
-        if(fMouseInChartArea) {
-            uint32_t nTime = ConvertCandlePlotPointTime(lposMouse);
-            // Calculate the candle the mouse is closest to and change OHLC
-            std::map<uint32_t, Candle>::iterator candleUpper = m_mapPoints.upper_bound(nTime - m_nCandleTimePeriod);
-            std::map<uint32_t, Candle>::iterator candleLower = m_mapPoints.lower_bound(nTime - m_nCandleTimePeriod);
-            int upperDist = std::abs(static_cast<int>(candleUpper->first) - static_cast<int>(nTime));
-            int lowerDist = std::abs(static_cast<int>(candleLower->first) - static_cast<int>(nTime));
-            Candle currentCandle;
-            if (upperDist > lowerDist) {
-                currentCandle = candleLower->second;
-            } else {
-                currentCandle = candleUpper->second;
-            }
-            m_strOHLC = "O:" + QString::number(currentCandle.m_open) + "\t";
-            m_strOHLC += "H:" + QString::number(currentCandle.m_high) + "\t";
-            m_strOHLC += "L:" + QString::number(currentCandle.m_low) + "\t";
-            m_strOHLC += "C:" + QString::number(currentCandle.m_close) + "\t";
-            m_strOHLC += QString::number((currentCandle.m_close - currentCandle.m_open)/ currentCandle.m_open)+ "%";
-        }
-        QRect rectInfo = rectFull;
-        rectInfo.setBottom(rectFull.top() + HeightTopTitleArea());
-        painter.drawText(rectInfo, Qt::AlignRight, m_strOHLC);
-    }
 
     //Draw axis sections next so that they get covered up by chart fill
     if (m_axisSections > 0) {
@@ -536,6 +505,36 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
     painter.save();
     painter.restore();
 
+    // Draw Candlestick Info
+    if (m_fDisplayOHLC) {
+        QPen penLine;
+        penLine.setWidth(m_lineWidth);
+        painter.setPen(penLine);
+        painter.setFont(m_fontOHLC);
+        if(fMouseInChartArea) {
+            uint32_t nTime = ConvertCandlePlotPointTime(lposMouse);
+            // Calculate the candle the mouse is closest to and change OHLC
+            std::map<uint32_t, Candle>::iterator candleUpper = m_mapPoints.upper_bound(nTime - m_nCandleTimePeriod);
+            std::map<uint32_t, Candle>::iterator candleLower = m_mapPoints.lower_bound(nTime - m_nCandleTimePeriod);
+            int upperDist = std::abs(static_cast<int>(candleUpper->first) - static_cast<int>(nTime));
+            int lowerDist = std::abs(static_cast<int>(candleLower->first) - static_cast<int>(nTime));
+            Candle currentCandle;
+            if (upperDist > lowerDist) {
+                currentCandle = candleLower->second;
+            } else {
+                currentCandle = candleUpper->second;
+            }
+            m_strOHLC = "O:" + QString::number(currentCandle.m_open) + "\t";
+            m_strOHLC += "H:" + QString::number(currentCandle.m_high) + "\t";
+            m_strOHLC += "L:" + QString::number(currentCandle.m_low) + "\t";
+            m_strOHLC += "C:" + QString::number(currentCandle.m_close) + "\t";
+            m_strOHLC += QString::number((currentCandle.m_close - currentCandle.m_open)/ currentCandle.m_open)+ "%";
+        }
+        QRect rectInfo = rectFull;
+        rectInfo.setBottom(rectFull.top() + HeightTopTitleArea());
+        painter.drawText(rectInfo, Qt::AlignRight, m_strOHLC);
+    }
+
     //Draw axis
     if (m_fDrawXAxis) {
         QLineF axisX(rectChart.bottomLeft(), rectChart.bottomRight());
@@ -636,6 +635,14 @@ void CandlestickChart::SetCandleLineWidth(int nWidth)
 void CandlestickChart::SetCandleWidth(int nWidth)
 {
     m_nCandleWidth = nWidth;
+    m_fChangesMade = true;
+}
+
+void CandlestickChart::SetCandleWidth(int nWidth, int nMinWidth, int nMaxWidth)
+{
+    m_nCandleWidth = nWidth;
+    m_nCandleMinWidth = nMinWidth;
+    m_nCandleMaxWidth = nMaxWidth;
     m_fChangesMade = true;
 }
 
