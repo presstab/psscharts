@@ -146,42 +146,19 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->spinboxGridlines->setValue(5);
     ui->spinboxLineWidth->setValue(3);
 
-    ui->spinboxCandleWidth->setMinimum(1);
-    ui->spinboxCandleWidth->setMaximum(20);
-    ui->spinboxCandleWidth->setValue(2);
+    ui->spinboxCandleWidth->setMinimum(5);
+    ui->spinboxCandleWidth->setMaximum(25);
+    ui->spinboxCandleWidth->setValue(10);
     ui->spinboxCandleLineWidth->setMinimum(1);
     ui->spinboxCandleLineWidth->setMaximum(20);
     ui->spinboxCandleLineWidth->setValue(2);
+    m_candleChart->SetCandleWidth(10, 5, 25);
 
     //Crosshairs
     ui->checkboxCrosshairs->setChecked(true);
     ui->spinboxCrosshairWidth->setValue(2);
     ui->comboboxCrosshairColor->addItems(listQtColors);
     ui->comboboxCrosshairColor->setCurrentIndex(0); //black
-
-    //Generate some data points to fill the chart
-    std::map<uint32_t, PssCharts::Candle> mapCandlePoints;
-    PssCharts::Candle candlePrev;
-    for (auto i = 0; i < 100; i++) {
-        double nMax = candlePrev.m_high > 0 ? candlePrev.m_high * 1.3 : 0.5;
-        double high = QRandomGenerator::global()->bounded(nMax);
-        double nMax_min = candlePrev.m_close * 0.7;
-        if (high < nMax_min) {
-            high = nMax_min + QRandomGenerator::global()->bounded(nMax - nMax_min);
-        }
-        double low = QRandomGenerator::global()->bounded(high);
-        if (low < high * 0.7) {
-            low = high * 0.7;
-        }
-        double open = (QRandomGenerator::global()->generateDouble() * (high-low)) + low;
-        double close = (QRandomGenerator::global()->generateDouble() * (high-low)) + low;
-        PssCharts::Candle candle(open, high, low, close);
-        mapCandlePoints.emplace(i*(60*60*24), candle);
-        candlePrev = candle;
-    }
-    m_candleChart->SetDataPoints(mapCandlePoints);
-    m_candleChart->setMinimumSize(QSize(600,400));
-    m_candleChart->show();
 
     //Generate some data points to fill the chart
     std::map<uint32_t, double> mapPoints;
@@ -201,6 +178,9 @@ MainWindow::MainWindow(QWidget *parent) :
     m_lineChart->SetDataPoints(mapPoints);
     m_lineChart->setMinimumSize(QSize(600,400));
     m_lineChart->hide();
+    m_candleChart->SetDataPoints(mapPoints, 4*60*60*24);
+    m_candleChart->setMinimumSize(QSize(600,400));
+    m_candleChart->show();
     RedrawChart();
 
     connect(ui->lineeditChartTitle, &QLineEdit::textChanged, this, &MainWindow::RedrawChart);
