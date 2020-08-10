@@ -26,6 +26,7 @@ SOFTWARE.
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "src/chart.h"
 
 namespace Ui {
 class MainWindow;
@@ -33,6 +34,7 @@ class MainWindow;
 
 namespace PssCharts {
 class LineChart;
+class CandlestickChart;
 }
 
 class MainWindow : public QMainWindow
@@ -40,7 +42,9 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 private:
     Ui::MainWindow *ui;
-    PssCharts::LineChart* m_chart;
+    PssCharts::LineChart* m_lineChart;
+    PssCharts::CandlestickChart* m_candleChart;
+    PssCharts::ChartType m_chartType;
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
