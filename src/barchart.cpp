@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "linechart.h"
+#include "barchart.h"
 #include "stringutil.h"
 
 #include <QDateTime>
@@ -30,7 +30,6 @@ SOFTWARE.
 #include <QPainter>
 #include <QPaintEvent>
 #include <QPen>
-#include <QPainterPath>
 
 /* ----------------------------------------------- |
  * |              TOP TITLE AREA                   |
@@ -55,20 +54,29 @@ SOFTWARE.
 */
 namespace PssCharts {
 
-LineChart::LineChart(QWidget *parent) : Chart(ChartType::LINE, parent)
+BarChart::BarChart(QWidget *parent) : Chart (ChartType::BAR, parent)
 {
     setAutoFillBackground(true);
     m_settingsXLabels.SetNull();
     m_settingsYLabels.SetNull();
 
+    m_nBarLineWidth = 2;
+    m_nBarSpacing = 2;
+    m_nBarWidth = 8;
+    m_nBarMaxWidth = 20;
+    m_nBarMinWidth = 1;
+
+    m_fFillBar = true;
+
     m_axisSections = 0;
     m_yPadding = 0;
-    m_fEnableFill = true;
     m_fChangesMade = true;
     m_rightMargin = -1;
     m_topTitleHeight = -1;
     m_precision = 100000000;
-
+    m_fDrawOutline = true;
+    m_brushLine = QBrush(QColor(Qt::black));
+    m_brushFill = QBrush(QColor(Qt::green));
     setMouseTracking(true);
 }
 
@@ -77,7 +85,7 @@ LineChart::LineChart(QWidget *parent) : Chart(ChartType::LINE, parent)
  * @param pair
  * @return
  */
-QPointF LineChart::ConvertToPlotPoint(const std::pair<uint32_t, double> &pair) const
+QPointF BarChart::ConvertToPlotPoint(const std::pair<uint32_t, double> &pair)
 {
     QRect rectChart = ChartArea();
     if (m_yPadding > 0) {
@@ -88,11 +96,18 @@ QPointF LineChart::ConvertToPlotPoint(const std::pair<uint32_t, double> &pair) c
     }
 
     //compute point-value of X
+    m_nBars = 0;
     int nWidth = rectChart.width();
     double nValueMaxX = (MaxX() - MinX());
     double nValueX = ((pair.first - MinX()) / nValueMaxX);
     nValueX *= nWidth;
-    nValueX += rectChart.left();
+    nValueX += rectChart.left() - (2*m_nBars + 1) * m_nBarWidth; // factor in space bars take
+    if(nValueX < rectChart.left()) {
+        // outside of chart
+        return QPointF(std::numeric_limits<double>::max(), std::numeric_limits<double>::max());
+    } else {
+        m_nBars++;
+    }
 
     //compute point-value of Y
     int nHeight = rectChart.height();
@@ -113,10 +128,10 @@ QPointF LineChart::ConvertToPlotPoint(const std::pair<uint32_t, double> &pair) c
 }
 
 /**
- * @brief LineChart::ConvertFromPlotPoint: convert a point on the chart to the value it represents
+ * @brief BarChart::ConvertFromPlotPoint: get the timestamp for a candle on the chart
  * @return
  */
-std::pair<uint32_t, double> LineChart::ConvertFromPlotPoint(const QPointF& point)
+std::pair<uint32_t, double> BarChart::ConvertFromPlotPoint(const QPointF& point)
 {
     std::pair<uint32_t, double> pairValues;
     QRect rectChart = ChartArea();
@@ -135,57 +150,45 @@ std::pair<uint32_t, double> LineChart::ConvertFromPlotPoint(const QPointF& point
     return pairValues;
 }
 
-void LineChart::AddDataPoint(const uint32_t& x, const double& y)
-{
-    m_mapPoints.emplace(x, y);
-    ProcessChangedData();
-}
-
-void LineChart::RemoveDataPoint(const uint32_t &x)
-{
-    m_mapPoints.erase(x);
-    ProcessChangedData();
-}
-
-void LineChart::SetDataPoints(const std::map<uint32_t, double>& mapPoints)
+void BarChart::SetDataPoints(std::map<uint32_t, double>& mapPoints)
 {
     m_mapPoints = mapPoints;
     ProcessChangedData();
 }
 
-void LineChart::ProcessChangedData()
+void BarChart::ProcessChangedData()
 {
     m_pairXRange = {0, 0};
     m_pairYRange = {0, 0};
     bool fFirstRun = true;
-    for (const auto& pair : m_mapPoints) {
+    m_nBars = 0;
+    std::map<uint32_t, double>::reverse_iterator rit;
+    for (rit = m_mapPoints.rbegin(); rit != m_mapPoints.rend(); ++rit) {
+        // determine if bars are out of bounds
+        QRect rectChart = ChartArea();
+        int nWidth = rectChart.width();
+        double nValueX = (2*m_nBars + 1) * m_nBarWidth + 2*m_nBarSpacing;
+        if(nValueX > nWidth) {
+            break;
+        } else {
+            m_nBars++;
+        }
+
         //Set min and max for x and y
-        if (fFirstRun || pair.first < m_pairXRange.first)
-            m_pairXRange.first = pair.first;
-        if (fFirstRun || pair.first > m_pairXRange.second)
-            m_pairXRange.second = pair.first;
-        if (fFirstRun || pair.second < m_pairYRange.first)
-            m_pairYRange.first = pair.second;
-        if (fFirstRun || pair.second > m_pairYRange.second)
-            m_pairYRange.second = pair.second;
+        if (fFirstRun || rit->first < m_pairXRange.first)
+            m_pairXRange.first = rit->first;
+        if (fFirstRun || rit->first > m_pairXRange.second)
+            m_pairXRange.second = rit->first;
+        if (fFirstRun || rit->second < m_pairYRange.first)
+            m_pairYRange.first = rit->second;
+        if (fFirstRun || rit->second > m_pairYRange.second)
+            m_pairYRange.second = rit->second;
         fFirstRun = false;
     }
     m_fChangesMade = true;
 }
 
-/**
- * @brief GetLineEquation Get the slope and y intercept of a line
- * @param line[in]
- * @param nSlope[out]
- * @param nYIntercept[out]
- */
-void LineChart::GetLineEquation(const QLineF& line, double& nSlope, double& nYIntercept)
-{
-    nSlope = (line.y2() - line.y1()) / (line.x2() - line.x1());
-    nYIntercept = line.y1() - (nSlope * line.x1());
-}
-
-void LineChart::paintEvent(QPaintEvent *event)
+void BarChart::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event);
 
@@ -248,59 +251,6 @@ void LineChart::paintEvent(QPaintEvent *event)
         }
      }
 
-    //Create the lines that are drawn
-    QVector<QPointF> qvecPolygon;
-    QVector<QLineF> qvecLines;
-
-    qvecPolygon.append(rectChart.bottomLeft());
-    bool fFirstRun = true;
-    QPointF pointPrev;
-    bool fMouseSet = false;
-    for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
-        QPointF point = ConvertToPlotPoint(pair);
-        qvecPolygon.append(point);
-        if (fFirstRun) {
-            pointPrev = point;
-            fFirstRun = false;
-            continue;
-        }
-
-        QLineF line(pointPrev, point);
-        qvecLines.append(line);
-        pointPrev = point;
-
-        if (fMouseInChartArea && !fMouseSet) {
-            //Find the line that the mouse x point would belong on
-            if (lposMouse.x() >= line.x1() && lposMouse.x() <= line.x2()) {
-                double nLineSlope = 0;
-                double nLineYIntercept = 0;
-                GetLineEquation(line, nLineSlope, nLineYIntercept);
-                double y = nLineSlope * lposMouse.x() + nLineYIntercept;
-                m_mousedisplay.SetDot(QPointF(lposMouse.x(), y));
-                fMouseSet = true;
-            }
-        }
-    }
-
-    // Cleanly close the polygon
-    qvecPolygon.append(QPointF(rectChart.right(), rectChart.bottom()));
-
-    if (m_fEnableFill) {
-        //Fill in the chart area - Note: this is the most computational part of the painting
-        QPolygonF polygon(qvecPolygon);
-        painter.setBrush(m_brushFill);
-        painter.drawConvexPolygon(polygon); //supposedly faster than "drawPolygon()"
-    }
-
-    //Draw the lines
-    painter.save();
-    QPen penLine;
-    penLine.setBrush(m_brushLine);
-    penLine.setWidth(m_lineWidth);
-    painter.setPen(penLine);
-    painter.drawLines(qvecLines);
-    painter.restore();
-
     //Draw axis sections next so that they get covered up by chart fill
     if (m_axisSections > 0) {
         painter.save();
@@ -348,6 +298,37 @@ void LineChart::paintEvent(QPaintEvent *event)
             }
         }
     }
+
+    //Draw Bars
+    QPen penBar;
+    penBar.setBrush(m_brushLine);
+    penBar.setWidth(m_nBarLineWidth);
+    ProcessChangedData();
+    for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
+        QPointF chartBar = ConvertToPlotPoint(pair);
+        if (chartBar.x() == std::numeric_limits<double>::max() && chartBar.y() == std::numeric_limits<double>::max()) {
+            break;
+        }
+        QPointF pointBar = QPointF(chartBar.x() + m_nBarWidth, chartBar.y());
+        QPointF pointOrigin = QPointF(chartBar.x() - m_nBarWidth, rectChart.bottom());
+        QRectF rect(pointBar, pointOrigin);
+        QBrush rectBrush = m_brushFill;
+        if(m_fDrawOutline) {
+            painter.setPen(penBar);
+            painter.drawRect(rect);
+            if (m_fFillBar) {
+                painter.fillRect(rect, rectBrush);
+            } else {
+                painter.fillRect(rect, m_brushBackground);
+            }
+        } else if (m_fFillBar) {
+            painter.setPen(penBar);
+            painter.drawRect(rect);
+            painter.fillRect(rect, rectBrush);
+        }
+    }
+    painter.save();
+    painter.restore();
 
     //Draw axis
     if (m_fDrawXAxis) {
@@ -400,106 +381,56 @@ void LineChart::paintEvent(QPaintEvent *event)
         QPointF posTop(lposMouse.x(), rectChart.top());
         QPointF posBottom(lposMouse.x(), rectChart.bottom());
         painter.drawLine(QLineF(posTop, posBottom));
-
-        //Draw a dot on the line series where the mouse X point is
-        QPainterPath pathDot;
-        QPointF pointCircleCenter(m_mousedisplay.DotPos());
-        pathDot.addEllipse(pointCircleCenter, 5, 5);
-        painter.setBrush(m_brushLine.color());
-        painter.fillPath(pathDot, m_brushLine.color());
-
-        //Add a border to the dot
-        //        QPen pen;
-        //        pen.setColor(m_mousedisplay.LabelBackgroundColor());
-        //        pen.setWidth(2);
-        //        painter.setPen(pen);
-        //        painter.drawPath(pathDot);
-
-        //Draw a small tooltip looking item showing the point's data (x,y)
-        auto pairData = ConvertFromPlotPoint(pointCircleCenter);
-        const uint32_t& nX = pairData.first;
-        const double& nY = pairData.second;
-        QString strLabel = "(";
-        if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
-            strLabel += TimeStampToString(nX);
-        } else {
-            strLabel += PrecisionToString(nX, m_settingsXLabels.Precision());
-        }
-        strLabel += ", ";
-        strLabel += PrecisionToString(nY, m_settingsYLabels.Precision());
-        strLabel += ")";
-
-        //Create the background of the tooltip
-        QRect rectDraw = MouseOverTooltipRect(painter, rectFull, pointCircleCenter, strLabel);
-
-        QPainterPath pathBackground;
-        pathBackground.addRoundedRect(rectDraw, 5, 5);
-        painter.fillPath(pathBackground, m_mousedisplay.LabelBackgroundColor());
-
-        //Draw the text of the tooltip
-        painter.setBrush(m_brushLabels);
-        painter.setPen(Qt::black);
-        painter.drawText(rectDraw, Qt::AlignCenter, strLabel);
     }
     m_fChangesMade = false;
 }
 
-/**
- * @brief LineChart::MouseOverTooltipRect Get the boundaries of the tooltip that is drawn for the mouseover data.
- * @param painter: The chart widget's painter.
- * @param rectFull: The QRect of the entire drawing area of the chart widget.
- * @param pointCircleCenter: the center of the dot that is being drawn for the mouseover.
- * @param strLabel: the label text that is being placed in the tooltip.
- * @return QRect with the coordinates that the tooltip should be drawn in.
- */
-QRect LineChart::MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const
-{
-    QFontMetrics fm(painter.font());
-    int nWidthText = fm.horizontalAdvance(strLabel) + 4;
-
-    //Place the tooltip right below the dot being displayed.
-    QPoint pointTopLeft(pointCircleCenter.x() - nWidthText/2, pointCircleCenter.y()+10);
-
-    QRect rectDraw;
-    rectDraw.setTopLeft(pointTopLeft);
-    rectDraw.setWidth(nWidthText);
-    rectDraw.setHeight(fm.height() + 4);
-
-    //The tooltip is outside of the drawing zone, shift it into the drawing zone
-    if (rectDraw.left() < rectFull.left())
-        rectDraw.moveRight(rectFull.left()+3);
-    if (rectDraw.right() > rectFull.right())
-        rectDraw.moveLeft(rectFull.right() - rectDraw.width() - 3);
-
-    return rectDraw;
-}
-
-void LineChart::SetFillBrush(const QBrush &brush)
+void BarChart::SetFillBrush(const QBrush &brush)
 {
     m_brushFill = brush;
     m_fChangesMade = true;
 }
 
-void LineChart::SetLineBrush(const QBrush &brush)
+void BarChart::SetLineBrush(const QBrush &brush)
 {
     m_brushLine = brush;
     m_fChangesMade = true;
 }
 
-void LineChart::SetLineWidth(int nWidth)
+void BarChart::SetLineWidth(int nWidth)
 {
     m_lineWidth = nWidth;
     m_fChangesMade = true;
 }
 
-/**
- * Set the linechart to fill in the area between the line and the bottom of the chart.
- * Default is enabled.
- * @param fEnable
- */
-void LineChart::EnableFill(bool fEnable)
+void BarChart::EnableFill(bool fEnable)
 {
     m_fEnableFill = fEnable;
+}
+
+/**
+ * @brief BarChart::ChartArea : Get the area of the widget that is dedicated to the chart itself
+ * @return
+ */
+QRect BarChart::ChartArea() const
+{
+    QRect rectFull = this->rect();
+    QRect rectChart = rectFull;
+    rectChart.setTop(rectFull.top() + HeightTopTitleArea());
+    rectChart.setBottom(rectFull.bottom() - HeightXLabelArea());
+    rectChart.setLeft(rectFull.left() + WidthYTitleArea() + WidthYLabelArea());
+    rectChart.setRight(rectFull.right());
+    return rectChart;
+}
+void BarChart::wheelEvent(QWheelEvent *event)
+{
+    int dBarWidth = event->angleDelta().y()/120;
+    if ((m_nBarWidth > m_nBarMinWidth && dBarWidth < 0)
+            || (m_nBarWidth < m_nBarMaxWidth && dBarWidth > 0)) {
+        m_nBarWidth += dBarWidth;
+        m_fChangesMade = true;
+        emit barWidthChanged(dBarWidth);
+    }
 }
 
 }//namespace

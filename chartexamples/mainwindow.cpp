@@ -27,6 +27,7 @@ SOFTWARE.
 #include "src/chart.h"
 #include "src/linechart.h"
 #include "src/candlestickchart.h"
+#include "src/barchart.h"
 
 #include <QRandomGenerator>
 #include <QScreen>
@@ -52,8 +53,9 @@ QStringList listQtColors = {
 };
 
 QStringList listChartFormats = {
-    "Line",
-    "Candlestick"
+    "Bar",
+    "Candlestick",
+    "Line"
 };
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -64,21 +66,24 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_lineChart = new PssCharts::LineChart(this);
     m_candleChart = new PssCharts::CandlestickChart(this);
+    m_barChart = new PssCharts::BarChart(this);
     QSize sizeScreen = QGuiApplication::screens()[0]->size();
     if (sizeScreen.height() > sizeScreen.width()) {
         ui->formLayout->addRow(m_lineChart);
         ui->formLayout->addRow(m_candleChart);
+        ui->formLayout->addRow(m_barChart);
     } else {
         ui->hlayoutMain->addWidget(m_lineChart, /*stretch*/1);
         ui->hlayoutMain->addWidget(m_candleChart, /*stretch*/1);
+        ui->hlayoutMain->addWidget(m_barChart, /*stretch*/1);
     }
-    m_chartType = PssCharts::ChartType::CANDLESTICK;
+    m_chartType = PssCharts::ChartType::BAR;
 
     setWindowTitle(QString("PssCharts %1").arg(m_lineChart->VersionString()));
 
     //Chart Formats
     ui->comboBoxChartType->addItems(listChartFormats);
-    ui->comboBoxChartType->setCurrentIndex(1); //candlestick
+    ui->comboBoxChartType->setCurrentIndex(0); // bar
 
     ui->comboboxChartFillColor->addItems(listQtColors);
     ui->comboboxChartFillColor->setCurrentIndex(8); //cyan
@@ -163,7 +168,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //Generate some data points to fill the chart
     std::map<uint32_t, double> mapPoints;
     double nLastPoint = 0;
-    for (auto i = 0; i < 365; i++) {
+    for (auto i = 0; i < 366; i++) {
         double y = QRandomGenerator::global()->generateDouble();
         if (nLastPoint > 0) {
             double nPercentChange = (y - nLastPoint) / nLastPoint;
@@ -180,7 +185,10 @@ MainWindow::MainWindow(QWidget *parent) :
     m_lineChart->hide();
     m_candleChart->SetDataPoints(mapPoints, 7*60*60*24);
     m_candleChart->setMinimumSize(QSize(600,400));
-    m_candleChart->show();
+    m_candleChart->hide();
+    m_barChart->SetDataPoints(mapPoints);
+    m_barChart->setMinimumSize(QSize(600,400));
+    m_barChart->hide();
     RedrawChart();
 
     connect(ui->lineeditChartTitle, &QLineEdit::textChanged, this, &MainWindow::RedrawChart);
@@ -238,6 +246,7 @@ void MainWindow::RedrawChart()
     m_chartType = PssCharts::ChartTypeFromString(ui->comboBoxChartType->currentText().toStdString());
     switch (m_chartType) {
         case PssCharts::ChartType::LINE:{
+            m_barChart->setVisible(false);
             m_candleChart->setVisible(false);
             m_lineChart->setVisible(true);
 
@@ -289,6 +298,7 @@ void MainWindow::RedrawChart()
             break;
         }
         case PssCharts::ChartType::CANDLESTICK: {
+            m_barChart->setVisible(false);
             m_lineChart->setVisible(false);
             m_candleChart->setVisible(true);
 
@@ -355,6 +365,59 @@ void MainWindow::RedrawChart()
             display->SetColor(colorCrosshair);
 
             m_candleChart->repaint();
+            break;
+        }
+        case PssCharts::ChartType::BAR:
+        {
+            m_lineChart->setVisible(false);
+            m_candleChart->setVisible(false);
+            m_barChart->setVisible(true);
+
+            //Chart Title
+            m_barChart->SetTopTitle(ui->lineeditChartTitle->text());
+            QFont fontChartTitle;
+            fontChartTitle.setPointSize(ui->spinboxTitleFontSize->value());
+            fontChartTitle.setBold(ui->checkboxChartTitleBold->isChecked());
+            m_barChart->SetTopTitleFont(fontChartTitle);
+
+            //Y Title
+            m_barChart->SetYTitle(ui->lineeditYTitle->text());
+            QFont fontYTitle;
+            fontYTitle.setPointSize(ui->spinboxYTitleFontSize->value());
+            fontYTitle.setBold(ui->checkboxYTitleBold->isChecked());
+            m_barChart->SetYTitleFont(fontYTitle);
+
+            //Axis Labels
+            m_barChart->SetLabelPrecision(ui->spinboxYLabelPrecision->value());
+            m_barChart->SetAxisLabelsOnOff(ui->checkboxDrawXTitle->checkState() == Qt::Checked, ui->checkboxDrawYTitle->checkState() == Qt::Checked);
+
+            //Axis gridlines
+            m_barChart->SetAxisOnOff(ui->checkboxDrawXAxisLine->checkState() == Qt::Checked, ui->checkBoxDrawYAxisLine->checkState() == Qt::Checked);
+            m_barChart->SetAxisSectionCount(ui->spinboxGridlines->value());
+            m_barChart->SetAxisLabelsBrush(QBrush(Qt::black));
+
+            m_barChart->EnableFill(ui->checkboxFillChart->checkState() == Qt::Checked);
+            QColor colorFill = static_cast<Qt::GlobalColor>(ui->comboboxChartFillColor->currentIndex()+2);
+            m_barChart->SetFillBrush(QBrush(colorFill));
+
+            QColor colorBackground = palette().window().color();
+            if (ui->checkboxFillBackground->checkState() == Qt::Checked)
+                colorBackground = static_cast<Qt::GlobalColor>(ui->comboboxBgColor->currentIndex()+2);
+            m_barChart->SetBackgroundBrush(QBrush(colorBackground));
+
+            //Line Color
+            m_barChart->SetLineWidth(ui->spinboxLineWidth->value());
+            QColor colorLine = static_cast<Qt::GlobalColor>(ui->comboboxLineColor->currentIndex()+2);
+            m_barChart->SetLineBrush(colorLine);
+
+            //Mouse Display
+            m_barChart->EnableMouseDisplay(ui->checkboxCrosshairs->isChecked());
+            PssCharts::MouseDisplay* display = m_barChart->GetMouseDisplay();
+            display->SetWidth(ui->spinboxCrosshairWidth->value());
+            QColor colorCrosshair = static_cast<Qt::GlobalColor>(ui->comboboxCrosshairColor->currentIndex()+2);
+            display->SetColor(colorCrosshair);
+
+            m_barChart->repaint();
             break;
         }
         default:
