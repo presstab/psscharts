@@ -27,6 +27,7 @@ SOFTWARE.
 #include "src/chart.h"
 #include "src/linechart.h"
 #include "src/candlestickchart.h"
+#include "src/piechart.h"
 
 #include <QRandomGenerator>
 #include <QScreen>
@@ -62,7 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    m_lineChart = new PssCharts::LineChart(this);
+    m_lineChart = new PssCharts::PieChart(this);
     m_candleChart = new PssCharts::CandlestickChart(this);
     QSize sizeScreen = QGuiApplication::screens()[0]->size();
     if (sizeScreen.height() > sizeScreen.width()) {
@@ -78,7 +79,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Chart Formats
     ui->comboBoxChartType->addItems(listChartFormats);
-    ui->comboBoxChartType->setCurrentIndex(1); //candlestick
+    ui->comboBoxChartType->setCurrentIndex(0); //candlestick
 
     ui->comboboxChartFillColor->addItems(listQtColors);
     ui->comboboxChartFillColor->setCurrentIndex(8); //cyan

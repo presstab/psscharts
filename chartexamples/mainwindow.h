@@ -35,6 +35,7 @@ class MainWindow;
 namespace PssCharts {
 class LineChart;
 class CandlestickChart;
+class PieChart;
 }
 
 class MainWindow : public QMainWindow
@@ -42,7 +43,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 private:
     Ui::MainWindow *ui;
-    PssCharts::LineChart* m_lineChart;
+    PssCharts::PieChart* m_lineChart;
     PssCharts::CandlestickChart* m_candleChart;
     PssCharts::ChartType m_chartType;
 

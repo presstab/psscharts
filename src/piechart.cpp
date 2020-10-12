@@ -239,109 +239,11 @@ void PieChart::paintEvent(QPaintEvent *event)
     QVector<QPointF> qvecPolygon;
     QVector<QLineF> qvecLines;
 
+    std::srand(1);
     qvecPolygon.append(rectChart.bottomLeft());
-    bool fFirstRun = true;
-    QPointF pointPrev;
-    bool fMouseSet = false;
-    for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
-        QPointF point = ConvertToPlotPoint(pair);
-        qvecPolygon.append(point);
-        if (fFirstRun) {
-            pointPrev = point;
-            fFirstRun = false;
-            continue;
-        }
-
-        QLineF line(pointPrev, point);
-        qvecLines.append(line);
-        pointPrev = point;
-
-        if (fMouseInChartArea && !fMouseSet) {
-            //Find the line that the mouse x point would belong on
-            if (lposMouse.x() >= line.x1() && lposMouse.x() <= line.x2()) {
-                m_mousedisplay.SetDot(QPointF(lposMouse.x(), lposMouse.y()));
-                fMouseSet = true;
-            }
-        }
-    }
-
-    // Cleanly close the polygon
-    qvecPolygon.append(QPointF(rectChart.right(), rectChart.bottom()));
-
-    if (m_fEnableFill) {
-        //Fill in the chart area - Note: this is the most computational part of the painting
-        QPolygonF polygon(qvecPolygon);
-        painter.setBrush(m_brushFill);
-        painter.drawConvexPolygon(polygon); //supposedly faster than "drawPolygon()"
-    }
-
-    //Draw the lines
-    painter.save();
-    QPen penLine;
-    penLine.setBrush(m_brushLine);
-    penLine.setWidth(m_lineWidth);
-    painter.setPen(penLine);
-    painter.drawLines(qvecLines);
-    painter.restore();
-
-    //Draw axis sections next so that they get covered up by chart fill
-    if (m_axisSections > 0) {
-        painter.save();
-        painter.setPen(m_penAxisSeparater);
-        int nSpacingY = rectChart.height() / m_axisSections;
-        int nSpacingX = rectChart.width() / m_axisSections;
-        std::vector<int> vYPoints;
-        std::vector<int> vXPoints;
-        for (uint32_t i = 0; i <= m_axisSections; i++) {
-            int y = rectChart.top() + i*nSpacingY;
-            vYPoints.emplace_back(y);
-            QPointF lineLeftPoint(rectChart.left(), y);
-            QPointF lineRightPoint(rectChart.right(), y);
-
-            //Don't redraw the bottom x-axis
-            if (i < m_axisSections)
-                painter.drawLine(lineLeftPoint, lineRightPoint);
-
-            int x = rectChart.left() + i * nSpacingX;
-            vXPoints.emplace_back(x);
-        }
-        painter.restore();
-
-        //Draw the Y-axis labels
-        if (m_settingsYLabels.fEnabled) {
-            painter.setFont(m_settingsYLabels.font);
-            painter.setBrush(m_brushLabels);
-            painter.setPen(m_brushLabels.color());
-            DrawYLabels(painter, vYPoints, /*isMouseDisplay*/false);
-            if (m_mousedisplay.IsEnabled() && fMouseInChartArea) {
-                DrawYLabels(painter, {lposMouse.y()}, /*isMouseDisplay*/true);
-            }
-        }
-
-        //Draw the X-axis labels
-        if (m_settingsXLabels.fEnabled) {
-            painter.setFont(m_settingsXLabels.font);
-            painter.setBrush(m_brushLabels);
-            DrawXLabels(painter, vXPoints, /*drawIndicatorLine*/true);
-
-            // Give detail about where mouse is located
-            if (m_mousedisplay.IsEnabled() && fMouseInChartArea) {
-                //Draw the x label
-                DrawXLabels(painter, {lposMouse.x()}, /*drawIndicatorLine*/false);
-            }
-        }
-    }
-
-    //Draw axis
-    if (m_fDrawXAxis) {
-        QLineF axisX(rectChart.bottomLeft(), rectChart.bottomRight());
-        painter.setPen(Qt::black);
-        painter.drawLine(axisX);
-    }
-    if (m_fDrawYAxis) {
-        QLineF axisY(rectChart.bottomLeft(), rectChart.topLeft());
-        painter.setPen(Qt::black);
-        painter.drawLine(axisY);
+    for(int i = 0; i < 12; i++) {
+        painter.setBrush(QColor(std::rand()%256, std::rand()%256, std::rand()%256));
+        painter.drawPie(rectChart,160*i*3,160*3);
     }
 
     //Draw top title
@@ -355,75 +257,51 @@ void PieChart::paintEvent(QPaintEvent *event)
         painter.restore();
     }
 
-    //Draw y title
-    if (!m_strTitleY.isEmpty()) {
-        painter.save();
-        painter.setFont(m_fontYTitle);
-        painter.rotate(-90);
-
-        //The painter rotates around the (0,0) coordinate.
-        QRect rectRotated;
-        rectRotated.setTopLeft(QPoint(0,0));
-        rectRotated.setBottomRight(QPoint(rectFull.height(), WidthYTitleArea()));
-
-        // move "left" (from the painter's perspective) because the rotation takes it out of the paint area.
-        rectRotated.moveLeft(-rectFull.height());
-        painter.drawText(rectRotated, Qt::AlignCenter, m_strTitleY);
-        painter.restore();
-    }
-
     //Draw mouse display
-    if (m_mousedisplay.IsEnabled() && fMouseInChartArea) {
-        //Cross hair lines
-        painter.setPen(m_mousedisplay.Pen());
-        QPointF posLeft(rectChart.left(), lposMouse.y());
-        QPointF posRight(rectChart.right(), lposMouse.y());
-        QLineF lineMouseX(posLeft, posRight);
-        painter.drawLine(lineMouseX);
-        QPointF posTop(lposMouse.x(), rectChart.top());
-        QPointF posBottom(lposMouse.x(), rectChart.bottom());
-        painter.drawLine(QLineF(posTop, posBottom));
+//    if (m_mousedisplay.IsEnabled() && fMouseInChartArea) {
+//        //Cross hair lines
+//        painter.setPen(m_mousedisplay.Pen());
+//        QPointF posLeft(rectChart.left(), lposMouse.y());
+//        QPointF posRight(rectChart.right(), lposMouse.y());
+//        QLineF lineMouseX(posLeft, posRight);
+//        painter.drawLine(lineMouseX);
+//        QPointF posTop(lposMouse.x(), rectChart.top());
+//        QPointF posBottom(lposMouse.x(), rectChart.bottom());
+//        painter.drawLine(QLineF(posTop, posBottom));
 
-        //Draw a dot on the line series where the mouse X point is
-        QPainterPath pathDot;
-        QPointF pointCircleCenter(m_mousedisplay.DotPos());
-        pathDot.addEllipse(pointCircleCenter, 5, 5);
-        painter.setBrush(m_brushLine.color());
-        painter.fillPath(pathDot, m_brushLine.color());
+//        //Draw a dot on the line series where the mouse X point is
+//        QPainterPath pathDot;
+//        QPointF pointCircleCenter(m_mousedisplay.DotPos());
+//        pathDot.addEllipse(pointCircleCenter, 5, 5);
+//        painter.setBrush(m_brushLine.color());
+//        painter.fillPath(pathDot, m_brushLine.color());
 
-        //Add a border to the dot
-        //        QPen pen;
-        //        pen.setColor(m_mousedisplay.LabelBackgroundColor());
-        //        pen.setWidth(2);
-        //        painter.setPen(pen);
-        //        painter.drawPath(pathDot);
+//        //Draw a small tooltip looking item showing the point's data (x,y)
+//        auto pairData = ConvertFromPlotPoint(pointCircleCenter);
+//        const uint32_t& nX = pairData.first;
+//        const double& nY = pairData.second;
+//        QString strLabel = "(";
+//        if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
+//            strLabel += TimeStampToString(nX);
+//        } else {
+//            strLabel += PrecisionToString(nX, m_settingsXLabels.Precision());
+//        }
+//        strLabel += ", ";
+//        strLabel += PrecisionToString(nY, m_settingsYLabels.Precision());
+//        strLabel += ")";
 
-        //Draw a small tooltip looking item showing the point's data (x,y)
-        auto pairData = ConvertFromPlotPoint(pointCircleCenter);
-        const uint32_t& nX = pairData.first;
-        const double& nY = pairData.second;
-        QString strLabel = "(";
-        if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
-            strLabel += TimeStampToString(nX);
-        } else {
-            strLabel += PrecisionToString(nX, m_settingsXLabels.Precision());
-        }
-        strLabel += ", ";
-        strLabel += PrecisionToString(nY, m_settingsYLabels.Precision());
-        strLabel += ")";
+//        //Create the background of the tooltip
+//        QRect rectDraw = MouseOverTooltipRect(painter, rectFull, pointCircleCenter, strLabel);
 
-        //Create the background of the tooltip
-        QRect rectDraw = MouseOverTooltipRect(painter, rectFull, pointCircleCenter, strLabel);
+//        QPainterPath pathBackground;
+//        pathBackground.addRoundedRect(rectDraw, 5, 5);
+//        painter.fillPath(pathBackground, m_mousedisplay.LabelBackgroundColor());
 
-        QPainterPath pathBackground;
-        pathBackground.addRoundedRect(rectDraw, 5, 5);
-        painter.fillPath(pathBackground, m_mousedisplay.LabelBackgroundColor());
-
-        //Draw the text of the tooltip
-        painter.setBrush(m_brushLabels);
-        painter.setPen(Qt::black);
-        painter.drawText(rectDraw, Qt::AlignCenter, strLabel);
-    }
+//        //Draw the text of the tooltip
+//        painter.setBrush(m_brushLabels);
+//        painter.setPen(Qt::black);
+//        painter.drawText(rectDraw, Qt::AlignCenter, strLabel);
+//    }
     m_fChangesMade = false;
 }
 
