@@ -66,41 +66,32 @@ protected:
     void wheelEvent(QWheelEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
 
-    bool m_fIsLineChart;
-    bool m_fFillBar;
-    bool m_fDrawOutline;
+    bool m_fEnableOutline;
     bool m_fEnableFill;
 
     double m_nBarWidth;
     double m_nBarMaxWidth;
     double m_nBarMinWidth;
 
-    int m_nBarLineWidth;
     int m_nBarSpacing;
     int m_nBars;
 
-    uint32_t m_nBarTimePeriod;
-
     QBrush m_brushLine;
-    QBrush m_brushFill;
+    QColor m_color;
 
 public:
     BarChart(QWidget* parent = nullptr);
 
     QRect ChartArea() const;
 
-    void EnableBarFill(bool fEnable);
-    void EnableBarBorder(bool fEnable);
-
     void SetDataPoints(std::map<uint32_t, double>& mapPoints);
-    void SetBarBodyColor(const QColor& upColor, const QColor& downColor = QColor());
-    void SetBarColor(const QColor& upColor, const QColor& downColor = QColor());
+    void SetBarColor(const QColor& color);
     void SetLineWidth(int nWidth);
     void SetBarWidth(int nWidth);
     void SetBarWidth(int nWidth, int nMinWidth, int nMaxWidth);
     void SetLineBrush(const QBrush& brush);
-    void SetFillBrush(const QBrush& brush);
     void EnableFill(bool fEnable);
+    void EnableBorder(bool fEnable);
 
 signals:
     void barWidthChanged(int dChange);

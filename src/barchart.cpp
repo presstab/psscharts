@@ -59,14 +59,16 @@ BarChart::BarChart(QWidget *parent) : Chart (ChartType::BAR, parent)
     setAutoFillBackground(true);
     m_settingsXLabels.SetNull();
     m_settingsYLabels.SetNull();
+    m_settingsXLabels.labeltype = AxisLabelType::AX_TIMESTAMP;
 
-    m_nBarLineWidth = 2;
+    m_lineWidth = 3;
     m_nBarSpacing = 2;
     m_nBarWidth = 8;
     m_nBarMaxWidth = 20;
-    m_nBarMinWidth = 1;
+    m_nBarMinWidth = 3;
 
-    m_fFillBar = true;
+    m_fEnableFill = true;
+    m_fEnableOutline = true;
 
     m_axisSections = 0;
     m_yPadding = 0;
@@ -74,9 +76,8 @@ BarChart::BarChart(QWidget *parent) : Chart (ChartType::BAR, parent)
     m_rightMargin = -1;
     m_topTitleHeight = -1;
     m_precision = 100000000;
-    m_fDrawOutline = true;
     m_brushLine = QBrush(QColor(Qt::black));
-    m_brushFill = QBrush(QColor(Qt::green));
+    m_color = QColor(Qt::green);
     setMouseTracking(true);
 }
 
@@ -179,9 +180,9 @@ void BarChart::ProcessChangedData()
             m_pairXRange.first = rit->first;
         if (fFirstRun || rit->first > m_pairXRange.second)
             m_pairXRange.second = rit->first;
-        if (fFirstRun || rit->second < m_pairYRange.first)
+        if (rit->second < m_pairYRange.first)
             m_pairYRange.first = rit->second;
-        if (fFirstRun || rit->second > m_pairYRange.second)
+        if (rit->second > m_pairYRange.second)
             m_pairYRange.second = rit->second;
         fFirstRun = false;
     }
@@ -251,6 +252,34 @@ void BarChart::paintEvent(QPaintEvent *event)
         }
      }
 
+    //Draw Bars
+    QPen penBar;
+    penBar.setBrush(m_brushLine);
+    penBar.setWidth(m_lineWidth);
+    ProcessChangedData();
+    for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
+        QPointF chartBar = ConvertToPlotPoint(pair);
+        QPointF pointBar = QPointF(chartBar.x() + m_nBarWidth, chartBar.y());
+        QPointF pointOrigin = QPointF(chartBar.x() - m_nBarWidth, rectChart.bottom());
+        QRectF rect(pointBar, pointOrigin);
+        QBrush rectBrush = m_color;
+        if(m_fEnableOutline) {
+            painter.setPen(penBar);
+            painter.drawRect(rect);
+            if (m_fEnableFill) {
+                painter.fillRect(rect, rectBrush);
+            } else {
+                painter.fillRect(rect, m_brushBackground);
+            }
+        } else if (m_fEnableFill) {
+            painter.setPen(penBar);
+            painter.drawRect(rect);
+            painter.fillRect(rect, rectBrush);
+        }
+    }
+    painter.save();
+    painter.restore();
+
     //Draw axis sections next so that they get covered up by chart fill
     if (m_axisSections > 0) {
         painter.save();
@@ -298,37 +327,6 @@ void BarChart::paintEvent(QPaintEvent *event)
             }
         }
     }
-
-    //Draw Bars
-    QPen penBar;
-    penBar.setBrush(m_brushLine);
-    penBar.setWidth(m_nBarLineWidth);
-    ProcessChangedData();
-    for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
-        QPointF chartBar = ConvertToPlotPoint(pair);
-        if (chartBar.x() == std::numeric_limits<double>::max() && chartBar.y() == std::numeric_limits<double>::max()) {
-            break;
-        }
-        QPointF pointBar = QPointF(chartBar.x() + m_nBarWidth, chartBar.y());
-        QPointF pointOrigin = QPointF(chartBar.x() - m_nBarWidth, rectChart.bottom());
-        QRectF rect(pointBar, pointOrigin);
-        QBrush rectBrush = m_brushFill;
-        if(m_fDrawOutline) {
-            painter.setPen(penBar);
-            painter.drawRect(rect);
-            if (m_fFillBar) {
-                painter.fillRect(rect, rectBrush);
-            } else {
-                painter.fillRect(rect, m_brushBackground);
-            }
-        } else if (m_fFillBar) {
-            painter.setPen(penBar);
-            painter.drawRect(rect);
-            painter.fillRect(rect, rectBrush);
-        }
-    }
-    painter.save();
-    painter.restore();
 
     //Draw axis
     if (m_fDrawXAxis) {
@@ -385,9 +383,8 @@ void BarChart::paintEvent(QPaintEvent *event)
     m_fChangesMade = false;
 }
 
-void BarChart::SetFillBrush(const QBrush &brush)
-{
-    m_brushFill = brush;
+void BarChart::SetBarColor(const QColor &color) {
+    m_color = color;
     m_fChangesMade = true;
 }
 
@@ -406,6 +403,11 @@ void BarChart::SetLineWidth(int nWidth)
 void BarChart::EnableFill(bool fEnable)
 {
     m_fEnableFill = fEnable;
+}
+
+void BarChart::EnableBorder(bool fEnable)
+{
+    m_fEnableOutline = fEnable;
 }
 
 /**

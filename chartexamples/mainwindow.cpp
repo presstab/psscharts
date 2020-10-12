@@ -234,6 +234,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->spinboxOHLCFontSize, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
 
     connect(m_candleChart, &PssCharts::CandlestickChart::candleWidthChanged, this, &MainWindow::ChangeCandleWidth);
+    connect(m_barChart, &PssCharts::BarChart::barWidthChanged, this, &MainWindow::ChangeCandleWidth);
 }
 
 MainWindow::~MainWindow()
@@ -396,19 +397,18 @@ void MainWindow::RedrawChart()
             m_barChart->SetAxisSectionCount(ui->spinboxGridlines->value());
             m_barChart->SetAxisLabelsBrush(QBrush(Qt::black));
 
-            m_barChart->EnableFill(ui->checkboxFillChart->checkState() == Qt::Checked);
-            QColor colorFill = static_cast<Qt::GlobalColor>(ui->comboboxChartFillColor->currentIndex()+2);
-            m_barChart->SetFillBrush(QBrush(colorFill));
-
             QColor colorBackground = palette().window().color();
             if (ui->checkboxFillBackground->checkState() == Qt::Checked)
                 colorBackground = static_cast<Qt::GlobalColor>(ui->comboboxBgColor->currentIndex()+2);
             m_barChart->SetBackgroundBrush(QBrush(colorBackground));
 
-            //Line Color
+            //Bar Color
             m_barChart->SetLineWidth(ui->spinboxLineWidth->value());
             QColor colorLine = static_cast<Qt::GlobalColor>(ui->comboboxLineColor->currentIndex()+2);
             m_barChart->SetLineBrush(colorLine);
+            m_barChart->EnableFill(ui->checkboxFillChart->checkState() == Qt::Checked);
+            QColor colorFill = static_cast<Qt::GlobalColor>(ui->comboboxChartFillColor->currentIndex()+2);
+            m_barChart->SetBarColor(colorFill);
 
             //Mouse Display
             m_barChart->EnableMouseDisplay(ui->checkboxCrosshairs->isChecked());
