@@ -96,6 +96,15 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboboxLineColor->addItems(listQtColors);
     ui->comboboxLineColor->setCurrentIndex(0); //black
 
+    // Bar Colors
+    ui->comboboxBarColor->addItems(listQtColors);
+    ui->comboboxBarColor->setCurrentIndex(8); //cyan
+    ui->checkboxBarColor->setChecked(true);
+
+    ui->comboboxBarLineColor->addItems(listQtColors);
+    ui->comboboxBarLineColor->setCurrentIndex(0); //black
+    ui->checkboxBarLine->setChecked(true);
+
     // Candlestick Colors
     ui->checkBoxCandleFill->setChecked(true);
     ui->comboBoxUpCandleFillColor->addItems(listQtColors);
@@ -147,9 +156,19 @@ MainWindow::MainWindow(QWidget *parent) :
     m_lineChart->SetXLabelType(PssCharts::AxisLabelType::AX_TIMESTAMP);
     m_candleChart->SetYLabelType(PssCharts::AxisLabelType::AX_NUMBER);
     m_candleChart->SetXLabelType(PssCharts::AxisLabelType::AX_TIMESTAMP);
+    m_barChart->SetYLabelType(PssCharts::AxisLabelType::AX_NUMBER);
+    m_barChart->SetXLabelType(PssCharts::AxisLabelType::AX_TIMESTAMP);
 
     ui->spinboxGridlines->setValue(5);
     ui->spinboxLineWidth->setValue(3);
+
+    ui->spinboxBarWidth->setMinimum(1);
+    ui->spinboxBarWidth->setMaximum(25);
+    ui->spinboxBarWidth->setValue(10);
+    ui->spinboxBarLineWidth->setMinimum(1);
+    ui->spinboxBarLineWidth->setMaximum(20);
+    ui->spinboxBarLineWidth->setValue(2);
+    m_barChart->SetBarWidth(10, 1, 25);
 
     ui->spinboxCandleWidth->setMinimum(5);
     ui->spinboxCandleWidth->setMaximum(25);
@@ -191,6 +210,9 @@ MainWindow::MainWindow(QWidget *parent) :
     m_barChart->hide();
     RedrawChart();
 
+    connect(ui->tabWidget, &QTabWidget::currentChanged, ui->comboBoxChartType, &QComboBox::setCurrentIndex);
+    connect(ui->comboBoxChartType, SIGNAL(currentIndexChanged(int)), ui->tabWidget, SLOT(setCurrentIndex(int)));
+
     connect(ui->lineeditChartTitle, &QLineEdit::textChanged, this, &MainWindow::RedrawChart);
     connect(ui->lineeditYTitle, &QLineEdit::textChanged, this, &MainWindow::RedrawChart);
     connect(ui->checkboxDrawXTitle, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
@@ -208,6 +230,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->checkboxOHLCBold, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkBoxOHLCDisplay, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkboxCandleDash, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkboxBarColor, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkboxBarLine, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
 
     connect(ui->comboBoxChartType, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxChartFillColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
@@ -222,6 +246,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->comboBoxDownBorderColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboBoxUpCandleDashColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboBoxDownCandleDashColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboboxBarColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboboxBarLineColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
 
     connect(ui->spinboxGridlines, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
@@ -232,9 +258,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->spinboxCandleWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxCandleLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxOHLCFontSize, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
+    connect(ui->spinboxBarWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
+    connect(ui->spinboxBarLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
 
     connect(m_candleChart, &PssCharts::CandlestickChart::candleWidthChanged, this, &MainWindow::ChangeCandleWidth);
-    connect(m_barChart, &PssCharts::BarChart::barWidthChanged, this, &MainWindow::ChangeCandleWidth);
+    connect(m_barChart, &PssCharts::BarChart::barWidthChanged, this, &MainWindow::ChangeBarWidth);
 }
 
 MainWindow::~MainWindow()
@@ -403,12 +431,17 @@ void MainWindow::RedrawChart()
             m_barChart->SetBackgroundBrush(QBrush(colorBackground));
 
             //Bar Color
-            m_barChart->SetLineWidth(ui->spinboxLineWidth->value());
-            QColor colorLine = static_cast<Qt::GlobalColor>(ui->comboboxLineColor->currentIndex()+2);
+            m_barChart->SetLineWidth(ui->spinboxBarLineWidth->value());
+            QColor colorLine = static_cast<Qt::GlobalColor>(ui->comboboxBarLineColor->currentIndex()+2);
             m_barChart->SetLineBrush(colorLine);
-            m_barChart->EnableFill(ui->checkboxFillChart->checkState() == Qt::Checked);
-            QColor colorFill = static_cast<Qt::GlobalColor>(ui->comboboxChartFillColor->currentIndex()+2);
+            m_barChart->EnableFill(ui->checkboxBarColor->checkState() == Qt::Checked);
+            QColor colorFill = static_cast<Qt::GlobalColor>(ui->comboboxBarColor->currentIndex()+2);
             m_barChart->SetBarColor(colorFill);
+
+            m_barChart->SetBarWidth(ui->spinboxBarWidth->value());
+            m_barChart->SetLineWidth(ui->spinboxBarLineWidth->value());
+            m_barChart->EnableFill(ui->checkboxBarColor->checkState() == Qt::Checked);
+            m_barChart->EnableBorder(ui->checkboxBarLine->checkState() == Qt::Checked);
 
             //Mouse Display
             m_barChart->EnableMouseDisplay(ui->checkboxCrosshairs->isChecked());
@@ -427,4 +460,8 @@ void MainWindow::RedrawChart()
 
 void MainWindow::ChangeCandleWidth(int dChange) {
     ui->spinboxCandleWidth->setValue(ui->spinboxCandleWidth->value() + dChange);
+}
+
+void MainWindow::ChangeBarWidth(int dChange) {
+    ui->spinboxBarWidth->setValue(ui->spinboxBarWidth->value() + dChange);
 }

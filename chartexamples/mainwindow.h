@@ -55,6 +55,7 @@ public:
 private slots:
     void RedrawChart();
     void ChangeCandleWidth(int dChange);
+    void ChangeBarWidth(int dChange);
 };
 
 #endif // MAINWINDOW_H

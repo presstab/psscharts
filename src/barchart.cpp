@@ -59,13 +59,12 @@ BarChart::BarChart(QWidget *parent) : Chart (ChartType::BAR, parent)
     setAutoFillBackground(true);
     m_settingsXLabels.SetNull();
     m_settingsYLabels.SetNull();
-    m_settingsXLabels.labeltype = AxisLabelType::AX_TIMESTAMP;
 
     m_lineWidth = 3;
     m_nBarSpacing = 2;
     m_nBarWidth = 8;
     m_nBarMaxWidth = 20;
-    m_nBarMinWidth = 3;
+    m_nBarMinWidth = 1;
 
     m_fEnableFill = true;
     m_fEnableOutline = true;
@@ -268,10 +267,9 @@ void BarChart::paintEvent(QPaintEvent *event)
             painter.drawRect(rect);
             if (m_fEnableFill) {
                 painter.fillRect(rect, rectBrush);
-            } else {
-                painter.fillRect(rect, m_brushBackground);
             }
         } else if (m_fEnableFill) {
+            penBar.setColor(m_color);
             painter.setPen(penBar);
             painter.drawRect(rect);
             painter.fillRect(rect, rectBrush);
@@ -379,8 +377,78 @@ void BarChart::paintEvent(QPaintEvent *event)
         QPointF posTop(lposMouse.x(), rectChart.top());
         QPointF posBottom(lposMouse.x(), rectChart.bottom());
         painter.drawLine(QLineF(posTop, posBottom));
+
+        //Draw a dot on the line series where the mouse X point is
+        QPainterPath pathDot;
+        QPointF pointCircleCenter(m_mousedisplay.DotPos());
+        pathDot.addEllipse(pointCircleCenter, 5, 5);
+        painter.setBrush(m_brushLine.color());
+        painter.fillPath(pathDot, m_brushLine.color());
+
+        //Add a border to the dot
+        //        QPen pen;
+        //        pen.setColor(m_mousedisplay.LabelBackgroundColor());
+        //        pen.setWidth(2);
+        //        painter.setPen(pen);
+        //        painter.drawPath(pathDot);
+
+        //Draw a small tooltip looking item showing the point's data (x,y)
+        auto pairData = ConvertFromPlotPoint(pointCircleCenter);
+        const uint32_t& nX = pairData.first;
+        const double& nY = pairData.second;
+        QString strLabel = "(";
+        if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
+            strLabel += TimeStampToString(nX);
+        } else {
+            strLabel += PrecisionToString(nX, m_settingsXLabels.Precision());
+        }
+        strLabel += ", ";
+        strLabel += PrecisionToString(nY, m_settingsYLabels.Precision());
+        strLabel += ")";
+
+        //Create the background of the tooltip
+        QRect rectDraw = MouseOverTooltipRect(painter, rectFull, pointCircleCenter, strLabel);
+
+        QPainterPath pathBackground;
+        pathBackground.addRoundedRect(rectDraw, 5, 5);
+        painter.fillPath(pathBackground, m_mousedisplay.LabelBackgroundColor());
+
+        //Draw the text of the tooltip
+        painter.setBrush(m_brushLabels);
+        painter.setPen(Qt::black);
+        painter.drawText(rectDraw, Qt::AlignCenter, strLabel);
     }
     m_fChangesMade = false;
+}
+
+/**
+ * @brief LineChart::MouseOverTooltipRect Get the boundaries of the tooltip that is drawn for the mouseover data.
+ * @param painter: The chart widget's painter.
+ * @param rectFull: The QRect of the entire drawing area of the chart widget.
+ * @param pointCircleCenter: the center of the dot that is being drawn for the mouseover.
+ * @param strLabel: the label text that is being placed in the tooltip.
+ * @return QRect with the coordinates that the tooltip should be drawn in.
+ */
+QRect BarChart::MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const
+{
+    QFontMetrics fm(painter.font());
+    int nWidthText = fm.horizontalAdvance(strLabel) + 4;
+
+    //Place the tooltip right below the dot being displayed.
+    QPoint pointTopLeft(pointCircleCenter.x() - nWidthText/2, pointCircleCenter.y()+10);
+
+    QRect rectDraw;
+    rectDraw.setTopLeft(pointTopLeft);
+    rectDraw.setWidth(nWidthText);
+    rectDraw.setHeight(fm.height() + 4);
+
+    //The tooltip is outside of the drawing zone, shift it into the drawing zone
+    if (rectDraw.left() < rectFull.left())
+        rectDraw.moveRight(rectFull.left()+3);
+    if (rectDraw.right() > rectFull.right())
+        rectDraw.moveLeft(rectFull.right() - rectDraw.width() - 3);
+
+    return rectDraw;
 }
 
 void BarChart::SetBarColor(const QColor &color) {
@@ -391,6 +459,20 @@ void BarChart::SetBarColor(const QColor &color) {
 void BarChart::SetLineBrush(const QBrush &brush)
 {
     m_brushLine = brush;
+    m_fChangesMade = true;
+}
+
+void BarChart::SetBarWidth(int nWidth)
+{
+    m_nBarWidth = nWidth;
+    m_fChangesMade = true;
+}
+
+void BarChart::SetBarWidth(int nWidth, int nMinWidth, int nMaxWidth)
+{
+    m_nBarWidth = nWidth;
+    m_nBarMinWidth = nMinWidth;
+    m_nBarMaxWidth = nMaxWidth;
     m_fChangesMade = true;
 }
 

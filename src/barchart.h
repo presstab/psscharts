@@ -59,6 +59,7 @@ protected:
     QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair);
     std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point) override;
 
+    QRect MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const;
     void ProcessChangedData() override;
 
     uint32_t ConvertBarPlotPointTime(const QPointF& point);
