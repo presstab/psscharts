@@ -105,6 +105,15 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboboxBarLineColor->setCurrentIndex(0); //black
     ui->checkboxBarLine->setChecked(true);
 
+    ui->comboboxHighlightBar->addItems(listQtColors);
+    ui->comboboxHighlightBar->setCurrentIndex(9); //magenta
+    ui->checkboxHighlightBar->setChecked(true);
+
+    ui->comboboxHighlightLine->addItems(listQtColors);
+    ui->comboboxHighlightLine->setCurrentIndex(1); //white
+    ui->checkboxHighlightLine->setChecked(true);
+
+
     // Candlestick Colors
     ui->checkBoxCandleFill->setChecked(true);
     ui->comboBoxUpCandleFillColor->addItems(listQtColors);
@@ -232,6 +241,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->checkboxCandleDash, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkboxBarColor, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkboxBarLine, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkboxHighlightBar, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkboxHighlightLine, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
 
     connect(ui->comboBoxChartType, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxChartFillColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
@@ -248,6 +259,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->comboBoxDownCandleDashColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxBarColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxBarLineColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboboxHighlightBar, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboboxHighlightLine, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
 
     connect(ui->spinboxGridlines, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
@@ -434,14 +447,20 @@ void MainWindow::RedrawChart()
             m_barChart->SetLineWidth(ui->spinboxBarLineWidth->value());
             QColor colorLine = static_cast<Qt::GlobalColor>(ui->comboboxBarLineColor->currentIndex()+2);
             m_barChart->SetLineBrush(colorLine);
+            QColor colorLineHighlight = static_cast<Qt::GlobalColor>(ui->comboboxHighlightLine->currentIndex()+2);
+            m_barChart->SetLineHighlightBrush(colorLineHighlight);
             m_barChart->EnableFill(ui->checkboxBarColor->checkState() == Qt::Checked);
             QColor colorFill = static_cast<Qt::GlobalColor>(ui->comboboxBarColor->currentIndex()+2);
             m_barChart->SetBarColor(colorFill);
+            QColor colorFillHighlight = static_cast<Qt::GlobalColor>(ui->comboboxHighlightBar->currentIndex()+2);
+            m_barChart->SetBarHighlightColor(colorFillHighlight);
 
             m_barChart->SetBarWidth(ui->spinboxBarWidth->value());
             m_barChart->SetLineWidth(ui->spinboxBarLineWidth->value());
             m_barChart->EnableFill(ui->checkboxBarColor->checkState() == Qt::Checked);
             m_barChart->EnableBorder(ui->checkboxBarLine->checkState() == Qt::Checked);
+            m_barChart->EnableHighlight(ui->checkboxHighlightBar->checkState() == Qt::Checked);
+            m_barChart->EnableHighlightBorder(ui->checkboxHighlightLine->checkState() == Qt::Checked);
 
             //Mouse Display
             m_barChart->EnableMouseDisplay(ui->checkboxCrosshairs->isChecked());

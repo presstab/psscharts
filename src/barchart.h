@@ -51,7 +51,7 @@ class BarChart : public Chart
 private:
     static const uint32_t VERSION_MAJOR = 0;
     static const uint32_t VERSION_MINOR = 1;
-    static const uint32_t VERSION_REVISION = 5;
+    static const uint32_t VERSION_REVISION = 6;
     static const uint32_t VERSION_BUILD = 0;
 
 protected:
@@ -69,6 +69,8 @@ protected:
 
     bool m_fEnableOutline;
     bool m_fEnableFill;
+    bool m_fEnableHighlightBar;
+    bool m_fEnableHighlightOutline;
 
     double m_nBarWidth;
     double m_nBarMaxWidth;
@@ -78,7 +80,9 @@ protected:
     int m_nBars;
 
     QBrush m_brushLine;
+    QBrush m_brushLineHighlight;
     QColor m_color;
+    QColor m_highlight;
 
 public:
     BarChart(QWidget* parent = nullptr);
@@ -88,11 +92,15 @@ public:
     void SetDataPoints(std::map<uint32_t, double>& mapPoints);
     void SetBarColor(const QColor& color);
     void SetLineWidth(int nWidth);
+    void SetLineBrush(const QBrush& brush);
+    void SetBarHighlightColor(const QColor& color);
+    void SetLineHighlightBrush(const QBrush& brush);
     void SetBarWidth(int nWidth);
     void SetBarWidth(int nWidth, int nMinWidth, int nMaxWidth);
-    void SetLineBrush(const QBrush& brush);
     void EnableFill(bool fEnable);
     void EnableBorder(bool fEnable);
+    void EnableHighlight(bool fEnable);
+    void EnableHighlightBorder(bool fEnable);
 
 signals:
     void barWidthChanged(int dChange);

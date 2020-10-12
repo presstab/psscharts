@@ -68,6 +68,8 @@ BarChart::BarChart(QWidget *parent) : Chart (ChartType::BAR, parent)
 
     m_fEnableFill = true;
     m_fEnableOutline = true;
+    m_fEnableHighlightBar = true;
+    m_fEnableHighlightOutline = true;
 
     m_axisSections = 0;
     m_yPadding = 0;
@@ -77,6 +79,8 @@ BarChart::BarChart(QWidget *parent) : Chart (ChartType::BAR, parent)
     m_precision = 100000000;
     m_brushLine = QBrush(QColor(Qt::black));
     m_color = QColor(Qt::green);
+    m_brushLineHighlight = QBrush(QColor(Qt::white));
+    m_highlight = QColor(Qt::magenta);
     setMouseTracking(true);
 }
 
@@ -255,6 +259,10 @@ void BarChart::paintEvent(QPaintEvent *event)
     QPen penBar;
     penBar.setBrush(m_brushLine);
     penBar.setWidth(m_lineWidth);
+    QPen penHighlight;
+    penHighlight.setBrush(m_brushLineHighlight);
+    penHighlight.setWidth(m_lineWidth);
+    bool fMouseSet = false;
     ProcessChangedData();
     for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
         QPointF chartBar = ConvertToPlotPoint(pair);
@@ -262,15 +270,24 @@ void BarChart::paintEvent(QPaintEvent *event)
         QPointF pointOrigin = QPointF(chartBar.x() - m_nBarWidth, rectChart.bottom());
         QRectF rect(pointBar, pointOrigin);
         QBrush rectBrush = m_color;
-        if(m_fEnableOutline) {
+        if (lposMouse.x() >= rect.x() - 2*m_nBarWidth && lposMouse.x() <= rect.x()) {
+            m_mousedisplay.SetDot(QPointF(chartBar.x(), chartBar.y()));
+            if(m_fEnableHighlightBar) {
+                rectBrush = m_highlight;
+            }
+            if (m_fEnableHighlightOutline) {
+                painter.setPen(penHighlight);
+            }
+        } else {
             painter.setPen(penBar);
+        }
+        if(m_fEnableOutline) {
             painter.drawRect(rect);
             if (m_fEnableFill) {
                 painter.fillRect(rect, rectBrush);
             }
         } else if (m_fEnableFill) {
             penBar.setColor(m_color);
-            painter.setPen(penBar);
             painter.drawRect(rect);
             painter.fillRect(rect, rectBrush);
         }
@@ -378,21 +395,8 @@ void BarChart::paintEvent(QPaintEvent *event)
         QPointF posBottom(lposMouse.x(), rectChart.bottom());
         painter.drawLine(QLineF(posTop, posBottom));
 
-        //Draw a dot on the line series where the mouse X point is
-        QPainterPath pathDot;
-        QPointF pointCircleCenter(m_mousedisplay.DotPos());
-        pathDot.addEllipse(pointCircleCenter, 5, 5);
-        painter.setBrush(m_brushLine.color());
-        painter.fillPath(pathDot, m_brushLine.color());
-
-        //Add a border to the dot
-        //        QPen pen;
-        //        pen.setColor(m_mousedisplay.LabelBackgroundColor());
-        //        pen.setWidth(2);
-        //        painter.setPen(pen);
-        //        painter.drawPath(pathDot);
-
         //Draw a small tooltip looking item showing the point's data (x,y)
+        QPointF pointCircleCenter(m_mousedisplay.DotPos());
         auto pairData = ConvertFromPlotPoint(pointCircleCenter);
         const uint32_t& nX = pairData.first;
         const double& nY = pairData.second;
@@ -434,8 +438,8 @@ QRect BarChart::MouseOverTooltipRect(const QPainter& painter, const QRect& rectF
     QFontMetrics fm(painter.font());
     int nWidthText = fm.horizontalAdvance(strLabel) + 4;
 
-    //Place the tooltip right below the dot being displayed.
-    QPoint pointTopLeft(pointCircleCenter.x() - nWidthText/2, pointCircleCenter.y()+10);
+    //Place the tooltip right above the bar its displayed on.
+    QPoint pointTopLeft(pointCircleCenter.x() - nWidthText/2, pointCircleCenter.y() - 20);
 
     QRect rectDraw;
     rectDraw.setTopLeft(pointTopLeft);
@@ -459,6 +463,17 @@ void BarChart::SetBarColor(const QColor &color) {
 void BarChart::SetLineBrush(const QBrush &brush)
 {
     m_brushLine = brush;
+    m_fChangesMade = true;
+}
+
+void BarChart::SetBarHighlightColor(const QColor &color) {
+    m_highlight = color;
+    m_fChangesMade = true;
+}
+
+void BarChart::SetLineHighlightBrush(const QBrush &brush)
+{
+    m_brushLineHighlight = brush;
     m_fChangesMade = true;
 }
 
@@ -490,6 +505,16 @@ void BarChart::EnableFill(bool fEnable)
 void BarChart::EnableBorder(bool fEnable)
 {
     m_fEnableOutline = fEnable;
+}
+
+void BarChart::EnableHighlight(bool fEnable)
+{
+    m_fEnableHighlightBar = fEnable;
+}
+
+void BarChart::EnableHighlightBorder(bool fEnable)
+{
+    m_fEnableHighlightOutline = fEnable;
 }
 
 /**
