@@ -518,20 +518,6 @@ void BarChart::EnableHighlightBorder(bool fEnable)
     m_fEnableHighlightOutline = fEnable;
 }
 
-/**
- * @brief BarChart::ChartArea : Get the area of the widget that is dedicated to the chart itself
- * @return
- */
-QRect BarChart::ChartArea() const
-{
-    QRect rectFull = this->rect();
-    QRect rectChart = rectFull;
-    rectChart.setTop(rectFull.top() + HeightTopTitleArea());
-    rectChart.setBottom(rectFull.bottom() - HeightXLabelArea());
-    rectChart.setLeft(rectFull.left() + WidthYTitleArea() + WidthYLabelArea());
-    rectChart.setRight(rectFull.right());
-    return rectChart;
-}
 void BarChart::wheelEvent(QWheelEvent *event)
 {
     int dBarWidth = event->angleDelta().y()/120;

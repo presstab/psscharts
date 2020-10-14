@@ -87,8 +87,6 @@ protected:
 public:
     BarChart(QWidget* parent = nullptr);
 
-    QRect ChartArea() const;
-
     void SetDataPoints(std::map<uint32_t, double>& mapPoints);
     void SetBarColor(const QColor& color);
     void SetLineWidth(int nWidth);
