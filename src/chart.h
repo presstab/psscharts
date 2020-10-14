@@ -54,7 +54,8 @@ enum class ChartType
 {
     ERROR = -1,
     LINE = 0,
-    CANDLESTICK = 1
+    CANDLESTICK = 1,
+    PIE = 2
 };
 
 std::string ChartTypeToString(const ChartType type);

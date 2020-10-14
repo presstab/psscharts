@@ -30,6 +30,7 @@ SOFTWARE.
 #include <QPainter>
 #include <QPaintEvent>
 #include <QPen>
+#include <QPainterPath>
 
 /* ----------------------------------------------- |
  * |              TOP TITLE AREA                   |

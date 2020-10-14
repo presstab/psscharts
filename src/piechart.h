@@ -38,7 +38,7 @@ SOFTWARE.
 
 #include <list>
 #include <set>
-
+#include <vector>
 class QColor;
 class QPaintEvent;
 
@@ -48,33 +48,45 @@ class PieChart : public Chart
 {
     Q_OBJECT
 
-private:
-    static const uint32_t VERSION_MAJOR = 0;
-    static const uint32_t VERSION_MINOR = 1;
-    static const uint32_t VERSION_REVISION = 5;
-    static const uint32_t VERSION_BUILD = 0;
+    struct cmpGreaterKey {
+        // comparison function for drawing the slices
+        bool operator()(const double& a, const double& b) const {
+            return a > b;
+        }
+    };
 
 protected:
-    std::map<uint32_t, double> m_mapPoints;
-    QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair) const;
+    std::map<std::string, double> m_mapPoints;
+    std::multimap<double,std::string, cmpGreaterKey> m_mapData;
     std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point) override;
     QBrush m_brushLine;
     QBrush m_brushFill;
-    bool m_fEnableFill; //! Does the line get filled
+    bool m_fEnableFill; //! Does the chart get filled
+    int m_size;
+    bool m_fDountHole;
+    int m_nDountSize;
+    int m_nStartingAngle;
+    double m_nTotal;
+    double m_nRatio;
 
     QRect MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const;
     void ProcessChangedData() override;
 
 public:
     PieChart(QWidget* parent = nullptr);
-    void AddDataPoint(const uint32_t& x, const double& y);
-    void RemoveDataPoint(const uint32_t& x);
-    void SetDataPoints(const std::map<uint32_t, double>& mapPoints);
     void paintEvent(QPaintEvent *event) override;
+    QRect ChartArea() const;
+    void AddDataPoint(const std::string& label, const double& value);
+    void RemoveDataPoint(const std::string& label);
+    void SetDataPoints(const std::map<std::string, double>& mapPoints);
     void SetFillBrush(const QBrush& brush);
     void EnableFill(bool fEnable);
     void SetLineBrush(const QBrush& brush);
     void SetLineWidth(int nWidth);
+    void SetChartSize(int nSize);
+    void SetStartingAngle(int nAngle);
+    void SetDonutSize(int nSize);
+    void EnableDonut(bool fEnable);
 };
 
 } //namespace

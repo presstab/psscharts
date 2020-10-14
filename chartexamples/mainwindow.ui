@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>421</width>
-    <height>713</height>
+    <height>874</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -406,6 +406,47 @@
         </item>
         <item row="20" column="1">
          <widget class="QSpinBox" name="spinboxCandleLineWidth"/>
+        </item>
+        <item row="21" column="0">
+         <widget class="QLabel" name="label_19">
+          <property name="text">
+           <string>Chart Size</string>
+          </property>
+         </widget>
+        </item>
+        <item row="21" column="1">
+         <widget class="QSpinBox" name="spinboxPieSize"/>
+        </item>
+        <item row="22" column="0">
+         <widget class="QLabel" name="label_21">
+          <property name="text">
+           <string>Starting Angle</string>
+          </property>
+         </widget>
+        </item>
+        <item row="22" column="1">
+         <widget class="QSpinBox" name="spinboxPieAngle"/>
+        </item>
+        <item row="23" column="0">
+         <widget class="QLabel" name="label_20">
+          <property name="text">
+           <string>Donut Hole</string>
+          </property>
+         </widget>
+        </item>
+        <item row="23" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_14">
+          <item>
+           <widget class="QCheckBox" name="checkboxPieDonut">
+            <property name="text">
+             <string>Enable</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="spinboxPieDonut"/>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>

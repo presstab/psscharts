@@ -30,6 +30,7 @@ SOFTWARE.
 #include <QPainter>
 #include <QPaintEvent>
 #include <QPen>
+#include <QPainterPath>
 
 /* ----------------------------------------------- |
  * |              TOP TITLE AREA                   |
@@ -60,55 +61,19 @@ PieChart::PieChart(QWidget *parent) : Chart(ChartType::LINE, parent)
     m_settingsXLabels.SetNull();
     m_settingsYLabels.SetNull();
 
+    m_size = 250;
+    m_nDountSize = 100;
+    m_nStartingAngle = 16*90; // 12 o'clock position
     m_axisSections = 0;
     m_yPadding = 0;
     m_fEnableFill = true;
     m_fChangesMade = true;
+    m_fDountHole = true;
     m_rightMargin = -1;
     m_topTitleHeight = -1;
     m_precision = 100000000;
 
     setMouseTracking(true);
-}
-
-/**
- * @brief PieChart::ConvertToPlotPoint: convert a datapoint into the actual point it will be painted to
- * @param pair
- * @return
- */
-QPointF PieChart::ConvertToPlotPoint(const std::pair<uint32_t, double> &pair) const
-{
-    QRect rectChart = ChartArea();
-    if (m_yPadding > 0) {
-        //Y padding will make it so that there is an area on the top and bottom of the ChartArea
-        //that does not get drawn in. It makes it so the lines don't go right onto the edges.
-        rectChart.setBottom(rectChart.bottom() - m_yPadding);
-        rectChart.setTop(rectChart.top() + m_yPadding);
-    }
-
-    //compute point-value of X
-    int nWidth = rectChart.width();
-    double nValueMaxX = (MaxX() - MinX());
-    double nValueX = ((pair.first - MinX()) / nValueMaxX);
-    nValueX *= nWidth;
-    nValueX += rectChart.left();
-
-    //compute point-value of Y
-    int nHeight = rectChart.height();
-    uint64_t y1 = pair.second * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
-    uint64_t nMaxY = MaxY()*m_precision;
-    uint64_t nMinY = MinY()*m_precision;
-    uint64_t nSpanY = (nMaxY - nMinY);
-    uint64_t nValueY = (y1 - nMinY);
-    nValueY *= nHeight;
-    double dValueY = nValueY;
-    if (nSpanY == 0) {
-        dValueY = rectChart.top() + (nHeight/2);
-    } else {
-        dValueY /= nSpanY;
-        dValueY = rectChart.bottom() - dValueY; // Qt uses inverted Y axis
-    }
-    return QPointF(nValueX, dValueY);
 }
 
 /**
@@ -134,19 +99,19 @@ std::pair<uint32_t, double> PieChart::ConvertFromPlotPoint(const QPointF& point)
     return pairValues;
 }
 
-void PieChart::AddDataPoint(const uint32_t& x, const double& y)
+void PieChart::AddDataPoint(const std::string& label, const double& value)
 {
-    m_mapPoints.emplace(x, y);
+    m_mapPoints.emplace(label, value);
     ProcessChangedData();
 }
 
-void PieChart::RemoveDataPoint(const uint32_t &x)
+void PieChart::RemoveDataPoint(const std::string &label)
 {
-    m_mapPoints.erase(x);
+    m_mapPoints.erase(label);
     ProcessChangedData();
 }
 
-void PieChart::SetDataPoints(const std::map<uint32_t, double>& mapPoints)
+void PieChart::SetDataPoints(const std::map<std::string, double>& mapPoints)
 {
     m_mapPoints = mapPoints;
     ProcessChangedData();
@@ -154,21 +119,13 @@ void PieChart::SetDataPoints(const std::map<uint32_t, double>& mapPoints)
 
 void PieChart::ProcessChangedData()
 {
-    m_pairXRange = {0, 0};
-    m_pairYRange = {0, 0};
-    bool fFirstRun = true;
-    for (const auto& pair : m_mapPoints) {
-        //Set min and max for x and y
-        if (fFirstRun || pair.first < m_pairXRange.first)
-            m_pairXRange.first = pair.first;
-        if (fFirstRun || pair.first > m_pairXRange.second)
-            m_pairXRange.second = pair.first;
-        if (fFirstRun || pair.second < m_pairYRange.first)
-            m_pairYRange.first = pair.second;
-        if (fFirstRun || pair.second > m_pairYRange.second)
-            m_pairYRange.second = pair.second;
-        fFirstRun = false;
+    m_mapData.clear();
+    m_nTotal = 0;
+    for (auto pair: m_mapPoints) {
+        m_nTotal += pair.second;
+        m_mapData.emplace(std::pair<double, std::string>(pair.second, pair.first));
     }
+    m_nRatio = 5760 / m_nTotal;
     m_fChangesMade = true;
 }
 
@@ -196,28 +153,6 @@ void PieChart::paintEvent(QPaintEvent *event)
         }
     }
 
-    //If axis labels are dynamic, get the sizing
-    if (m_axisSections > 0) {
-        if (m_settingsYLabels.fDynamicSizing) {
-            QString strLabel = PrecisionToString(MaxY(), m_settingsYLabels.Precision());
-            QFontMetrics fm(m_settingsYLabels.font);
-            m_settingsYLabels.sizeDynamicDimension.setWidth(fm.horizontalAdvance(strLabel)+3);
-            m_settingsYLabels.sizeDynamicDimension.setHeight(fm.height());
-        }
-
-        if (m_settingsXLabels.fDynamicSizing) {
-            QString strLabel;
-            if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP)
-                strLabel = TimeStampToString(MaxX());
-            else
-                strLabel = PrecisionToString(MaxX(), m_settingsXLabels.Precision());
-
-            QFontMetrics fm(m_settingsXLabels.font);
-            m_settingsXLabels.sizeDynamicDimension.setHeight(fm.height()+3);
-            m_settingsXLabels.sizeDynamicDimension.setWidth(fm.horizontalAdvance(strLabel)+3);
-        }
-    }
-
     QRect rectFull = rect();
     QRect rectChart = ChartArea();
 
@@ -235,15 +170,36 @@ void PieChart::paintEvent(QPaintEvent *event)
         }
      }
 
-    //Create the lines that are drawn
-    QVector<QPointF> qvecPolygon;
-    QVector<QLineF> qvecLines;
+    // Draw Pie Chart
+    QPen penLine;
+    penLine.setBrush(m_brushLine);
+    penLine.setWidth(m_lineWidth);
+    painter.setPen(penLine);
+    QRect rectPie;
+    QPoint pointCenter = rectChart.center();
+    rectPie.setBottom(pointCenter.y() - m_size);
+    rectPie.setTop(pointCenter.y() + m_size);
+    rectPie.setRight(pointCenter.x() - m_size);
+    rectPie.setLeft(pointCenter.x() + m_size);
+    std::srand(42);
+    double nFilled = 0;
+    int i = 0;
+    for(auto pair: m_mapData) {
+        if (m_fEnableFill) {
+            painter.setBrush(QColor(std::rand()%256, std::rand()%256, std::rand()%256));
+        }
+        painter.drawPie(rectPie, m_nStartingAngle + nFilled, pair.first * m_nRatio);
+        nFilled += pair.first * m_nRatio;
 
-    std::srand(1);
-    qvecPolygon.append(rectChart.bottomLeft());
-    for(int i = 0; i < 12; i++) {
-        painter.setBrush(QColor(std::rand()%256, std::rand()%256, std::rand()%256));
-        painter.drawPie(rectChart,160*i*3,160*3);
+        // test text
+        QPoint pointText(pointCenter.x() - m_size, pointCenter.y() + m_size + i);
+        painter.drawText(pointText, QString::number((i/20)+1) + QString::fromStdString(": " + pair.second));
+        i += 20;
+    }
+
+    if(m_fDountHole) {
+        painter.setBrush(m_brushBackground);
+        painter.drawEllipse(pointCenter, m_nDountSize, m_nDountSize);
     }
 
     //Draw top title
@@ -252,56 +208,22 @@ void PieChart::paintEvent(QPaintEvent *event)
         painter.setFont(m_fontTopTitle);
         QRect rectTopTitle = rectFull;
         rectTopTitle.setBottom(rectFull.top() + HeightTopTitleArea());
-        rectTopTitle.setLeft(2*WidthYTitleArea());
         painter.drawText(rectTopTitle, Qt::AlignCenter, m_strTopTitle);
         painter.restore();
     }
 
     //Draw mouse display
-//    if (m_mousedisplay.IsEnabled() && fMouseInChartArea) {
-//        //Cross hair lines
-//        painter.setPen(m_mousedisplay.Pen());
-//        QPointF posLeft(rectChart.left(), lposMouse.y());
-//        QPointF posRight(rectChart.right(), lposMouse.y());
-//        QLineF lineMouseX(posLeft, posRight);
-//        painter.drawLine(lineMouseX);
-//        QPointF posTop(lposMouse.x(), rectChart.top());
-//        QPointF posBottom(lposMouse.x(), rectChart.bottom());
-//        painter.drawLine(QLineF(posTop, posBottom));
-
-//        //Draw a dot on the line series where the mouse X point is
-//        QPainterPath pathDot;
-//        QPointF pointCircleCenter(m_mousedisplay.DotPos());
-//        pathDot.addEllipse(pointCircleCenter, 5, 5);
-//        painter.setBrush(m_brushLine.color());
-//        painter.fillPath(pathDot, m_brushLine.color());
-
-//        //Draw a small tooltip looking item showing the point's data (x,y)
-//        auto pairData = ConvertFromPlotPoint(pointCircleCenter);
-//        const uint32_t& nX = pairData.first;
-//        const double& nY = pairData.second;
-//        QString strLabel = "(";
-//        if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
-//            strLabel += TimeStampToString(nX);
-//        } else {
-//            strLabel += PrecisionToString(nX, m_settingsXLabels.Precision());
-//        }
-//        strLabel += ", ";
-//        strLabel += PrecisionToString(nY, m_settingsYLabels.Precision());
-//        strLabel += ")";
-
-//        //Create the background of the tooltip
-//        QRect rectDraw = MouseOverTooltipRect(painter, rectFull, pointCircleCenter, strLabel);
-
-//        QPainterPath pathBackground;
-//        pathBackground.addRoundedRect(rectDraw, 5, 5);
-//        painter.fillPath(pathBackground, m_mousedisplay.LabelBackgroundColor());
-
-//        //Draw the text of the tooltip
-//        painter.setBrush(m_brushLabels);
-//        painter.setPen(Qt::black);
-//        painter.drawText(rectDraw, Qt::AlignCenter, strLabel);
-//    }
+    if (m_mousedisplay.IsEnabled() && fMouseInChartArea) {
+        //Cross hair lines
+        painter.setPen(m_mousedisplay.Pen());
+        QPointF posLeft(rectChart.left(), lposMouse.y());
+        QPointF posRight(rectChart.right(), lposMouse.y());
+        QLineF lineMouseX(posLeft, posRight);
+        painter.drawLine(lineMouseX);
+        QPointF posTop(lposMouse.x(), rectChart.top());
+        QPointF posBottom(lposMouse.x(), rectChart.bottom());
+        painter.drawLine(QLineF(posTop, posBottom));
+    }
     m_fChangesMade = false;
 }
 
@@ -361,6 +283,50 @@ void PieChart::SetLineWidth(int nWidth)
 void PieChart::EnableFill(bool fEnable)
 {
     m_fEnableFill = fEnable;
+}
+
+void PieChart::SetChartSize(int nSize)
+{
+    m_size = nSize;
+    m_fChangesMade = true;
+}
+
+void PieChart::SetStartingAngle(int nAngle)
+{
+    // Full Circle is 16*360 = 5760
+    // Modulo then set to angle for use in code
+    m_nStartingAngle = 16*(nAngle % 360);
+    m_fChangesMade = true;
+}
+
+void PieChart::SetDonutSize(int nSize)
+{
+    if(nSize > m_size) {
+        m_nDountSize = m_size;
+    } else {
+        m_nDountSize = nSize;
+    }
+    m_fChangesMade = true;
+}
+
+void PieChart::EnableDonut(bool fEnable)
+{
+    m_fDountHole = fEnable;
+}
+
+/**
+ * @brief PssChart::ChartArea : Get the area of the widget that is dedicated to the chart itself
+ * @return
+ */
+QRect PieChart::ChartArea() const
+{
+    QRect rectFull = this->rect();
+    QRect rectChart = rectFull;
+    rectChart.setTop(rectFull.top() + HeightTopTitleArea());
+    rectChart.setBottom(rectFull.bottom());
+    rectChart.setLeft(rectFull.left());
+    rectChart.setRight(rectFull.right());
+    return rectChart;
 }
 
 }//namespace

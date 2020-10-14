@@ -43,7 +43,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 private:
     Ui::MainWindow *ui;
-    PssCharts::PieChart* m_lineChart;
+    PssCharts::PieChart* m_pieChart;
     PssCharts::CandlestickChart* m_candleChart;
     PssCharts::ChartType m_chartType;
 
