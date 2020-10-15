@@ -54,7 +54,8 @@ enum class ChartType
 {
     ERROR = -1,
     LINE = 0,
-    CANDLESTICK = 1
+    CANDLESTICK = 1,
+    BAR = 2
 };
 
 std::string ChartTypeToString(const ChartType type);
@@ -67,7 +68,7 @@ class Chart : public QWidget
 private:
     static const uint32_t VERSION_MAJOR = 0;
     static const uint32_t VERSION_MINOR = 1;
-    static const uint32_t VERSION_REVISION = 5;
+    static const uint32_t VERSION_REVISION = 6;
     static const uint32_t VERSION_BUILD = 0;
 
 protected:

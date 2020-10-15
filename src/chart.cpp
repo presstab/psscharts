@@ -30,6 +30,7 @@ SOFTWARE.
 #include <QPainter>
 #include <QPaintEvent>
 #include <QPen>
+#include <QPainterPath>
 
 /* ----------------------------------------------- |
  * |              TOP TITLE AREA                   |
@@ -105,6 +106,8 @@ std::string ChartTypeToString(const ChartType type)
             return "LINE";
         case ChartType::CANDLESTICK:
             return "CANDLESTICK";
+        case ChartType::BAR:
+            return "BAR";
         default:
             return "ERROR";
     }
@@ -112,10 +115,12 @@ std::string ChartTypeToString(const ChartType type)
 ChartType ChartTypeFromString(std::string strType)
 {
     strType = convertToUpper(strType);
-    if(strType == "LINE")
+    if (strType == "LINE")
         return ChartType::LINE;
-    else if(strType == "CANDLESTICK")
+    else if (strType == "CANDLESTICK")
         return ChartType::CANDLESTICK;
+    else if (strType == "BAR")
+        return ChartType::BAR;
     else
         return ChartType::ERROR;
 }

@@ -27,6 +27,7 @@ CONFIG += c++11
 SOURCES += \
         chartexamples/main.cpp \
         chartexamples/mainwindow.cpp \
+        src/barchart.cpp \
         src/candlestickchart.cpp \
         src/linechart.cpp \
         src/chart.cpp \
@@ -35,6 +36,7 @@ SOURCES += \
 
 HEADERS += \
         chartexamples/mainwindow.h \
+        src/barchart.h \
         src/candlestickchart.h \
         src/linechart.h \
         src/chart.h \

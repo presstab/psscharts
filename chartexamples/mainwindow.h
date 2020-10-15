@@ -35,6 +35,7 @@ class MainWindow;
 namespace PssCharts {
 class LineChart;
 class CandlestickChart;
+class BarChart;
 }
 
 class MainWindow : public QMainWindow
@@ -44,6 +45,7 @@ private:
     Ui::MainWindow *ui;
     PssCharts::LineChart* m_lineChart;
     PssCharts::CandlestickChart* m_candleChart;
+    PssCharts::BarChart* m_barChart;
     PssCharts::ChartType m_chartType;
 
 public:
@@ -53,6 +55,7 @@ public:
 private slots:
     void RedrawChart();
     void ChangeCandleWidth(int dChange);
+    void ChangeBarWidth(int dChange);
 };
 
 #endif // MAINWINDOW_H
