@@ -28,6 +28,7 @@ SOFTWARE.
 #include "src/linechart.h"
 #include "src/candlestickchart.h"
 #include "src/piechart.h"
+#include "src/barchart.h"
 
 #include <QRandomGenerator>
 #include <QScreen>
@@ -53,8 +54,10 @@ QStringList listQtColors = {
 };
 
 QStringList listChartFormats = {
-    "Pie",
-    "Candlestick"
+    "Bar",
+    "Candlestick",
+    "Line",
+    "Pie"
 };
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -63,23 +66,29 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    m_pieChart = new PssCharts::PieChart(this);
+    m_lineChart = new PssCharts::LineChart(this);
     m_candleChart = new PssCharts::CandlestickChart(this);
+    m_barChart = new PssCharts::BarChart(this);
+    m_pieChart = new PssCharts::PieChart(this);
     QSize sizeScreen = QGuiApplication::screens()[0]->size();
     if (sizeScreen.height() > sizeScreen.width()) {
-        ui->formLayout->addRow(m_pieChart);
+        ui->formLayout->addRow(m_lineChart);
         ui->formLayout->addRow(m_candleChart);
+        ui->formLayout->addRow(m_barChart);
+        ui->formLayout->addRow(m_pieChart);
     } else {
-        ui->hlayoutMain->addWidget(m_pieChart, /*stretch*/1);
+        ui->hlayoutMain->addWidget(m_lineChart, /*stretch*/1);
         ui->hlayoutMain->addWidget(m_candleChart, /*stretch*/1);
+        ui->hlayoutMain->addWidget(m_barChart, /*stretch*/1);
+        ui->hlayoutMain->addWidget(m_pieChart, /*stretch*/1);
     }
-    m_chartType = PssCharts::ChartType::CANDLESTICK;
+    m_chartType = PssCharts::ChartType::PIE;
 
-    setWindowTitle(QString("PssCharts %1").arg(m_pieChart->VersionString()));
+    setWindowTitle(QString("PssCharts %1").arg(m_lineChart->VersionString()));
 
     //Chart Formats
     ui->comboBoxChartType->addItems(listChartFormats);
-    ui->comboBoxChartType->setCurrentIndex(0); //candlestick
+    ui->comboBoxChartType->setCurrentIndex(3); // pie
 
     ui->comboboxChartFillColor->addItems(listQtColors);
     ui->comboboxChartFillColor->setCurrentIndex(8); //cyan
@@ -91,6 +100,24 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->comboboxLineColor->addItems(listQtColors);
     ui->comboboxLineColor->setCurrentIndex(0); //black
+
+    // Bar Colors
+    ui->comboboxBarColor->addItems(listQtColors);
+    ui->comboboxBarColor->setCurrentIndex(8); //cyan
+    ui->checkboxBarColor->setChecked(true);
+
+    ui->comboboxBarLineColor->addItems(listQtColors);
+    ui->comboboxBarLineColor->setCurrentIndex(0); //black
+    ui->checkboxBarLine->setChecked(true);
+
+    ui->comboboxHighlightBar->addItems(listQtColors);
+    ui->comboboxHighlightBar->setCurrentIndex(9); //magenta
+    ui->checkboxHighlightBar->setChecked(true);
+
+    ui->comboboxHighlightLine->addItems(listQtColors);
+    ui->comboboxHighlightLine->setCurrentIndex(1); //white
+    ui->checkboxHighlightLine->setChecked(true);
+
 
     // Candlestick Colors
     ui->checkBoxCandleFill->setChecked(true);
@@ -128,6 +155,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->spinboxPieAngle->setMaximum(360);
     ui->spinboxPieAngle->setValue(90);
     ui->checkboxPieDonut->setChecked(false);
+    ui->checkboxPieOutline->setChecked(true);
+    ui->comboboxPieOutline->addItems(listQtColors);
+    ui->comboboxPieOutline->setCurrentIndex(0); //black
+    ui->spinboxPieOutline->setValue(5);
+
 
     //Chart Title
     ui->lineeditChartTitle->setText("PssCharts");
@@ -151,13 +183,23 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->checkBoxDrawYAxisLine->setChecked(true);
     ui->spinboxYLabelPrecision->setValue(2);
 
-    m_pieChart->SetYLabelType(PssCharts::AxisLabelType::AX_NUMBER);
-    m_pieChart->SetXLabelType(PssCharts::AxisLabelType::AX_TIMESTAMP);
+    m_lineChart->SetYLabelType(PssCharts::AxisLabelType::AX_NUMBER);
+    m_lineChart->SetXLabelType(PssCharts::AxisLabelType::AX_TIMESTAMP);
     m_candleChart->SetYLabelType(PssCharts::AxisLabelType::AX_NUMBER);
     m_candleChart->SetXLabelType(PssCharts::AxisLabelType::AX_TIMESTAMP);
+    m_barChart->SetYLabelType(PssCharts::AxisLabelType::AX_NUMBER);
+    m_barChart->SetXLabelType(PssCharts::AxisLabelType::AX_TIMESTAMP);
 
     ui->spinboxGridlines->setValue(5);
     ui->spinboxLineWidth->setValue(3);
+
+    ui->spinboxBarWidth->setMinimum(1);
+    ui->spinboxBarWidth->setMaximum(25);
+    ui->spinboxBarWidth->setValue(10);
+    ui->spinboxBarLineWidth->setMinimum(1);
+    ui->spinboxBarLineWidth->setMaximum(20);
+    ui->spinboxBarLineWidth->setValue(2);
+    m_barChart->SetBarWidth(10, 1, 25);
 
     ui->spinboxCandleWidth->setMinimum(5);
     ui->spinboxCandleWidth->setMaximum(25);
@@ -176,7 +218,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //Generate some data points to fill the chart
     std::map<uint32_t, double> mapPoints;
     double nLastPoint = 0;
-    for (auto i = 0; i < 365; i++) {
+    for (auto i = 0; i < 366; i++) {
         double y = QRandomGenerator::global()->generateDouble();
         if (nLastPoint > 0) {
             double nPercentChange = (y - nLastPoint) / nLastPoint;
@@ -188,6 +230,14 @@ MainWindow::MainWindow(QWidget *parent) :
         mapPoints.emplace(i*(60*60*24), y);
         nLastPoint = y;
     }
+
+    m_lineChart->SetDataPoints(mapPoints);
+    m_lineChart->setMinimumSize(QSize(600,400));
+    m_candleChart->SetDataPoints(mapPoints, 7*60*60*24);
+    m_candleChart->setMinimumSize(QSize(600,400));
+    m_barChart->SetDataPoints(mapPoints);
+    m_barChart->setMinimumSize(QSize(600,400));
+
     m_pieChart->AddDataPoint("persona", 4932);
     m_pieChart->AddDataPoint("pizza", 2556);
     m_pieChart->AddDataPoint("fire", 1235);
@@ -195,11 +245,10 @@ MainWindow::MainWindow(QWidget *parent) :
     m_pieChart->AddDataPoint("were", 1235);
     m_pieChart->AddDataPoint("luigi", 6235);
     m_pieChart->setMinimumSize(QSize(600,400));
-    m_pieChart->hide();
-    m_candleChart->SetDataPoints(mapPoints, 7*60*60*24);
-    m_candleChart->setMinimumSize(QSize(600,400));
-    m_candleChart->show();
     RedrawChart();
+
+    connect(ui->tabWidget, &QTabWidget::currentChanged, ui->comboBoxChartType, &QComboBox::setCurrentIndex);
+    connect(ui->comboBoxChartType, SIGNAL(currentIndexChanged(int)), ui->tabWidget, SLOT(setCurrentIndex(int)));
 
     connect(ui->lineeditChartTitle, &QLineEdit::textChanged, this, &MainWindow::RedrawChart);
     connect(ui->lineeditYTitle, &QLineEdit::textChanged, this, &MainWindow::RedrawChart);
@@ -218,7 +267,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->checkboxOHLCBold, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkBoxOHLCDisplay, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkboxCandleDash, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkboxBarColor, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkboxBarLine, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkboxHighlightBar, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkboxHighlightLine, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkboxPieDonut, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkboxPieOutline, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
 
     connect(ui->comboBoxChartType, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxChartFillColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
@@ -233,6 +287,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->comboBoxDownBorderColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboBoxUpCandleDashColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboBoxDownCandleDashColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboboxBarColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboboxBarLineColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboboxHighlightBar, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboboxHighlightLine, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboboxPieOutline, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
 
     connect(ui->spinboxGridlines, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
@@ -243,11 +302,15 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->spinboxCandleWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxCandleLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxOHLCFontSize, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
+    connect(ui->spinboxBarWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
+    connect(ui->spinboxBarLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxPieSize, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxPieAngle, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxPieDonut, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
+    connect(ui->spinboxPieOutline, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
 
     connect(m_candleChart, &PssCharts::CandlestickChart::candleWidthChanged, this, &MainWindow::ChangeCandleWidth);
+    connect(m_barChart, &PssCharts::BarChart::barWidthChanged, this, &MainWindow::ChangeBarWidth);
 }
 
 MainWindow::~MainWindow()
@@ -260,57 +323,61 @@ void MainWindow::RedrawChart()
     m_chartType = PssCharts::ChartTypeFromString(ui->comboBoxChartType->currentText().toStdString());
     switch (m_chartType) {
         case PssCharts::ChartType::LINE:{
+            m_barChart->setVisible(false);
             m_candleChart->setVisible(false);
-            m_pieChart->setVisible(true);
+            m_pieChart->setVisible(false);
+            m_lineChart->setVisible(true);
 
             //Chart Title
-            m_pieChart->SetTopTitle(ui->lineeditChartTitle->text());
+            m_lineChart->SetTopTitle(ui->lineeditChartTitle->text());
             QFont fontChartTitle;
             fontChartTitle.setPointSize(ui->spinboxTitleFontSize->value());
             fontChartTitle.setBold(ui->checkboxChartTitleBold->isChecked());
-            m_pieChart->SetTopTitleFont(fontChartTitle);
+            m_lineChart->SetTopTitleFont(fontChartTitle);
 
             //Y Title
-            m_pieChart->SetYTitle(ui->lineeditYTitle->text());
+            m_lineChart->SetYTitle(ui->lineeditYTitle->text());
             QFont fontYTitle;
             fontYTitle.setPointSize(ui->spinboxYTitleFontSize->value());
             fontYTitle.setBold(ui->checkboxYTitleBold->isChecked());
-            m_pieChart->SetYTitleFont(fontYTitle);
+            m_lineChart->SetYTitleFont(fontYTitle);
 
             //Axis Labels
-            m_pieChart->SetLabelPrecision(ui->spinboxYLabelPrecision->value());
-            m_pieChart->SetAxisLabelsOnOff(ui->checkboxDrawXTitle->checkState() == Qt::Checked, ui->checkboxDrawYTitle->checkState() == Qt::Checked);
+            m_lineChart->SetLabelPrecision(ui->spinboxYLabelPrecision->value());
+            m_lineChart->SetAxisLabelsOnOff(ui->checkboxDrawXTitle->checkState() == Qt::Checked, ui->checkboxDrawYTitle->checkState() == Qt::Checked);
 
             //Axis gridlines
-            m_pieChart->SetAxisOnOff(ui->checkboxDrawXAxisLine->checkState() == Qt::Checked, ui->checkBoxDrawYAxisLine->checkState() == Qt::Checked);
-            m_pieChart->SetAxisSectionCount(ui->spinboxGridlines->value());
-            m_pieChart->SetAxisLabelsBrush(QBrush(Qt::black));
+            m_lineChart->SetAxisOnOff(ui->checkboxDrawXAxisLine->checkState() == Qt::Checked, ui->checkBoxDrawYAxisLine->checkState() == Qt::Checked);
+            m_lineChart->SetAxisSectionCount(ui->spinboxGridlines->value());
+            m_lineChart->SetAxisLabelsBrush(QBrush(Qt::black));
 
-            m_pieChart->EnableFill(ui->checkboxFillChart->checkState() == Qt::Checked);
+            m_lineChart->EnableFill(ui->checkboxFillChart->checkState() == Qt::Checked);
             QColor colorFill = static_cast<Qt::GlobalColor>(ui->comboboxChartFillColor->currentIndex()+2);
-            m_pieChart->SetFillBrush(QBrush(colorFill));
+            m_lineChart->SetFillBrush(QBrush(colorFill));
 
             QColor colorBackground = palette().window().color();
             if (ui->checkboxFillBackground->checkState() == Qt::Checked)
                 colorBackground = static_cast<Qt::GlobalColor>(ui->comboboxBgColor->currentIndex()+2);
-            m_pieChart->SetBackgroundBrush(QBrush(colorBackground));
+            m_lineChart->SetBackgroundBrush(QBrush(colorBackground));
 
             //Line Color
-            m_pieChart->SetLineWidth(ui->spinboxLineWidth->value());
+            m_lineChart->SetLineWidth(ui->spinboxLineWidth->value());
             QColor colorLine = static_cast<Qt::GlobalColor>(ui->comboboxLineColor->currentIndex()+2);
-            m_pieChart->SetLineBrush(colorLine);
+            m_lineChart->SetLineBrush(colorLine);
 
             //Mouse Display
-            m_pieChart->EnableMouseDisplay(ui->checkboxCrosshairs->isChecked());
-            PssCharts::MouseDisplay* display = m_pieChart->GetMouseDisplay();
+            m_lineChart->EnableMouseDisplay(ui->checkboxCrosshairs->isChecked());
+            PssCharts::MouseDisplay* display = m_lineChart->GetMouseDisplay();
             display->SetWidth(ui->spinboxCrosshairWidth->value());
             QColor colorCrosshair = static_cast<Qt::GlobalColor>(ui->comboboxCrosshairColor->currentIndex()+2);
             display->SetColor(colorCrosshair);
 
-            m_pieChart->repaint();
+            m_lineChart->repaint();
             break;
         }
         case PssCharts::ChartType::CANDLESTICK: {
+            m_lineChart->setVisible(false);
+            m_barChart->setVisible(false);
             m_pieChart->setVisible(false);
             m_candleChart->setVisible(true);
 
@@ -379,8 +446,74 @@ void MainWindow::RedrawChart()
             m_candleChart->repaint();
             break;
         }
-        case PssCharts::ChartType::PIE:{
+        case PssCharts::ChartType::BAR:
+        {
+            m_lineChart->setVisible(false);
             m_candleChart->setVisible(false);
+            m_pieChart->setVisible(false);
+            m_barChart->setVisible(true);
+
+            //Chart Title
+            m_barChart->SetTopTitle(ui->lineeditChartTitle->text());
+            QFont fontChartTitle;
+            fontChartTitle.setPointSize(ui->spinboxTitleFontSize->value());
+            fontChartTitle.setBold(ui->checkboxChartTitleBold->isChecked());
+            m_barChart->SetTopTitleFont(fontChartTitle);
+
+            //Y Title
+            m_barChart->SetYTitle(ui->lineeditYTitle->text());
+            QFont fontYTitle;
+            fontYTitle.setPointSize(ui->spinboxYTitleFontSize->value());
+            fontYTitle.setBold(ui->checkboxYTitleBold->isChecked());
+            m_barChart->SetYTitleFont(fontYTitle);
+
+            //Axis Labels
+            m_barChart->SetLabelPrecision(ui->spinboxYLabelPrecision->value());
+            m_barChart->SetAxisLabelsOnOff(ui->checkboxDrawXTitle->checkState() == Qt::Checked, ui->checkboxDrawYTitle->checkState() == Qt::Checked);
+
+            //Axis gridlines
+            m_barChart->SetAxisOnOff(ui->checkboxDrawXAxisLine->checkState() == Qt::Checked, ui->checkBoxDrawYAxisLine->checkState() == Qt::Checked);
+            m_barChart->SetAxisSectionCount(ui->spinboxGridlines->value());
+            m_barChart->SetAxisLabelsBrush(QBrush(Qt::black));
+
+            QColor colorBackground = palette().window().color();
+            if (ui->checkboxFillBackground->checkState() == Qt::Checked)
+                colorBackground = static_cast<Qt::GlobalColor>(ui->comboboxBgColor->currentIndex()+2);
+            m_barChart->SetBackgroundBrush(QBrush(colorBackground));
+
+            //Bar Color
+            m_barChart->SetLineWidth(ui->spinboxBarLineWidth->value());
+            QColor colorLine = static_cast<Qt::GlobalColor>(ui->comboboxBarLineColor->currentIndex()+2);
+            m_barChart->SetLineBrush(colorLine);
+            QColor colorLineHighlight = static_cast<Qt::GlobalColor>(ui->comboboxHighlightLine->currentIndex()+2);
+            m_barChart->SetLineHighlightBrush(colorLineHighlight);
+            m_barChart->EnableFill(ui->checkboxBarColor->checkState() == Qt::Checked);
+            QColor colorFill = static_cast<Qt::GlobalColor>(ui->comboboxBarColor->currentIndex()+2);
+            m_barChart->SetBarColor(colorFill);
+            QColor colorFillHighlight = static_cast<Qt::GlobalColor>(ui->comboboxHighlightBar->currentIndex()+2);
+            m_barChart->SetBarHighlightColor(colorFillHighlight);
+
+            m_barChart->SetBarWidth(ui->spinboxBarWidth->value());
+            m_barChart->SetLineWidth(ui->spinboxBarLineWidth->value());
+            m_barChart->EnableFill(ui->checkboxBarColor->checkState() == Qt::Checked);
+            m_barChart->EnableBorder(ui->checkboxBarLine->checkState() == Qt::Checked);
+            m_barChart->EnableHighlight(ui->checkboxHighlightBar->checkState() == Qt::Checked);
+            m_barChart->EnableHighlightBorder(ui->checkboxHighlightLine->checkState() == Qt::Checked);
+
+            //Mouse Display
+            m_barChart->EnableMouseDisplay(ui->checkboxCrosshairs->isChecked());
+            PssCharts::MouseDisplay* display = m_barChart->GetMouseDisplay();
+            display->SetWidth(ui->spinboxCrosshairWidth->value());
+            QColor colorCrosshair = static_cast<Qt::GlobalColor>(ui->comboboxCrosshairColor->currentIndex()+2);
+            display->SetColor(colorCrosshair);
+
+            m_barChart->repaint();
+            break;
+        }
+        case PssCharts::ChartType::PIE:{
+            m_lineChart->setVisible(false);
+            m_candleChart->setVisible(false);
+            m_barChart->setVisible(false);
             m_pieChart->setVisible(true);
 
             //Chart Title
@@ -416,14 +549,15 @@ void MainWindow::RedrawChart()
             m_pieChart->SetBackgroundBrush(QBrush(colorBackground));
 
             //Line Color
-            m_pieChart->SetLineWidth(ui->spinboxLineWidth->value());
-            QColor colorLine = static_cast<Qt::GlobalColor>(ui->comboboxLineColor->currentIndex()+2);
+            m_pieChart->SetLineWidth(ui->spinboxPieOutline->value());
+            QColor colorLine = static_cast<Qt::GlobalColor>(ui->comboboxPieOutline->currentIndex()+2);
             m_pieChart->SetLineBrush(colorLine);
 
             // Pie Chart
             m_pieChart->SetChartSize(ui->spinboxPieSize->value());
             m_pieChart->SetStartingAngle(ui->spinboxPieAngle->value());
             m_pieChart->SetDonutSize(ui->spinboxPieDonut->value());
+            m_pieChart->EnableOutline(ui->checkboxPieOutline->checkState() == Qt::Checked);
             m_pieChart->EnableDonut(ui->checkboxPieDonut->checkState() == Qt::Checked);
 
             //Mouse Display
@@ -436,6 +570,7 @@ void MainWindow::RedrawChart()
             m_pieChart->repaint();
             break;
         }
+
         default:
             break;
     }
@@ -443,4 +578,8 @@ void MainWindow::RedrawChart()
 
 void MainWindow::ChangeCandleWidth(int dChange) {
     ui->spinboxCandleWidth->setValue(ui->spinboxCandleWidth->value() + dChange);
+}
+
+void MainWindow::ChangeBarWidth(int dChange) {
+    ui->spinboxBarWidth->setValue(ui->spinboxBarWidth->value() + dChange);
 }

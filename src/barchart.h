@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef PIECHART_H
-#define PIECHART_H
+#ifndef BARCHART_H
+#define BARCHART_H
 
 #include "chart.h"
 #include "axislabelsettings.h"
@@ -38,58 +38,71 @@ SOFTWARE.
 
 #include <list>
 #include <set>
-#include <vector>
+
 class QColor;
 class QPaintEvent;
 
 namespace PssCharts {
 
-class PieChart : public Chart
+class BarChart : public Chart
 {
     Q_OBJECT
 
-    struct cmpGreaterKey {
-        // comparison function for drawing the slices
-        bool operator()(const double& a, const double& b) const {
-            return a > b;
-        }
-    };
+private:
+    static const uint32_t VERSION_MAJOR = 0;
+    static const uint32_t VERSION_MINOR = 1;
+    static const uint32_t VERSION_REVISION = 6;
+    static const uint32_t VERSION_BUILD = 0;
 
 protected:
-    std::map<std::string, double> m_mapPoints;
-    std::multimap<double,std::string, cmpGreaterKey> m_mapData;
+    std::map<uint32_t, double> m_mapPoints;
+    QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair);
     std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point) override;
-    QBrush m_brushLine;
-    QBrush m_brushFill;
-    bool m_fEnableFill; //! Does the chart get filled
-    int m_size;
-    bool m_fDountHole;
-    int m_nDountSize;
-    int m_nStartingAngle;
-    double m_nTotal;
-    double m_nRatio;
-    bool m_fEnableOutline;
 
     QRect MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const;
     void ProcessChangedData() override;
 
-public:
-    PieChart(QWidget* parent = nullptr);
+    uint32_t ConvertBarPlotPointTime(const QPointF& point);
+
+    void wheelEvent(QWheelEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
-    QRect ChartArea() const;
-    void AddDataPoint(const std::string& label, const double& value);
-    void RemoveDataPoint(const std::string& label);
-    void SetDataPoints(const std::map<std::string, double>& mapPoints);
-    void SetFillBrush(const QBrush& brush);
-    void EnableFill(bool fEnable);
-    void SetLineBrush(const QBrush& brush);
+
+    bool m_fEnableOutline;
+    bool m_fEnableFill;
+    bool m_fEnableHighlightBar;
+    bool m_fEnableHighlightOutline;
+
+    double m_nBarWidth;
+    double m_nBarMaxWidth;
+    double m_nBarMinWidth;
+
+    int m_nBarSpacing;
+    int m_nBars;
+
+    QBrush m_brushLine;
+    QBrush m_brushLineHighlight;
+    QColor m_color;
+    QColor m_highlight;
+
+public:
+    BarChart(QWidget* parent = nullptr);
+
+    void SetDataPoints(std::map<uint32_t, double>& mapPoints);
+    void SetBarColor(const QColor& color);
     void SetLineWidth(int nWidth);
-    void SetChartSize(int nSize);
-    void SetStartingAngle(int nAngle);
-    void SetDonutSize(int nSize);
-    void EnableDonut(bool fEnable);
-    void EnableOutline(bool fEnable);
+    void SetLineBrush(const QBrush& brush);
+    void SetBarHighlightColor(const QColor& color);
+    void SetLineHighlightBrush(const QBrush& brush);
+    void SetBarWidth(int nWidth);
+    void SetBarWidth(int nWidth, int nMinWidth, int nMaxWidth);
+    void EnableFill(bool fEnable);
+    void EnableBorder(bool fEnable);
+    void EnableHighlight(bool fEnable);
+    void EnableHighlightBorder(bool fEnable);
+
+signals:
+    void barWidthChanged(int dChange);
 };
 
 } //namespace
-#endif // PIECHART_H
+#endif // BARCHART_H

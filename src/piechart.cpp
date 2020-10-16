@@ -55,7 +55,7 @@ SOFTWARE.
 */
 namespace PssCharts {
 
-PieChart::PieChart(QWidget *parent) : Chart(ChartType::LINE, parent)
+PieChart::PieChart(QWidget *parent) : Chart(ChartType::PIE, parent)
 {
     setAutoFillBackground(true);
     m_settingsXLabels.SetNull();
@@ -188,12 +188,15 @@ void PieChart::paintEvent(QPaintEvent *event)
         if (m_fEnableFill) {
             painter.setBrush(QColor(std::rand()%256, std::rand()%256, std::rand()%256));
         }
+        if(m_fEnableOutline) {
+            penLine.setColor(painter.brush().color());
+        }
         painter.drawPie(rectPie, m_nStartingAngle + nFilled, pair.first * m_nRatio);
         nFilled += pair.first * m_nRatio;
 
         // test text
         QPoint pointText(pointCenter.x() - m_size, pointCenter.y() + m_size + i);
-        painter.drawText(pointText, QString::number((i/20)+1) + QString::fromStdString(": " + pair.second));
+        painter.drawText(pointText, QString::number((i/20)+1) + QString::fromStdString(": " + pair.second + " - ") + QString::number((pair.first)));
         i += 20;
     }
 
@@ -314,6 +317,10 @@ void PieChart::EnableDonut(bool fEnable)
     m_fDountHole = fEnable;
 }
 
+void PieChart::EnableOutline(bool fEnable)
+{
+    m_fDountHole = fEnable;
+}
 /**
  * @brief PssChart::ChartArea : Get the area of the widget that is dedicated to the chart itself
  * @return
