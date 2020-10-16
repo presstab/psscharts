@@ -38,11 +38,21 @@ SOFTWARE.
 
 #include <list>
 #include <set>
-#include <vector>
+#include <cmath>
 class QColor;
 class QPaintEvent;
 
 namespace PssCharts {
+
+enum class PieLabelType
+{
+    PIE_NO_LABEL,
+    PIE_VALUE,
+    PIE_PERCENT,
+    PIE_LABEL,
+    PIE_LABEL_PERCENT,
+    PIE_LABEL_VALUE
+};
 
 class PieChart : public Chart
 {
@@ -69,7 +79,13 @@ protected:
     double m_nTotal;
     double m_nRatio;
     bool m_fEnableOutline;
-
+    double pi = 3.141592653589793;
+    double m_xLabelPadding;
+    double m_yLabelPadding;
+    PieLabelType m_labelType;
+    std::string LabelTypeToString(const PieLabelType type);
+    PieLabelType LabelTypeFromString(std::string strType);
+    std::string strToUpper(std::string const &strInput);
     QRect MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const;
     void ProcessChangedData() override;
 
@@ -89,6 +105,10 @@ public:
     void SetDonutSize(int nSize);
     void EnableDonut(bool fEnable);
     void EnableOutline(bool fEnable);
+    void SetLabelType(PieLabelType nType);
+    void SetLabelType(std::string nType);
+    void SetXLabelPadding(double nPadding);
+    void SetYLabelPadding(double nPadding);
 };
 
 } //namespace

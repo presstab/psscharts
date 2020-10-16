@@ -159,7 +159,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboboxPieOutline->addItems(listQtColors);
     ui->comboboxPieOutline->setCurrentIndex(0); //black
     ui->spinboxPieOutline->setValue(5);
-
+    ui->doublespinboxPieLabelX->setSingleStep(0.05);
+    ui->doublespinboxPieLabelY->setSingleStep(0.05);
+    ui->doublespinboxPieLabelX->setValue(1.25);
+    ui->doublespinboxPieLabelY->setValue(1.1);
 
     //Chart Title
     ui->lineeditChartTitle->setText("PssCharts");
@@ -292,6 +295,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->comboboxHighlightBar, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxHighlightLine, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxPieOutline, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboboxPieLabel, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
 
     connect(ui->spinboxGridlines, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
@@ -308,6 +312,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->spinboxPieAngle, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxPieDonut, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxPieOutline, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
+    connect(ui->doublespinboxPieLabelX, SIGNAL(valueChanged(double)), this, SLOT(RedrawChart()));
+    connect(ui->doublespinboxPieLabelY, SIGNAL(valueChanged(double)), this, SLOT(RedrawChart()));
 
     connect(m_candleChart, &PssCharts::CandlestickChart::candleWidthChanged, this, &MainWindow::ChangeCandleWidth);
     connect(m_barChart, &PssCharts::BarChart::barWidthChanged, this, &MainWindow::ChangeBarWidth);
@@ -559,6 +565,10 @@ void MainWindow::RedrawChart()
             m_pieChart->SetDonutSize(ui->spinboxPieDonut->value());
             m_pieChart->EnableOutline(ui->checkboxPieOutline->checkState() == Qt::Checked);
             m_pieChart->EnableDonut(ui->checkboxPieDonut->checkState() == Qt::Checked);
+            m_pieChart->SetLabelType(ui->comboboxPieLabel->currentText().toStdString());
+            m_pieChart->SetXLabelPadding(ui->doublespinboxPieLabelX->value());
+            m_pieChart->SetYLabelPadding(ui->doublespinboxPieLabelY->value());
+
 
             //Mouse Display
             m_pieChart->EnableMouseDisplay(ui->checkboxCrosshairs->isChecked());

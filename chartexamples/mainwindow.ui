@@ -596,6 +596,67 @@
               </item>
              </layout>
             </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_46">
+              <property name="text">
+               <string>Slice Label</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QComboBox" name="comboboxPieLabel">
+              <property name="currentIndex">
+               <number>4</number>
+              </property>
+              <item>
+               <property name="text">
+                <string>None</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Label</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Value</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Percentage</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Label and Value</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Label and Percentage</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_47">
+              <property name="text">
+               <string>Label Spacing</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <layout class="QHBoxLayout" name="horizontalLayout_30">
+              <item>
+               <widget class="QDoubleSpinBox" name="doublespinboxPieLabelX"/>
+              </item>
+              <item>
+               <widget class="QDoubleSpinBox" name="doublespinboxPieLabelY"/>
+              </item>
+             </layout>
+            </item>
            </layout>
           </widget>
          </widget>

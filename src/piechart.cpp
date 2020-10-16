@@ -61,11 +61,12 @@ PieChart::PieChart(QWidget *parent) : Chart(ChartType::PIE, parent)
     m_settingsXLabels.SetNull();
     m_settingsYLabels.SetNull();
 
+    m_labelType = PieLabelType::PIE_LABEL;
     m_size = 250;
     m_nDountSize = 100;
     m_nStartingAngle = 16*90; // 12 o'clock position
     m_axisSections = 0;
-    m_yPadding = 0;
+    m_yLabelPadding = 0;
     m_fEnableFill = true;
     m_fChangesMade = true;
     m_fDountHole = true;
@@ -74,6 +75,51 @@ PieChart::PieChart(QWidget *parent) : Chart(ChartType::PIE, parent)
     m_precision = 100000000;
 
     setMouseTracking(true);
+}
+
+std::string PieChart::strToUpper(std::string const &strInput)
+{
+    std::string strOutput = "";
+    std::locale locale;
+    for (std::string::size_type i = 0; i < strInput.length(); ++i)
+        strOutput += std::toupper(strInput[i], locale);
+
+    return strOutput;
+}
+
+std::string PieChart::LabelTypeToString(const PieLabelType type)
+{
+    switch (type) {
+        case PieLabelType::PIE_LABEL:
+            return "LINE";
+        case PieLabelType::PIE_LABEL_PERCENT:
+            return "LABEL AND PERCENTAGE";
+        case PieLabelType::PIE_LABEL_VALUE:
+            return "LABEL AND VALUE";
+        case PieLabelType::PIE_PERCENT:
+            return "PERCENTAGE";
+        case PieLabelType::PIE_VALUE:
+            return "VALUE";
+        default:
+            return "NONE";
+    }
+}
+
+PieLabelType PieChart::LabelTypeFromString(std::string strType)
+{
+    strType = strToUpper(strType);
+    if (strType == "LABEL")
+        return PieLabelType::PIE_LABEL;
+    else if (strType == "LABEL AND PERCENTAGE")
+        return PieLabelType::PIE_LABEL_PERCENT;
+    else if(strType == "LABEL AND VALUE")
+        return PieLabelType::PIE_LABEL_VALUE;
+    else if (strType == "PERCENTAGE")
+        return PieLabelType::PIE_PERCENT;
+    else if (strType == "VALUE")
+        return PieLabelType::PIE_VALUE;
+    else
+        return PieLabelType::PIE_NO_LABEL;
 }
 
 /**
@@ -183,7 +229,6 @@ void PieChart::paintEvent(QPaintEvent *event)
     rectPie.setLeft(pointCenter.x() + m_size);
     std::srand(42);
     double nFilled = 0;
-    int i = 0;
     for(auto pair: m_mapData) {
         if (m_fEnableFill) {
             painter.setBrush(QColor(std::rand()%256, std::rand()%256, std::rand()%256));
@@ -191,13 +236,44 @@ void PieChart::paintEvent(QPaintEvent *event)
         if(m_fEnableOutline) {
             penLine.setColor(painter.brush().color());
         }
-        painter.drawPie(rectPie, m_nStartingAngle + nFilled, pair.first * m_nRatio);
-        nFilled += pair.first * m_nRatio;
+        double nSliceAngle = m_nStartingAngle + nFilled;
+        double nSliceSpan = pair.first * m_nRatio;
+        painter.drawPie(rectPie, nSliceAngle, nSliceSpan);
+        nFilled += nSliceSpan;
+        double nSliceMidPoint = (90 + ((nSliceAngle + nSliceSpan/2) / 16)) * pi / 180;
 
-        // test text
-        QPoint pointText(pointCenter.x() - m_size, pointCenter.y() + m_size + i);
-        painter.drawText(pointText, QString::number((i/20)+1) + QString::fromStdString(": " + pair.second + " - ") + QString::number((pair.first)));
-        i += 20;
+        QRect rectText;
+        QPoint pointText(pointCenter.x() + (m_xLabelPadding * m_size * std::sin(nSliceMidPoint)), pointCenter.y() + (m_yLabelPadding * m_size * std::cos(nSliceMidPoint)));
+        rectText.setHeight(1000);
+        rectText.setWidth(1000);
+        rectText.moveCenter(pointText);
+        QString strLabel;
+        switch (m_labelType) {
+            case PieLabelType::PIE_LABEL: {
+                strLabel = QString::fromStdString(pair.second);
+                break;
+            }
+            case PieLabelType::PIE_VALUE: {
+                strLabel = PrecisionToString(pair.first, m_settingsYLabels.Precision());
+                break;
+            }
+            case PieLabelType::PIE_LABEL_VALUE: {
+                strLabel = QString::fromStdString(pair.second) + " (" + PrecisionToString(pair.first, m_settingsYLabels.Precision()) + ")";
+                break;
+            }
+            case PieLabelType::PIE_PERCENT: {
+                strLabel = PrecisionToString(pair.first/m_nTotal*100, m_settingsYLabels.Precision()) + "%";
+                break;
+            }
+            case PieLabelType::PIE_LABEL_PERCENT: {
+                strLabel = QString::fromStdString(pair.second) + " (" + PrecisionToString(pair.first/m_nTotal*100, m_settingsYLabels.Precision()) + "%)";
+                break;
+            }
+            default:
+                strLabel = "";
+                break;
+        }
+        painter.drawText(rectText, Qt::AlignCenter, strLabel);
     }
 
     if(m_fDountHole) {
@@ -320,6 +396,26 @@ void PieChart::EnableDonut(bool fEnable)
 void PieChart::EnableOutline(bool fEnable)
 {
     m_fDountHole = fEnable;
+}
+
+void PieChart::SetLabelType(std::string nType)
+{
+    m_labelType = LabelTypeFromString(nType);
+}
+
+void PieChart::SetLabelType(PieLabelType nType)
+{
+    m_labelType = nType;
+}
+
+void PieChart::SetXLabelPadding(double nPadding)
+{
+    m_xLabelPadding = nPadding;
+}
+
+void PieChart::SetYLabelPadding(double nPadding)
+{
+    m_yLabelPadding = nPadding;
 }
 /**
  * @brief PssChart::ChartArea : Get the area of the widget that is dedicated to the chart itself
