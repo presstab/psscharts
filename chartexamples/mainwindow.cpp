@@ -162,7 +162,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->doublespinboxPieLabelY->setSingleStep(0.05);
     ui->doublespinboxPieLabelX->setValue(1.3);
     ui->doublespinboxPieLabelY->setValue(1.1);
-    ui->checkboxPieHighlight->setChecked(true);
+    ui->checkboxPieHighlight->setChecked(false);
     ui->comboboxPieHighlight->addItems(listQtColors);
     ui->comboboxPieHighlight->setCurrentIndex(9); //magenta
     ui->comboboxPieSliceColor->addItems(listQtColors);

@@ -294,9 +294,11 @@ void PieChart::paintEvent(QPaintEvent *event)
     }
 
     if(m_fDountHole) {
+        painter.setPen(penLine);
         painter.setBrush(m_brushBackground);
         painter.drawEllipse(pointCenter, m_nDountSize, m_nDountSize);
     }
+
     //Draw top title
     if (!m_strTopTitle.isEmpty()) {
         painter.save();
