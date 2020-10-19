@@ -58,6 +58,7 @@ private slots:
     void RedrawChart();
     void ChangeCandleWidth(int dChange);
     void ChangeBarWidth(int dChange);
+    void PieColorChanged(const QString& text);
 };
 
 #endif // MAINWINDOW_H

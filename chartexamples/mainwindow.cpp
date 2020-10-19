@@ -155,14 +155,18 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->spinboxPieAngle->setMaximum(360);
     ui->spinboxPieAngle->setValue(90);
     ui->checkboxPieDonut->setChecked(false);
-    ui->checkboxPieOutline->setChecked(true);
     ui->comboboxPieOutline->addItems(listQtColors);
     ui->comboboxPieOutline->setCurrentIndex(0); //black
     ui->spinboxPieOutline->setValue(5);
     ui->doublespinboxPieLabelX->setSingleStep(0.05);
     ui->doublespinboxPieLabelY->setSingleStep(0.05);
-    ui->doublespinboxPieLabelX->setValue(1.25);
+    ui->doublespinboxPieLabelX->setValue(1.3);
     ui->doublespinboxPieLabelY->setValue(1.1);
+    ui->checkboxPieHighlight->setChecked(true);
+    ui->comboboxPieHighlight->addItems(listQtColors);
+    ui->comboboxPieHighlight->setCurrentIndex(9); //magenta
+    ui->comboboxPieSliceColor->addItems(listQtColors);
+    ui->comboboxPieSliceColor->setCurrentIndex(8); //cyan
 
     //Chart Title
     ui->lineeditChartTitle->setText("PssCharts");
@@ -241,12 +245,18 @@ MainWindow::MainWindow(QWidget *parent) :
     m_barChart->SetDataPoints(mapPoints);
     m_barChart->setMinimumSize(QSize(600,400));
 
-    m_pieChart->AddDataPoint("persona", 4932);
-    m_pieChart->AddDataPoint("pizza", 2556);
-    m_pieChart->AddDataPoint("fire", 1235);
-    m_pieChart->AddDataPoint("thanos", 9876);
-    m_pieChart->AddDataPoint("were", 1235);
-    m_pieChart->AddDataPoint("luigi", 6235);
+    m_pieChart->AddDataPoint("USA", 4932.10437982);
+    m_pieChart->AddDataPoint("Italy", 1235.7598342);
+    m_pieChart->AddDataPoint("Belgium", 2556.91745);
+    m_pieChart->AddDataPoint("China", 9876.0942323);
+    m_pieChart->AddDataPoint("Brazil", 1235.7598342);
+    m_pieChart->AddDataPoint("India", 6235.671273894);
+    m_pieChart->AddDataPoint("Egypt", 943.9102548);
+    ui->comboboxPieSlice->addItems(m_pieChart->ChartLabels());
+    QColor sliceColor = m_pieChart->GetColor(ui->comboboxPieSlice->currentText().toStdString());
+    ui->spinboxPieBlue->setValue(sliceColor.blue());
+    ui->spinboxPieGreen->setValue(sliceColor.green());
+    ui->spinboxPieRed->setValue(sliceColor.red());
     m_pieChart->setMinimumSize(QSize(600,400));
     RedrawChart();
 
@@ -275,7 +285,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->checkboxHighlightBar, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkboxHighlightLine, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkboxPieDonut, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
-    connect(ui->checkboxPieOutline, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkboxPieHighlight, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
 
     connect(ui->comboBoxChartType, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxChartFillColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
@@ -296,6 +306,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->comboboxHighlightLine, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxPieOutline, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxPieLabel, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboboxPieSlice, &QComboBox::currentTextChanged, this, &MainWindow::PieColorChanged);
+    connect(ui->comboboxPieHighlight, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboboxPieSliceColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
 
     connect(ui->spinboxGridlines, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
@@ -312,6 +325,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->spinboxPieAngle, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxPieDonut, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxPieOutline, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
+    connect(ui->spinboxPieRed, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
+    connect(ui->spinboxPieGreen, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
+    connect(ui->spinboxPieBlue, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->doublespinboxPieLabelX, SIGNAL(valueChanged(double)), this, SLOT(RedrawChart()));
     connect(ui->doublespinboxPieLabelY, SIGNAL(valueChanged(double)), this, SLOT(RedrawChart()));
 
@@ -563,11 +579,16 @@ void MainWindow::RedrawChart()
             m_pieChart->SetChartSize(ui->spinboxPieSize->value());
             m_pieChart->SetStartingAngle(ui->spinboxPieAngle->value());
             m_pieChart->SetDonutSize(ui->spinboxPieDonut->value());
-            m_pieChart->EnableOutline(ui->checkboxPieOutline->checkState() == Qt::Checked);
             m_pieChart->EnableDonut(ui->checkboxPieDonut->checkState() == Qt::Checked);
             m_pieChart->SetLabelType(ui->comboboxPieLabel->currentText().toStdString());
             m_pieChart->SetXLabelPadding(ui->doublespinboxPieLabelX->value());
             m_pieChart->SetYLabelPadding(ui->doublespinboxPieLabelY->value());
+            m_pieChart->SetColor(ui->comboboxPieSlice->currentText().toStdString(),
+                                 QColor(ui->spinboxPieRed->value(), ui->spinboxPieGreen->value(), ui->spinboxPieBlue->value()));
+            //m_pieChart->SetColor(ui->comboboxPieSlice->currentText().toStdString(),
+                                 //static_cast<Qt::GlobalColor>(ui->comboboxPieSliceColor->currentIndex()+2));
+            m_pieChart->EnableHighlight(ui->checkboxPieHighlight->checkState() == Qt::Checked);
+            m_pieChart->SetHighlight(static_cast<Qt::GlobalColor>(ui->comboboxPieHighlight->currentIndex() + 2));
 
 
             //Mouse Display
@@ -577,6 +598,10 @@ void MainWindow::RedrawChart()
             QColor colorCrosshair = static_cast<Qt::GlobalColor>(ui->comboboxCrosshairColor->currentIndex()+2);
             display->SetColor(colorCrosshair);
 
+            QColor sliceColor = m_pieChart->GetColor(ui->comboboxPieSlice->currentText().toStdString());
+            ui->spinboxPieBlue->setValue(sliceColor.blue());
+            ui->spinboxPieGreen->setValue(sliceColor.green());
+            ui->spinboxPieRed->setValue(sliceColor.red());
             m_pieChart->repaint();
             break;
         }
@@ -593,3 +618,12 @@ void MainWindow::ChangeCandleWidth(int dChange) {
 void MainWindow::ChangeBarWidth(int dChange) {
     ui->spinboxBarWidth->setValue(ui->spinboxBarWidth->value() + dChange);
 }
+
+void MainWindow::PieColorChanged(const QString& text) {
+    QColor sliceColor = m_pieChart->GetColor(text.toStdString());
+    ui->spinboxPieBlue->setValue(sliceColor.blue());
+    ui->spinboxPieGreen->setValue(sliceColor.green());
+    ui->spinboxPieRed->setValue(sliceColor.red());
+    RedrawChart();
+}
+

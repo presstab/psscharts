@@ -67,8 +67,9 @@ class PieChart : public Chart
 
 protected:
     std::map<std::string, double> m_mapPoints;
-    std::multimap<double,std::string, cmpGreaterKey> m_mapData;
+    std::multimap<double, std::string, cmpGreaterKey> m_mapData;
     std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point) override;
+    std::map<std::string, QColor> m_mapColors;
     QBrush m_brushLine;
     QBrush m_brushFill;
     bool m_fEnableFill; //! Does the chart get filled
@@ -83,6 +84,8 @@ protected:
     double m_xLabelPadding;
     double m_yLabelPadding;
     PieLabelType m_labelType;
+    bool m_fEnableHighlight;
+    QColor m_colorHighlight;
     std::string LabelTypeToString(const PieLabelType type);
     PieLabelType LabelTypeFromString(std::string strType);
     std::string strToUpper(std::string const &strInput);
@@ -109,6 +112,11 @@ public:
     void SetLabelType(std::string nType);
     void SetXLabelPadding(double nPadding);
     void SetYLabelPadding(double nPadding);
+    void SetColor(std::string label, QColor qColor);
+    QColor GetColor(std::string label);
+    QStringList ChartLabels();
+    void SetHighlight(QColor color);
+    void EnableHighlight(bool fEnable);
 };
 
 } //namespace

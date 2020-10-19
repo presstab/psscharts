@@ -31,6 +31,7 @@ SOFTWARE.
 #include <QPaintEvent>
 #include <QPen>
 #include <QPainterPath>
+#include <QDebug>
 
 /* ----------------------------------------------- |
  * |              TOP TITLE AREA                   |
@@ -148,12 +149,14 @@ std::pair<uint32_t, double> PieChart::ConvertFromPlotPoint(const QPointF& point)
 void PieChart::AddDataPoint(const std::string& label, const double& value)
 {
     m_mapPoints.emplace(label, value);
+    m_mapColors.emplace(label, QColor(std::rand()%256, std::rand()%256, std::rand()%256));
     ProcessChangedData();
 }
 
 void PieChart::RemoveDataPoint(const std::string &label)
 {
     m_mapPoints.erase(label);
+    m_mapColors.erase(label);
     ProcessChangedData();
 }
 
@@ -227,15 +230,28 @@ void PieChart::paintEvent(QPaintEvent *event)
     rectPie.setTop(pointCenter.y() + m_size);
     rectPie.setRight(pointCenter.x() - m_size);
     rectPie.setLeft(pointCenter.x() + m_size);
-    std::srand(42);
     double nFilled = 0;
     for(auto pair: m_mapData) {
-        if (m_fEnableFill) {
-            painter.setBrush(QColor(std::rand()%256, std::rand()%256, std::rand()%256));
+        painter.setPen(penLine);
+        QPoint pointMouse(lposMouse.x() - pointCenter.x(), pointCenter.y() - lposMouse.y());
+        double nCenterDistance = std::sqrt((pointMouse.x()^2) + (pointMouse.y()^2));
+        if (nCenterDistance < m_size && m_fEnableHighlight) {
+            painter.setBrush(m_colorHighlight);
         }
-        if(m_fEnableOutline) {
-            penLine.setColor(painter.brush().color());
+        else if (m_fEnableFill) {
+            painter.setBrush(m_mapColors[pair.second]);
         }
+        float mouseAngle;
+        if (pointMouse.x() == 0) {
+            if (pointMouse.y() >= 0)
+                mouseAngle = 90;
+            else
+                mouseAngle = -90;
+
+        } else {
+            mouseAngle = atan(pointMouse.y() / pointMouse.x());
+        }
+
         double nSliceAngle = m_nStartingAngle + nFilled;
         double nSliceSpan = pair.first * m_nRatio;
         painter.drawPie(rectPie, nSliceAngle, nSliceSpan);
@@ -248,6 +264,7 @@ void PieChart::paintEvent(QPaintEvent *event)
         rectText.setWidth(1000);
         rectText.moveCenter(pointText);
         QString strLabel;
+        painter.setPen(Qt::black);
         switch (m_labelType) {
             case PieLabelType::PIE_LABEL: {
                 strLabel = QString::fromStdString(pair.second);
@@ -280,10 +297,10 @@ void PieChart::paintEvent(QPaintEvent *event)
         painter.setBrush(m_brushBackground);
         painter.drawEllipse(pointCenter, m_nDountSize, m_nDountSize);
     }
-
     //Draw top title
     if (!m_strTopTitle.isEmpty()) {
         painter.save();
+        painter.setPen(Qt::black);
         painter.setFont(m_fontTopTitle);
         QRect rectTopTitle = rectFull;
         rectTopTitle.setBottom(rectFull.top() + HeightTopTitleArea());
@@ -391,32 +408,70 @@ void PieChart::SetDonutSize(int nSize)
 void PieChart::EnableDonut(bool fEnable)
 {
     m_fDountHole = fEnable;
+    m_fChangesMade = true;
 }
 
 void PieChart::EnableOutline(bool fEnable)
 {
     m_fDountHole = fEnable;
+    m_fChangesMade = true;
 }
 
 void PieChart::SetLabelType(std::string nType)
 {
     m_labelType = LabelTypeFromString(nType);
+    m_fChangesMade = true;
 }
 
 void PieChart::SetLabelType(PieLabelType nType)
 {
     m_labelType = nType;
+    m_fChangesMade = true;
 }
 
 void PieChart::SetXLabelPadding(double nPadding)
 {
     m_xLabelPadding = nPadding;
+    m_fChangesMade = true;
 }
 
 void PieChart::SetYLabelPadding(double nPadding)
 {
     m_yLabelPadding = nPadding;
+    m_fChangesMade = true;
 }
+
+void PieChart::SetColor(std::string label, QColor qColor)
+{
+    m_mapColors.at(label) = qColor;
+    m_fChangesMade = true;
+}
+
+QColor PieChart::GetColor(std::string label)
+{
+    return m_mapColors.at(label);
+}
+
+QStringList PieChart::ChartLabels() {
+    QStringList listLabels;
+    for (auto pair: m_mapPoints) {
+        listLabels.append(QString::fromStdString(pair.first));
+    }
+    return listLabels;
+}
+
+void PieChart::EnableHighlight(bool fEnable)
+{
+    m_fEnableHighlight = fEnable;
+    m_fChangesMade = true;
+}
+
+void PieChart::SetHighlight(QColor color)
+{
+    m_colorHighlight = color;
+    m_fChangesMade = true;
+}
+
 /**
  * @brief PssChart::ChartArea : Get the area of the widget that is dedicated to the chart itself
  * @return
