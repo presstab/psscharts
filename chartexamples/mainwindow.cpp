@@ -153,7 +153,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->spinboxPieDonut->setValue(100);
     ui->spinboxPieAngle->setMinimum(0);
     ui->spinboxPieAngle->setMaximum(360);
-    ui->spinboxPieAngle->setValue(90);
+    ui->spinboxPieAngle->setValue(0);
     ui->checkboxPieDonut->setChecked(false);
     ui->comboboxPieOutline->addItems(listQtColors);
     ui->comboboxPieOutline->setCurrentIndex(0); //black
@@ -162,7 +162,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->doublespinboxPieLabelY->setSingleStep(0.05);
     ui->doublespinboxPieLabelX->setValue(1.3);
     ui->doublespinboxPieLabelY->setValue(1.1);
-    ui->checkboxPieHighlight->setChecked(false);
+    ui->checkboxPieHighlight->setChecked(true);
     ui->comboboxPieHighlight->addItems(listQtColors);
     ui->comboboxPieHighlight->setCurrentIndex(9); //magenta
     ui->comboboxPieSliceColor->addItems(listQtColors);

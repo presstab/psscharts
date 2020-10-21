@@ -234,26 +234,41 @@ void PieChart::paintEvent(QPaintEvent *event)
     for(auto pair: m_mapData) {
         painter.setPen(penLine);
         QPoint pointMouse(lposMouse.x() - pointCenter.x(), pointCenter.y() - lposMouse.y());
-        double nCenterDistance = std::sqrt((pointMouse.x()^2) + (pointMouse.y()^2));
-        if (nCenterDistance < m_size && m_fEnableHighlight) {
+//        double nCenterDistance = std::sqrt((pointMouse.x()^2) + (pointMouse.y()^2));
+
+        int mouseAngle;
+        if (pointMouse.x() == 0) {
+            if (pointMouse.y() >= 0)
+                mouseAngle = 0;
+            else
+                mouseAngle = 180;
+
+        } else {
+            mouseAngle = atan(pointMouse.y() / pointMouse.x()) * 180 / pi;
+            if (pointMouse.x() < 0) {
+                mouseAngle += 180;
+            } else if (pointMouse.y() < 0) {
+                mouseAngle += 360;
+            }
+        }
+        mouseAngle = mouseAngle % 360;
+
+        double nSliceAngle = m_nStartingAngle + nFilled;
+        double nSliceSpan = pair.first * m_nRatio;
+
+        int nSliceStartingAngle = static_cast<int>(nSliceAngle / 16) % 360;
+        int nSliceEndingAngle = static_cast<int>((nSliceAngle + nSliceSpan) / 16) % 360;
+        if (mouseAngle > nSliceStartingAngle && mouseAngle <= nSliceEndingAngle && m_fEnableHighlight) {
+            qDebug() << "";
+            qDebug() << "mouse:" << mouseAngle;
+            qDebug() << "start:" << nSliceStartingAngle;
+            qDebug() << "end:" << nSliceEndingAngle;
             painter.setBrush(m_colorHighlight);
         }
         else if (m_fEnableFill) {
             painter.setBrush(m_mapColors[pair.second]);
         }
-        float mouseAngle;
-        if (pointMouse.x() == 0) {
-            if (pointMouse.y() >= 0)
-                mouseAngle = 90;
-            else
-                mouseAngle = -90;
 
-        } else {
-            mouseAngle = atan(pointMouse.y() / pointMouse.x());
-        }
-
-        double nSliceAngle = m_nStartingAngle + nFilled;
-        double nSliceSpan = pair.first * m_nRatio;
         painter.drawPie(rectPie, nSliceAngle, nSliceSpan);
         nFilled += nSliceSpan;
         double nSliceMidPoint = (90 + ((nSliceAngle + nSliceSpan/2) / 16)) * pi / 180;
