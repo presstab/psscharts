@@ -99,7 +99,6 @@ public:
     void AddDataPoint(const std::string& label, const double& value);
     void RemoveDataPoint(const std::string& label);
     void SetDataPoints(const std::map<std::string, double>& mapPoints);
-    void SetFillBrush(const QBrush& brush);
     void EnableFill(bool fEnable);
     void SetLineBrush(const QBrush& brush);
     void SetLineWidth(int nWidth);

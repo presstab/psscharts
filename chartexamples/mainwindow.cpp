@@ -562,8 +562,6 @@ void MainWindow::RedrawChart()
             m_pieChart->SetAxisLabelsBrush(QBrush(Qt::black));
 
             m_pieChart->EnableFill(ui->checkboxFillChart->checkState() == Qt::Checked);
-            QColor colorFill = static_cast<Qt::GlobalColor>(ui->comboboxChartFillColor->currentIndex()+2);
-            m_pieChart->SetFillBrush(QBrush(colorFill));
 
             QColor colorBackground = palette().window().color();
             if (ui->checkboxFillBackground->checkState() == Qt::Checked)
