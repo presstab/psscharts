@@ -234,38 +234,19 @@ void PieChart::paintEvent(QPaintEvent *event)
     for(auto pair: m_mapData) {
         painter.setPen(penLine);
         QPoint pointMouse(lposMouse.x() - pointCenter.x(), pointCenter.y() - lposMouse.y());
-//        double nCenterDistance = std::sqrt((pointMouse.x()^2) + (pointMouse.y()^2));
-
-        int mouseAngle;
-        if (pointMouse.x() == 0) {
-            if (pointMouse.y() >= 0)
-                mouseAngle = 0;
-            else
-                mouseAngle = 180;
-
-        } else {
-            mouseAngle = atan(pointMouse.y() / pointMouse.x()) * 180 / pi;
-            if (pointMouse.x() < 0) {
-                mouseAngle += 180;
-            } else if (pointMouse.y() < 0) {
-                mouseAngle += 360;
-            }
+        int mouseAngle = static_cast<int>((std::atan2(pointMouse.y(), pointMouse.x()) * 180 / pi * 16));
+        mouseAngle = (mouseAngle + 5760) % 5760; // prevents negative angles in calculation
+        double nSliceAngle = m_nStartingAngle + nFilled; // angle for start of slice
+        double nSliceSpan = pair.first * m_nRatio; // angle from start of slice to end of slice
+        int nSliceStartingAngle = static_cast<int>(nSliceAngle + 5760) % 5760; // angle for start of slice
+        int nSliceEndingAngle = static_cast<int>(nSliceAngle + nSliceSpan + 5760) % 5760; // angle for end of slice
+        // Check if end angle is set properly after modulo
+        if (nSliceStartingAngle > nSliceEndingAngle) {
+            nSliceEndingAngle += 5760;
         }
-        mouseAngle = mouseAngle % 360;
-
-        double nSliceAngle = m_nStartingAngle + nFilled;
-        double nSliceSpan = pair.first * m_nRatio;
-
-        int nSliceStartingAngle = static_cast<int>(nSliceAngle / 16) % 360;
-        int nSliceEndingAngle = static_cast<int>((nSliceAngle + nSliceSpan) / 16) % 360;
         if (mouseAngle > nSliceStartingAngle && mouseAngle <= nSliceEndingAngle && m_fEnableHighlight) {
-            qDebug() << "";
-            qDebug() << "mouse:" << mouseAngle;
-            qDebug() << "start:" << nSliceStartingAngle;
-            qDebug() << "end:" << nSliceEndingAngle;
             painter.setBrush(m_colorHighlight);
-        }
-        else if (m_fEnableFill) {
+        } else if (m_fEnableFill) {
             painter.setBrush(m_mapColors[pair.second]);
         }
 
@@ -338,42 +319,6 @@ void PieChart::paintEvent(QPaintEvent *event)
         painter.drawLine(QLineF(posTop, posBottom));
     }
     m_fChangesMade = false;
-}
-
-/**
- * @brief PieChart::MouseOverTooltipRect Get the boundaries of the tooltip that is drawn for the mouseover data.
- * @param painter: The chart widget's painter.
- * @param rectFull: The QRect of the entire drawing area of the chart widget.
- * @param pointCircleCenter: the center of the dot that is being drawn for the mouseover.
- * @param strLabel: the label text that is being placed in the tooltip.
- * @return QRect with the coordinates that the tooltip should be drawn in.
- */
-QRect PieChart::MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const
-{
-    QFontMetrics fm(painter.font());
-    int nWidthText = fm.horizontalAdvance(strLabel) + 4;
-
-    //Place the tooltip right below the dot being displayed.
-    QPoint pointTopLeft(pointCircleCenter.x() - nWidthText/2, pointCircleCenter.y()+10);
-
-    QRect rectDraw;
-    rectDraw.setTopLeft(pointTopLeft);
-    rectDraw.setWidth(nWidthText);
-    rectDraw.setHeight(fm.height() + 4);
-
-    //The tooltip is outside of the drawing zone, shift it into the drawing zone
-    if (rectDraw.left() < rectFull.left())
-        rectDraw.moveRight(rectFull.left()+3);
-    if (rectDraw.right() > rectFull.right())
-        rectDraw.moveLeft(rectFull.right() - rectDraw.width() - 3);
-
-    return rectDraw;
-}
-
-void PieChart::SetFillBrush(const QBrush &brush)
-{
-    m_brushFill = brush;
-    m_fChangesMade = true;
 }
 
 void PieChart::SetLineBrush(const QBrush &brush)
