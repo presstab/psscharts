@@ -255,13 +255,14 @@ void PieChart::paintEvent(QPaintEvent *event)
         }
         int mouseDistance = static_cast<int>(mouseData.second);
         bool fHighlightText = false;
+        if (m_fEnableFill) {
+            painter.setBrush(m_mapColors[pair.second]);
+        }
         if (mouseAngle > nSliceStartingAngle && mouseAngle <= nSliceEndingAngle && mouseDistance < m_size) {
             fDrawHighlight = true;
             fHighlightText = true;
             nHighlightStartAngle = nSliceStartingAngle;
             nHighlightSpan = nSliceSpan;
-        } else if (m_fEnableFill) {
-            painter.setBrush(m_mapColors[pair.second]);
         }
         painter.drawPie(rectPie, nSliceStartingAngle, nSliceSpan);
         nFilled += nSliceSpan;
