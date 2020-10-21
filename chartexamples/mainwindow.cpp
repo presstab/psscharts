@@ -153,7 +153,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->spinboxPieDonut->setValue(100);
     ui->spinboxPieAngle->setMinimum(0);
     ui->spinboxPieAngle->setMaximum(360);
-    ui->spinboxPieAngle->setValue(0);
+    ui->spinboxPieAngle->setValue(90);
     ui->checkboxPieDonut->setChecked(false);
     ui->comboboxPieOutline->addItems(listQtColors);
     ui->comboboxPieOutline->setCurrentIndex(0); //black
@@ -165,8 +165,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->checkboxPieHighlight->setChecked(true);
     ui->comboboxPieHighlight->addItems(listQtColors);
     ui->comboboxPieHighlight->setCurrentIndex(9); //magenta
-    ui->comboboxPieSliceColor->addItems(listQtColors);
-    ui->comboboxPieSliceColor->setCurrentIndex(8); //cyan
+    ui->checkboxPieHighlightOutline->setChecked(true);
+    ui->comboboxPieHighlightOutline->addItems(listQtColors);
+    ui->comboboxPieHighlightOutline->setCurrentIndex(1); //white
 
     //Chart Title
     ui->lineeditChartTitle->setText("PssCharts");
@@ -286,6 +287,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->checkboxHighlightLine, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkboxPieDonut, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
     connect(ui->checkboxPieHighlight, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
+    connect(ui->checkboxPieHighlightOutline, &QCheckBox::clicked, this, &MainWindow::RedrawChart);
 
     connect(ui->comboBoxChartType, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxChartFillColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
@@ -308,7 +310,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->comboboxPieLabel, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxPieSlice, &QComboBox::currentTextChanged, this, &MainWindow::PieColorChanged);
     connect(ui->comboboxPieHighlight, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
-    connect(ui->comboboxPieSliceColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboboxPieHighlightOutline, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
 
     connect(ui->spinboxGridlines, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
@@ -544,24 +546,7 @@ void MainWindow::RedrawChart()
             fontChartTitle.setPointSize(ui->spinboxTitleFontSize->value());
             fontChartTitle.setBold(ui->checkboxChartTitleBold->isChecked());
             m_pieChart->SetTopTitleFont(fontChartTitle);
-
-            //Y Title
-            m_pieChart->SetYTitle(ui->lineeditYTitle->text());
-            QFont fontYTitle;
-            fontYTitle.setPointSize(ui->spinboxYTitleFontSize->value());
-            fontYTitle.setBold(ui->checkboxYTitleBold->isChecked());
-            m_pieChart->SetYTitleFont(fontYTitle);
-
-            //Axis Labels
             m_pieChart->SetLabelPrecision(ui->spinboxYLabelPrecision->value());
-            m_pieChart->SetAxisLabelsOnOff(ui->checkboxDrawXTitle->checkState() == Qt::Checked, ui->checkboxDrawYTitle->checkState() == Qt::Checked);
-
-            //Axis gridlines
-            m_pieChart->SetAxisOnOff(ui->checkboxDrawXAxisLine->checkState() == Qt::Checked, ui->checkBoxDrawYAxisLine->checkState() == Qt::Checked);
-            m_pieChart->SetAxisSectionCount(ui->spinboxGridlines->value());
-            m_pieChart->SetAxisLabelsBrush(QBrush(Qt::black));
-
-            m_pieChart->EnableFill(ui->checkboxFillChart->checkState() == Qt::Checked);
 
             QColor colorBackground = palette().window().color();
             if (ui->checkboxFillBackground->checkState() == Qt::Checked)
@@ -579,6 +564,7 @@ void MainWindow::RedrawChart()
             m_pieChart->SetDonutSize(ui->spinboxPieDonut->value());
             m_pieChart->EnableDonut(ui->checkboxPieDonut->checkState() == Qt::Checked);
             m_pieChart->SetLabelType(ui->comboboxPieLabel->currentText().toStdString());
+            m_pieChart->EnableFill(ui->checkboxFillChart->checkState() == Qt::Checked);
             m_pieChart->SetXLabelPadding(ui->doublespinboxPieLabelX->value());
             m_pieChart->SetYLabelPadding(ui->doublespinboxPieLabelY->value());
             m_pieChart->SetColor(ui->comboboxPieSlice->currentText().toStdString(),
@@ -587,6 +573,8 @@ void MainWindow::RedrawChart()
                                  //static_cast<Qt::GlobalColor>(ui->comboboxPieSliceColor->currentIndex()+2));
             m_pieChart->EnableHighlight(ui->checkboxPieHighlight->checkState() == Qt::Checked);
             m_pieChart->SetHighlight(static_cast<Qt::GlobalColor>(ui->comboboxPieHighlight->currentIndex() + 2));
+            m_pieChart->EnableHighlightOutline(ui->checkboxPieHighlightOutline->checkState() == Qt::Checked);
+            m_pieChart->SetHighlightOutline(static_cast<Qt::GlobalColor>(ui->comboboxPieHighlightOutline->currentIndex() + 2));
 
 
             //Mouse Display

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>413</width>
-    <height>764</height>
+    <height>878</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -551,6 +551,23 @@
             <item row="1" column="1">
              <widget class="QSpinBox" name="spinboxPieAngle"/>
             </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_45">
+              <property name="text">
+               <string>Outline</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <layout class="QHBoxLayout" name="horizontalLayout_29">
+              <item>
+               <widget class="QSpinBox" name="spinboxPieOutline"/>
+              </item>
+              <item>
+               <widget class="QComboBox" name="comboboxPieOutline"/>
+              </item>
+             </layout>
+            </item>
             <item row="3" column="0">
              <widget class="QLabel" name="label_20">
               <property name="text">
@@ -569,23 +586,6 @@
               </item>
               <item>
                <widget class="QSpinBox" name="spinboxPieDonut"/>
-              </item>
-             </layout>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_45">
-              <property name="text">
-               <string>Outline</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <layout class="QHBoxLayout" name="horizontalLayout_29">
-              <item>
-               <widget class="QSpinBox" name="spinboxPieOutline"/>
-              </item>
-              <item>
-               <widget class="QComboBox" name="comboboxPieOutline"/>
               </item>
              </layout>
             </item>
@@ -664,13 +664,6 @@
               </item>
              </layout>
             </item>
-            <item row="7" column="0">
-             <widget class="QLabel" name="label_28">
-              <property name="text">
-               <string>Slice Color</string>
-              </property>
-             </widget>
-            </item>
             <item row="6" column="0">
              <widget class="QLabel" name="label_32">
               <property name="text">
@@ -681,26 +674,12 @@
             <item row="6" column="1">
              <widget class="QComboBox" name="comboboxPieSlice"/>
             </item>
-            <item row="8" column="0">
-             <widget class="QLabel" name="label_33">
+            <item row="7" column="0">
+             <widget class="QLabel" name="label_28">
               <property name="text">
-               <string>Highlight</string>
+               <string>Slice Color</string>
               </property>
              </widget>
-            </item>
-            <item row="8" column="1">
-             <layout class="QHBoxLayout" name="horizontalLayout_19">
-              <item>
-               <widget class="QCheckBox" name="checkboxPieHighlight">
-                <property name="text">
-                 <string>Enable</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QComboBox" name="comboboxPieHighlight"/>
-              </item>
-             </layout>
             </item>
             <item row="7" column="1">
              <layout class="QHBoxLayout" name="horizontalLayout_18">
@@ -748,15 +727,47 @@
               </item>
              </layout>
             </item>
-            <item row="9" column="0">
-             <widget class="QLabel" name="label_34">
+            <item row="8" column="0">
+             <widget class="QLabel" name="label_33">
               <property name="text">
-               <string>Backup Color</string>
+               <string>Highlight Slice</string>
               </property>
              </widget>
             </item>
+            <item row="8" column="1">
+             <layout class="QHBoxLayout" name="horizontalLayout_19">
+              <item>
+               <widget class="QCheckBox" name="checkboxPieHighlight">
+                <property name="text">
+                 <string>Enable</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="comboboxPieHighlight"/>
+              </item>
+             </layout>
+            </item>
             <item row="9" column="1">
-             <widget class="QComboBox" name="comboboxPieSliceColor"/>
+             <layout class="QHBoxLayout" name="horizontalLayout_20">
+              <item>
+               <widget class="QCheckBox" name="checkboxPieHighlightOutline">
+                <property name="text">
+                 <string>Enable</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="comboboxPieHighlightOutline"/>
+              </item>
+             </layout>
+            </item>
+            <item row="9" column="0">
+             <widget class="QLabel" name="label_34">
+              <property name="text">
+               <string>Highlight Outline</string>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>
@@ -774,7 +785,7 @@
      <x>0</x>
      <y>0</y>
      <width>413</width>
-     <height>22</height>
+     <height>28</height>
     </rect>
    </property>
   </widget>

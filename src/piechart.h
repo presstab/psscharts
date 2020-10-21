@@ -58,20 +58,24 @@ class PieChart : public Chart
 {
     Q_OBJECT
 
+    // comparison function for drawing the slices want greatest values listed first
     struct cmpGreaterKey {
-        // comparison function for drawing the slices
         bool operator()(const double& a, const double& b) const {
             return a > b;
         }
     };
 
 protected:
+    double pi = 3.141592653589793;
+
     std::map<std::string, double> m_mapPoints;
     std::multimap<double, std::string, cmpGreaterKey> m_mapData;
     std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point) override;
+    QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair);
     std::map<std::string, QColor> m_mapColors;
+
+    PieLabelType m_labelType;
     QBrush m_brushLine;
-    QBrush m_brushFill;
     bool m_fEnableFill; //! Does the chart get filled
     int m_size;
     bool m_fDountHole;
@@ -80,15 +84,14 @@ protected:
     double m_nTotal;
     double m_nRatio;
     bool m_fEnableOutline;
-    double pi = 3.141592653589793;
     double m_xLabelPadding;
     double m_yLabelPadding;
-    PieLabelType m_labelType;
+
     bool m_fEnableHighlight;
     QColor m_colorHighlight;
-    std::string LabelTypeToString(const PieLabelType type);
-    PieLabelType LabelTypeFromString(std::string strType);
-    std::string strToUpper(std::string const &strInput);
+    bool m_fEnableHighlightOutline;
+    QColor m_colorHighlightOutline;
+
     QRect MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const;
     void ProcessChangedData() override;
 
@@ -96,9 +99,12 @@ public:
     PieChart(QWidget* parent = nullptr);
     void paintEvent(QPaintEvent *event) override;
     QRect ChartArea() const;
+    QStringList ChartLabels();
+
     void AddDataPoint(const std::string& label, const double& value);
     void RemoveDataPoint(const std::string& label);
     void SetDataPoints(const std::map<std::string, double>& mapPoints);
+
     void EnableFill(bool fEnable);
     void SetLineBrush(const QBrush& brush);
     void SetLineWidth(int nWidth);
@@ -111,11 +117,18 @@ public:
     void SetLabelType(std::string nType);
     void SetXLabelPadding(double nPadding);
     void SetYLabelPadding(double nPadding);
-    void SetColor(std::string label, QColor qColor);
+
     QColor GetColor(std::string label);
-    QStringList ChartLabels();
+    void SetColor(std::string label, QColor qColor);
+
     void SetHighlight(QColor color);
     void EnableHighlight(bool fEnable);
+    void SetHighlightOutline(QColor color);
+    void EnableHighlightOutline(bool fEnable);
+
+    std::string LabelTypeToString(const PieLabelType type);
+    PieLabelType LabelTypeFromString(std::string strType);
+    std::string strToUpper(const std::string& strInput);
 };
 
 } //namespace

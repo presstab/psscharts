@@ -131,19 +131,25 @@ std::pair<uint32_t, double> PieChart::ConvertFromPlotPoint(const QPointF& point)
 {
     std::pair<uint32_t, double> pairValues;
     QRect rectChart = ChartArea();
+    QPoint pointCenter = rectChart.center();
+    QPoint pointCircle(static_cast<int>(point.x() - pointCenter.x()), static_cast<int>(pointCenter.y() - point.y()));
 
-    //Y
-    auto t = rectChart.bottom() - point.y();
-    auto t1 = t / rectChart.height();
-    auto t2 = t1 * (MaxY() - MinY());
-    pairValues.second = t2 + MinY();
+    // Angle
+    uint32_t pointAngle = static_cast<uint32_t>(std::atan2(pointCircle.y(), pointCircle.x()) * 180 / pi * 16);
+    pairValues.first = pointAngle;
 
-    //X
-    t1 = (point.x() - rectChart.left()) / rectChart.width();
-    t2 = t1 * (MaxX() - MinX());
-    pairValues.first = t2 + MinX();
+    // Distance
+    double pointDistance = static_cast<double>(std::sqrt(pointCircle.x() * pointCircle.x() + pointCircle.y() * pointCircle.y()));
+    pairValues.second = pointDistance;
 
     return pairValues;
+}
+
+QPointF PieChart::ConvertToPlotPoint(const std::pair<uint32_t, double>& pair)
+{
+    QRect rectChart = ChartArea();
+    QPoint pointCenter = rectChart.center();
+    return QPoint(static_cast<int>(pointCenter.x() + (pair.second * std::sin(pair.first))), static_cast<int>(pointCenter.y() + (pair.second * std::cos(pair.second))));
 }
 
 void PieChart::AddDataPoint(const std::string& label, const double& value)
@@ -231,30 +237,38 @@ void PieChart::paintEvent(QPaintEvent *event)
     rectPie.setRight(pointCenter.x() - m_size);
     rectPie.setLeft(pointCenter.x() + m_size);
     double nFilled = 0;
+    int nHighlightStartAngle = 0;
+    int nHighlightSpan = 0;
+    bool fDrawHighlight = false;
     for(auto pair: m_mapData) {
+        // Draw Pie Slice
         painter.setPen(penLine);
-        QPoint pointMouse(lposMouse.x() - pointCenter.x(), pointCenter.y() - lposMouse.y());
-        int mouseAngle = static_cast<int>((std::atan2(pointMouse.y(), pointMouse.x()) * 180 / pi * 16));
+        std::pair<uint32_t, double> mouseData = ConvertFromPlotPoint(lposMouse);
+        int mouseAngle = static_cast<int>(mouseData.first);
         mouseAngle = (mouseAngle + 5760) % 5760; // prevents negative angles in calculation
-        double nSliceAngle = m_nStartingAngle + nFilled; // angle for start of slice
-        double nSliceSpan = pair.first * m_nRatio; // angle from start of slice to end of slice
-        int nSliceStartingAngle = static_cast<int>(nSliceAngle + 5760) % 5760; // angle for start of slice
-        int nSliceEndingAngle = static_cast<int>(nSliceAngle + nSliceSpan + 5760) % 5760; // angle for end of slice
+        int nSliceStartingAngle = static_cast<int>(m_nStartingAngle + nFilled + 5760) % 5760; // angle for start of slice
+        int nSliceSpan = static_cast<int>(pair.first * m_nRatio + 5760) % 5760; // angle from start of slice to end of slice
+        int nSliceEndingAngle = static_cast<int>(nSliceStartingAngle + nSliceSpan + 5760) % 5760; // angle for end of slice
         // Check if end angle is set properly after modulo
         if (nSliceStartingAngle > nSliceEndingAngle) {
             nSliceEndingAngle += 5760;
         }
-        if (mouseAngle > nSliceStartingAngle && mouseAngle <= nSliceEndingAngle && m_fEnableHighlight) {
-            painter.setBrush(m_colorHighlight);
+        int mouseDistance = static_cast<int>(mouseData.second);
+        bool fHighlightText = false;
+        if (mouseAngle > nSliceStartingAngle && mouseAngle <= nSliceEndingAngle && mouseDistance < m_size) {
+            fDrawHighlight = true;
+            fHighlightText = true;
+            nHighlightStartAngle = nSliceStartingAngle;
+            nHighlightSpan = nSliceSpan;
         } else if (m_fEnableFill) {
             painter.setBrush(m_mapColors[pair.second]);
         }
-
-        painter.drawPie(rectPie, nSliceAngle, nSliceSpan);
+        painter.drawPie(rectPie, nSliceStartingAngle, nSliceSpan);
         nFilled += nSliceSpan;
-        double nSliceMidPoint = (90 + ((nSliceAngle + nSliceSpan/2) / 16)) * pi / 180;
 
+        // Draw Pie Label
         QRect rectText;
+        double nSliceMidPoint = (90 + ((nSliceStartingAngle + nSliceSpan/2) / 16)) * pi / 180;
         QPoint pointText(pointCenter.x() + (m_xLabelPadding * m_size * std::sin(nSliceMidPoint)), pointCenter.y() + (m_yLabelPadding * m_size * std::cos(nSliceMidPoint)));
         rectText.setHeight(1000);
         rectText.setWidth(1000);
@@ -286,9 +300,30 @@ void PieChart::paintEvent(QPaintEvent *event)
                 strLabel = "";
                 break;
         }
-        painter.drawText(rectText, Qt::AlignCenter, strLabel);
+        if (fHighlightText) {
+            QFont font = painter.font();
+            font.setBold(true);
+            painter.setFont(font);
+            painter.drawText(rectText, Qt::AlignCenter, strLabel);
+        } else {
+            QFont font = painter.font();
+            font.setBold(false);
+            painter.setFont(font);
+            painter.drawText(rectText, Qt::AlignCenter, strLabel);
+        }
     }
 
+    // Draw Highlight
+    if (fDrawHighlight && m_fEnableHighlight) {
+        if(m_fEnableHighlightOutline) {
+            penLine.setColor(m_colorHighlightOutline);
+        }
+        painter.setPen(penLine);
+        painter.setBrush(m_colorHighlight);
+        painter.drawPie(rectPie, nHighlightStartAngle, nHighlightSpan);
+    }
+
+    // Draw Donut Hole
     if(m_fDountHole) {
         painter.setPen(penLine);
         painter.setBrush(m_brushBackground);
@@ -333,22 +368,25 @@ void PieChart::SetLineWidth(int nWidth)
     m_fChangesMade = true;
 }
 
-/**
- * Set the linechart to fill in the area between the line and the bottom of the chart.
- * Default is enabled.
- * @param fEnable
- */
 void PieChart::EnableFill(bool fEnable)
 {
     m_fEnableFill = fEnable;
 }
 
+/**
+ * @brief PieChart::SetChartSize set size of the full pie chart
+ * @param nSize size in pixels
+ */
 void PieChart::SetChartSize(int nSize)
 {
     m_size = nSize;
     m_fChangesMade = true;
 }
 
+/**
+ * @brief PieChart::SetStartingAngle set the initial angle of when the chart is first made
+ * @param nAngle
+ */
 void PieChart::SetStartingAngle(int nAngle)
 {
     // Full Circle is 16*360 = 5760
@@ -409,11 +447,20 @@ void PieChart::SetColor(std::string label, QColor qColor)
     m_fChangesMade = true;
 }
 
+/**
+ * @brief PieChart::GetColor gets the color of a specific label
+ * @param label
+ * @return
+ */
 QColor PieChart::GetColor(std::string label)
 {
     return m_mapColors.at(label);
 }
 
+/**
+ * @brief PieChart::ChartLabels Gives a list of the labels for the chart
+ * @return Alphabetized list of the labels
+ */
 QStringList PieChart::ChartLabels() {
     QStringList listLabels;
     for (auto pair: m_mapPoints) {
@@ -431,6 +478,18 @@ void PieChart::EnableHighlight(bool fEnable)
 void PieChart::SetHighlight(QColor color)
 {
     m_colorHighlight = color;
+    m_fChangesMade = true;
+}
+
+void PieChart::EnableHighlightOutline(bool fEnable)
+{
+    m_fEnableHighlightOutline = fEnable;
+    m_fChangesMade = true;
+}
+
+void PieChart::SetHighlightOutline(QColor color)
+{
+    m_colorHighlightOutline = color;
     m_fChangesMade = true;
 }
 
