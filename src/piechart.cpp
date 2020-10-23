@@ -334,17 +334,28 @@ void PieChart::paintEvent(QPaintEvent *event)
         rectHole.setRight(pointCenter.x() - m_nDountSize);
         rectHole.setLeft(pointCenter.x() + m_nDountSize);
 
-        penLine.setColor(m_brushLine.color());
-        painter.setPen(penLine);
-        painter.setBrush(m_brushBackground);
-        painter.drawEllipse(rectHole);
-
         // Draw Highlight
         if(m_fEnableHighlightOutline && m_fEnableHighlight) {
-            penLine.setColor(m_colorHighlightOutline);
+            // Draw small circle to get covered by outline
+            penLine.setColor(m_brushBackground.color());
+            penLine.setWidth(1);
+            painter.setPen(penLine);
+            painter.setBrush(m_brushBackground);
+            painter.drawEllipse(rectHole);
+            // Draw arcs to correspond with highlight
             penLine.setWidth(m_lineWidth + 1);
+            penLine.setColor(m_brushLine.color());
+            painter.setPen(penLine);
+            painter.drawArc(rectHole, nHighlightStartAngle + nHighlightSpan, 5760 - nHighlightSpan);
+            penLine.setColor(m_colorHighlightOutline);
             painter.setPen(penLine);
             painter.drawArc(rectHole, nHighlightStartAngle, nHighlightSpan);
+        } else {
+            penLine.setColor(m_brushLine.color());
+            penLine.setWidth(m_lineWidth);
+            painter.setPen(penLine);
+            painter.setBrush(m_brushBackground);
+            painter.drawEllipse(rectHole);
         }
     }
 
