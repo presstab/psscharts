@@ -258,6 +258,7 @@ void PieChart::paintEvent(QPaintEvent *event)
         if (m_fEnableFill) {
             painter.setBrush(m_mapColors[pair.second]);
         }
+        // Highlight data
         if (mouseAngle > nSliceStartingAngle && mouseAngle <= nSliceEndingAngle && mouseDistance < m_size) {
             fDrawHighlight = true;
             fHighlightText = true;
@@ -275,7 +276,7 @@ void PieChart::paintEvent(QPaintEvent *event)
         rectText.setWidth(1000);
         rectText.moveCenter(pointText);
         QString strLabel;
-        painter.setPen(Qt::black);
+        painter.setPen(m_colorYTitle);
         switch (m_labelType) {
             case PieLabelType::PIE_LABEL: {
                 strLabel = QString::fromStdString(pair.second);
@@ -326,15 +327,31 @@ void PieChart::paintEvent(QPaintEvent *event)
 
     // Draw Donut Hole
     if(m_fDountHole) {
+        QRect rectHole;
+        QPoint pointCenter = rectChart.center();
+        rectHole.setBottom(pointCenter.y() - m_nDountSize);
+        rectHole.setTop(pointCenter.y() + m_nDountSize);
+        rectHole.setRight(pointCenter.x() - m_nDountSize);
+        rectHole.setLeft(pointCenter.x() + m_nDountSize);
+
+        penLine.setColor(m_brushLine.color());
         painter.setPen(penLine);
         painter.setBrush(m_brushBackground);
-        painter.drawEllipse(pointCenter, m_nDountSize, m_nDountSize);
+        painter.drawEllipse(rectHole);
+
+        // Draw Highlight
+        if(m_fEnableHighlightOutline && m_fEnableHighlight) {
+            penLine.setColor(m_colorHighlightOutline);
+            penLine.setWidth(m_lineWidth + 1);
+            painter.setPen(penLine);
+            painter.drawArc(rectHole, nHighlightStartAngle, nHighlightSpan);
+        }
     }
 
     //Draw top title
     if (!m_strTopTitle.isEmpty()) {
         painter.save();
-        painter.setPen(Qt::black);
+        painter.setPen(m_colorTopTitle);
         painter.setFont(m_fontTopTitle);
         QRect rectTopTitle = rectFull;
         rectTopTitle.setBottom(rectFull.top() + HeightTopTitleArea());

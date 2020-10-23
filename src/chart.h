@@ -88,10 +88,12 @@ protected:
     //Top Title
     QString m_strTopTitle; //! Chart main title
     QFont m_fontTopTitle;
+    QColor m_colorTopTitle;
 
     //Y-Title
     QString m_strTitleY; //! Title for Y-axis
     QFont m_fontYTitle;
+    QColor m_colorYTitle;
 
     //Axis Tick Labels
     AxisLabelSettings m_settingsYLabels;
@@ -146,6 +148,8 @@ public:
     void SetAxisLabelsOnOff(bool fDrawXLabels, bool fDrawYLabels);
     void SetAxisSectionCount(uint32_t nCount);
     void SetAxisSeparatorPen(const QPen& pen);
+    void SetTopTitleColor(const QColor &color);
+    void SetYTitleColor(const QColor &color);
     static uint32_t Version();
     static QString VersionString();
 

@@ -316,6 +316,12 @@ void Chart::SetTopTitleFont(const QFont &font)
     m_fChangesMade = true;
 }
 
+void Chart::SetTopTitleColor(const QColor &color)
+{
+    m_colorTopTitle = color;
+    m_fChangesMade = true;
+}
+
 void Chart::SetXLabelType(AxisLabelType labelType)
 {
     m_settingsXLabels.labeltype = labelType;
@@ -342,6 +348,12 @@ void Chart::SetYTitle(const QString &strTitle)
 void Chart::SetYTitleFont(const QFont &font)
 {
     m_fontYTitle = font;
+    m_fChangesMade = true;
+}
+
+void Chart::SetYTitleColor(const QColor &color)
+{
+    m_colorYTitle = color;
     m_fChangesMade = true;
 }
 

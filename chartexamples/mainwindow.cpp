@@ -101,6 +101,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboboxLineColor->addItems(listQtColors);
     ui->comboboxLineColor->setCurrentIndex(0); //black
 
+    ui->comboboxChartTitleColor->addItems(listQtColors);
+    ui->comboboxChartTitleColor->setCurrentIndex(0); //black
+
+    ui->comboboxYTitleColor->addItems(listQtColors);
+    ui->comboboxYTitleColor->setCurrentIndex(0); //black
+
     // Bar Colors
     ui->comboboxBarColor->addItems(listQtColors);
     ui->comboboxBarColor->setCurrentIndex(8); //cyan
@@ -311,6 +317,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->comboboxPieSlice, &QComboBox::currentTextChanged, this, &MainWindow::PieColorChanged);
     connect(ui->comboboxPieHighlight, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxPieHighlightOutline, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboboxChartTitleColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
+    connect(ui->comboboxYTitleColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
 
     connect(ui->spinboxGridlines, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
     connect(ui->spinboxLineWidth, SIGNAL(valueChanged(int)), this, SLOT(RedrawChart()));
@@ -345,6 +353,35 @@ MainWindow::~MainWindow()
 void MainWindow::RedrawChart()
 {
     m_chartType = PssCharts::ChartTypeFromString(ui->comboBoxChartType->currentText().toStdString());
+
+    if (m_chartType == PssCharts::ChartType::PIE) {
+        ui->labelDrawAxisLabels->setVisible(false);
+        ui->labelDrawAxisLine->setVisible(false);
+        ui->labelYTitle->setVisible(false);
+        ui->labelGridlineCount->setVisible(false);
+        ui->spinboxGridlines->setVisible(false);
+        ui->checkboxYTitleBold->setVisible(false);
+        ui->lineeditYTitle->setVisible(false);
+        ui->spinboxYTitleFontSize->setVisible(false);
+        ui->checkBoxDrawYAxisLine->setVisible(false);
+        ui->checkboxDrawXAxisLine->setVisible(false);
+        ui->checkboxDrawXTitle->setVisible(false);
+        ui->checkboxDrawYTitle->setVisible(false);
+    } else {
+        ui->labelDrawAxisLabels->setVisible(true);
+        ui->labelDrawAxisLine->setVisible(true);
+        ui->labelYTitle->setVisible(true);
+        ui->labelGridlineCount->setVisible(true);
+        ui->spinboxGridlines->setVisible(true);
+        ui->checkboxYTitleBold->setVisible(true);
+        ui->lineeditYTitle->setVisible(true);
+        ui->spinboxYTitleFontSize->setVisible(true);
+        ui->checkBoxDrawYAxisLine->setVisible(true);
+        ui->checkboxDrawXAxisLine->setVisible(true);
+        ui->checkboxDrawXTitle->setVisible(true);
+        ui->checkboxDrawYTitle->setVisible(true);
+    }
+
     switch (m_chartType) {
         case PssCharts::ChartType::LINE:{
             m_barChart->setVisible(false);
@@ -358,6 +395,7 @@ void MainWindow::RedrawChart()
             fontChartTitle.setPointSize(ui->spinboxTitleFontSize->value());
             fontChartTitle.setBold(ui->checkboxChartTitleBold->isChecked());
             m_lineChart->SetTopTitleFont(fontChartTitle);
+            m_lineChart->SetTopTitleColor(static_cast<Qt::GlobalColor>(ui->comboboxChartTitleColor->currentIndex()+2));
 
             //Y Title
             m_lineChart->SetYTitle(ui->lineeditYTitle->text());
@@ -365,6 +403,7 @@ void MainWindow::RedrawChart()
             fontYTitle.setPointSize(ui->spinboxYTitleFontSize->value());
             fontYTitle.setBold(ui->checkboxYTitleBold->isChecked());
             m_lineChart->SetYTitleFont(fontYTitle);
+            m_lineChart->SetYTitleColor(static_cast<Qt::GlobalColor>(ui->comboboxYTitleColor->currentIndex()+2));
 
             //Axis Labels
             m_lineChart->SetLabelPrecision(ui->spinboxYLabelPrecision->value());
@@ -411,6 +450,7 @@ void MainWindow::RedrawChart()
             fontChartTitle.setPointSize(ui->spinboxTitleFontSize->value());
             fontChartTitle.setBold(ui->checkboxChartTitleBold->isChecked());
             m_candleChart->SetTopTitleFont(fontChartTitle);
+            m_candleChart->SetTopTitleColor(static_cast<Qt::GlobalColor>(ui->comboboxChartTitleColor->currentIndex()+2));
 
             //Y Title
             m_candleChart->SetYTitle(ui->lineeditYTitle->text());
@@ -418,6 +458,7 @@ void MainWindow::RedrawChart()
             fontYTitle.setPointSize(ui->spinboxYTitleFontSize->value());
             fontYTitle.setBold(ui->checkboxYTitleBold->isChecked());
             m_candleChart->SetYTitleFont(fontYTitle);
+            m_candleChart->SetYTitleColor(static_cast<Qt::GlobalColor>(ui->comboboxYTitleColor->currentIndex()+2));
 
             //Axis Labels
             m_candleChart->SetLabelPrecision(ui->spinboxYLabelPrecision->value());
@@ -483,6 +524,7 @@ void MainWindow::RedrawChart()
             fontChartTitle.setPointSize(ui->spinboxTitleFontSize->value());
             fontChartTitle.setBold(ui->checkboxChartTitleBold->isChecked());
             m_barChart->SetTopTitleFont(fontChartTitle);
+            m_barChart->SetTopTitleColor(static_cast<Qt::GlobalColor>(ui->comboboxChartTitleColor->currentIndex()+2));
 
             //Y Title
             m_barChart->SetYTitle(ui->lineeditYTitle->text());
@@ -490,6 +532,7 @@ void MainWindow::RedrawChart()
             fontYTitle.setPointSize(ui->spinboxYTitleFontSize->value());
             fontYTitle.setBold(ui->checkboxYTitleBold->isChecked());
             m_barChart->SetYTitleFont(fontYTitle);
+            m_barChart->SetYTitleColor(static_cast<Qt::GlobalColor>(ui->comboboxYTitleColor->currentIndex()+2));
 
             //Axis Labels
             m_barChart->SetLabelPrecision(ui->spinboxYLabelPrecision->value());
@@ -547,6 +590,8 @@ void MainWindow::RedrawChart()
             fontChartTitle.setBold(ui->checkboxChartTitleBold->isChecked());
             m_pieChart->SetTopTitleFont(fontChartTitle);
             m_pieChart->SetLabelPrecision(ui->spinboxYLabelPrecision->value());
+            m_pieChart->SetTopTitleColor(static_cast<Qt::GlobalColor>(ui->comboboxChartTitleColor->currentIndex()+2));
+            m_pieChart->SetYTitleColor(static_cast<Qt::GlobalColor>(ui->comboboxYTitleColor->currentIndex()+2));
 
             QColor colorBackground = palette().window().color();
             if (ui->checkboxFillBackground->checkState() == Qt::Checked)
