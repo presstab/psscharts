@@ -49,13 +49,15 @@ struct Candle {
     double m_high;
     double m_low;
     double m_close;
+    double m_volume;
     Candle() {
         m_open = 0;
         m_high = 0;
         m_low = 0;
         m_close = 0;
+        m_volume = 0;
     }
-    Candle(double open, double high, double low, double close) {
+    Candle(double open, double high, double low, double close, double volume = 0) {
         if (high < std::max(open, std::max(low, close))) {
             throw "High is not the maximum value";
         }
@@ -66,21 +68,16 @@ struct Candle {
         m_high = high;
         m_low = low;
         m_close = close;
+        m_volume = volume;
     }
     bool isNull() {
-        return this->m_low == 0.0 && this->m_high == 0.0 && this->m_low == 0.0 && this->m_close == 0.0;
+        return this->m_low == 0.0 && this->m_high == 0.0 && this->m_low == 0.0 && this->m_close == 0.0 && this->m_volume == 0.0;
     }
 };
 
 class CandlestickChart : public Chart
 {
     Q_OBJECT
-
-private:
-    static const uint32_t VERSION_MAJOR = 0;
-    static const uint32_t VERSION_MINOR = 1;
-    static const uint32_t VERSION_REVISION = 5;
-    static const uint32_t VERSION_BUILD = 0;
 
 protected:
     std::map<uint32_t, Candle> m_mapPoints;

@@ -83,7 +83,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Chart Formats
     ui->comboBoxChartType->addItems(listChartFormats);
-    ui->comboBoxChartType->setCurrentIndex(0); // bar
+    ui->comboBoxChartType->setCurrentIndex(1); // bar
 
     ui->comboboxChartFillColor->addItems(listQtColors);
     ui->comboboxChartFillColor->setCurrentIndex(8); //cyan
