@@ -58,7 +58,9 @@ protected:
     QBrush m_brushFill;
     bool m_fEnableFill; //! Does the line get filled
 
-    double m_nBarWidth = 5;
+    bool m_fDrawVolume;
+    double m_nBarWidth;
+    QColor m_colorVolume;
 
     QRect MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const;
     void ProcessChangedData() override;
@@ -74,6 +76,12 @@ public:
     void SetLineBrush(const QBrush& brush);
     void SetLineWidth(int nWidth);
     void GetLineEquation(const QLineF& line, double& nSlope, double& nYIntercept);
+    void EnableVolumeBar(bool fEnable);
+    void SetVolumeColor(const QColor& color);
+    void SetVolumeBarWidth(int nWidth);
+    void AddVolumePoint(const uint32_t& x, const double& y);
+    void RemoveVolumePoint(const uint32_t& x);
+    void SetVolumePoints(const std::map<uint32_t, double>& mapPoints);
 };
 
 } //namespace

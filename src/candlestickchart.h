@@ -98,6 +98,7 @@ protected:
     bool m_fDrawOutline;
     bool m_fDisplayCandleDash;
     bool m_fDisplayOHLC;
+    bool m_fDrawVolume;
 
     double m_nCandleWidth;
     double m_nCandleMaxWidth;
@@ -116,22 +117,27 @@ protected:
     QColor m_colorDownTail;
     QColor m_colorUpDash;
     QColor m_colorDownDash;
+    QColor m_colorVolume;
     QFont m_fontOHLC;
     QString m_strOHLC;
 
 public:
     CandlestickChart(QWidget* parent = nullptr);
 
-    QRect ChartArea() const;
+    void AddVolumePoint(const uint32_t& x, const double& y);
+    void RemoveVolumePoint(const uint32_t& x);
+    void SetVolumePoints(const std::map<uint32_t, double>& mapPoints);
 
     void EnableCandleFill(bool fEnable);
     void EnableWick(bool fEnable);
     void EnableCandleBorder(bool fEnable);
     void EnableCandleDash(bool fEnable);
     void EnableOHLCDisplay(bool fEnable);
+    void EnableVolumeBar(bool fEnable);
 
     void SetDataPoints(std::map<uint32_t, Candle>& mapPoints);
     void SetDataPoints(std::map<uint32_t, double>& mapPoints, uint32_t candleTimePeriod = 0);
+    void SetDataPoints(std::map<uint32_t, double>& mapPoints, std::map<uint32_t, double>& volPoints, uint32_t candleTimePeriod = 0);
     void SetCandleBodyColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetCandleLineColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetTailColor(const QColor& upColor, const QColor& downColor = QColor());
@@ -141,6 +147,7 @@ public:
     void SetCandleWidth(int nWidth, int nMinWidth, int nMaxWidth);
     void SetCandleTimePeriod(uint32_t nTime);
     void SetOLHCFont(const QFont &font);
+    void SetVolumeColor(const QColor& color);
 
 signals:
     void candleWidthChanged(int dChange);

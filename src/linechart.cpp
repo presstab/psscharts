@@ -69,6 +69,10 @@ LineChart::LineChart(QWidget *parent) : Chart(ChartType::LINE, parent)
     m_topTitleHeight = -1;
     m_precision = 100000000;
 
+    m_fDrawVolume = true;
+    m_colorVolume = Qt::magenta;
+    m_nBarWidth = 5;
+
     setMouseTracking(true);
 }
 
@@ -141,7 +145,7 @@ QPointF LineChart::ConvertToVolumePoint(const std::pair<uint32_t, double> &pair)
     if (nSpanY == 0) {
         dValueY = rectChart.top() + (nHeight/2);
     } else {
-        dValueY /= nSpanY;
+        dValueY /= 10*nSpanY;
         dValueY = rectChart.bottom() - dValueY; // Qt uses inverted Y axis
     }
     return QPointF(nValueX, dValueY);
@@ -188,15 +192,27 @@ void LineChart::SetDataPoints(const std::map<uint32_t, double>& mapPoints)
     ProcessChangedData();
 }
 
+void LineChart::AddVolumePoint(const uint32_t& x, const double& y)
+{
+    m_mapVolume.emplace(x, y);
+}
+
+void LineChart::RemoveVolumePoint(const uint32_t &x)
+{
+    m_mapVolume.erase(x);
+}
+
+void LineChart::SetVolumePoints(const std::map<uint32_t, double>& mapPoints)
+{
+    m_mapVolume = mapPoints;
+}
+
 void LineChart::ProcessChangedData()
 {
     m_mapVolume.clear();
     m_pairXRange = {0, 0};
     m_pairYRange = {0, 0};
     bool fFirstRun = true;
-    int i = 0;
-    double volume = 0;
-    uint32_t date;
     for (const auto& pair : m_mapPoints) {
         //Set min and max for x and y
         if (fFirstRun || pair.first < m_pairXRange.first)
@@ -207,18 +223,6 @@ void LineChart::ProcessChangedData()
             m_pairYRange.first = pair.second;
         if (fFirstRun || pair.second > m_pairYRange.second)
             m_pairYRange.second = pair.second;
-        if(fFirstRun) {
-            date = pair.first;
-        }
-        if (i < 5) {
-            volume += pair.second;
-            i++;
-        } else {
-            m_mapVolume.emplace(date, volume);
-            volume = 0;
-            i = 0;
-            date = pair.first;
-        }
         fFirstRun = false;
     }
     m_fChangesMade = true;
@@ -352,22 +356,24 @@ void LineChart::paintEvent(QPaintEvent *event)
     painter.drawLines(qvecLines);
     painter.restore();
 
-    //Draw Bars
-    QPen penBar;
-    penBar.setBrush(m_brushLine);
-    penBar.setWidth(m_lineWidth);
-    QPen penHighlight;
-    penHighlight.setBrush(m_brushLine);
-    penHighlight.setWidth(m_lineWidth);
-    for (const std::pair<uint32_t, double>& pair : m_mapVolume) {
-        QPointF chartBar = ConvertToVolumePoint(pair);
-        QPointF pointBar = QPointF(chartBar.x() + m_nBarWidth, chartBar.y());
-        QPointF pointOrigin = QPointF(chartBar.x(), rectChart.bottom());
-        QRectF rect(pointBar, pointOrigin);
-        QBrush rectBrush = QColor(255, 0, 255, 100);
-        painter.drawRect(rect);
-        if (m_fEnableFill) {
-            painter.fillRect(rect, rectBrush);
+    //Draw Volume Bars
+    if(m_fDrawVolume) {
+        QPen penBar;
+        penBar.setBrush(m_brushLine);
+        penBar.setWidth(m_lineWidth);
+        QPen penHighlight;
+        penHighlight.setBrush(m_brushLine);
+        penHighlight.setWidth(m_lineWidth);
+        for (const std::pair<uint32_t, double>& pair : m_mapVolume) {
+            QPointF chartBar = ConvertToVolumePoint(pair);
+            QPointF pointBar = QPointF(chartBar.x() + m_nBarWidth, chartBar.y());
+            QPointF pointOrigin = QPointF(chartBar.x() - m_nBarWidth, rectChart.bottom());
+            QRectF rect(pointBar, pointOrigin);
+            QBrush rectBrush = m_colorVolume;
+            painter.drawRect(rect);
+            if (m_fEnableFill) {
+                painter.fillRect(rect, rectBrush);
+            }
         }
     }
     painter.save();
@@ -564,6 +570,12 @@ void LineChart::SetLineWidth(int nWidth)
     m_fChangesMade = true;
 }
 
+void LineChart::SetVolumeBarWidth(int nWidth)
+{
+    m_nBarWidth = nWidth;
+    m_fChangesMade = true;
+}
+
 /**
  * Set the linechart to fill in the area between the line and the bottom of the chart.
  * Default is enabled.
@@ -572,6 +584,18 @@ void LineChart::SetLineWidth(int nWidth)
 void LineChart::EnableFill(bool fEnable)
 {
     m_fEnableFill = fEnable;
+    m_fChangesMade = true;
 }
 
+void LineChart::EnableVolumeBar(bool fEnable)
+{
+    m_fDrawVolume = fEnable;
+    m_fChangesMade = true;
+}
+
+void LineChart::SetVolumeColor(const QColor &color)
+{
+    m_colorVolume = color;
+    m_fChangesMade = true;
+}
 }//namespace
