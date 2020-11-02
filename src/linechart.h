@@ -48,19 +48,17 @@ class LineChart : public Chart
 {
     Q_OBJECT
 
-private:
-    static const uint32_t VERSION_MAJOR = 0;
-    static const uint32_t VERSION_MINOR = 1;
-    static const uint32_t VERSION_REVISION = 5;
-    static const uint32_t VERSION_BUILD = 0;
-
 protected:
     std::map<uint32_t, double> m_mapPoints;
+    std::map<uint32_t, double> m_mapVolume;
     QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair) const;
+    QPointF ConvertToVolumePoint(const std::pair<uint32_t, double>& pair) const;
     std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point) override;
     QBrush m_brushLine;
     QBrush m_brushFill;
     bool m_fEnableFill; //! Does the line get filled
+
+    double m_nBarWidth = 5;
 
     QRect MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const;
     void ProcessChangedData() override;
