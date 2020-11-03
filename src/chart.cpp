@@ -106,6 +106,8 @@ std::string ChartTypeToString(const ChartType type)
             return "LINE";
         case ChartType::CANDLESTICK:
             return "CANDLESTICK";
+        case ChartType::PIE:
+            return "PIE";
         case ChartType::BAR:
             return "BAR";
         default:
@@ -119,6 +121,8 @@ ChartType ChartTypeFromString(std::string strType)
         return ChartType::LINE;
     else if (strType == "CANDLESTICK")
         return ChartType::CANDLESTICK;
+    else if(strType == "PIE")
+        return ChartType::PIE;
     else if (strType == "BAR")
         return ChartType::BAR;
     else
@@ -312,6 +316,12 @@ void Chart::SetTopTitleFont(const QFont &font)
     m_fChangesMade = true;
 }
 
+void Chart::SetTopTitleColor(const QColor &color)
+{
+    m_colorTopTitle = color;
+    m_fChangesMade = true;
+}
+
 void Chart::SetXLabelType(AxisLabelType labelType)
 {
     m_settingsXLabels.labeltype = labelType;
@@ -338,6 +348,12 @@ void Chart::SetYTitle(const QString &strTitle)
 void Chart::SetYTitleFont(const QFont &font)
 {
     m_fontYTitle = font;
+    m_fChangesMade = true;
+}
+
+void Chart::SetYTitleColor(const QColor &color)
+{
+    m_colorYTitle = color;
     m_fChangesMade = true;
 }
 

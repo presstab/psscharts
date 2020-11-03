@@ -360,6 +360,7 @@ void BarChart::paintEvent(QPaintEvent *event)
     if (!m_strTopTitle.isEmpty()) {
         painter.save();
         painter.setFont(m_fontTopTitle);
+        painter.setPen(m_colorTopTitle);
         QRect rectTopTitle = rectFull;
         rectTopTitle.setBottom(rectFull.top() + HeightTopTitleArea());
         rectTopTitle.setLeft(2*WidthYTitleArea());
@@ -371,6 +372,7 @@ void BarChart::paintEvent(QPaintEvent *event)
     if (!m_strTitleY.isEmpty()) {
         painter.save();
         painter.setFont(m_fontYTitle);
+        painter.setPen(m_colorYTitle);
         painter.rotate(-90);
 
         //The painter rotates around the (0,0) coordinate.

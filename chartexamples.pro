@@ -31,6 +31,7 @@ SOURCES += \
         src/candlestickchart.cpp \
         src/linechart.cpp \
         src/chart.cpp \
+        src/piechart.cpp \
         src/stringutil.cpp \
         src/mousedisplay.cpp
 
@@ -40,6 +41,7 @@ HEADERS += \
         src/candlestickchart.h \
         src/linechart.h \
         src/chart.h \
+        src/piechart.h \
         src/stringutil.h \
         src/axislabelsettings.h \
         src/mousedisplay.h

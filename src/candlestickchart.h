@@ -125,8 +125,6 @@ protected:
 public:
     CandlestickChart(QWidget* parent = nullptr);
 
-    QRect ChartArea() const;
-
     void EnableCandleFill(bool fEnable);
     void EnableWick(bool fEnable);
     void EnableCandleBorder(bool fEnable);

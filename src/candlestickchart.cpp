@@ -551,6 +551,7 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
     if (!m_strTopTitle.isEmpty()) {
         painter.save();
         painter.setFont(m_fontTopTitle);
+        painter.setPen(m_colorTopTitle);
         QRect rectTopTitle = rectFull;
         rectTopTitle.setBottom(rectFull.top() + HeightTopTitleArea());
         rectTopTitle.setLeft(2*WidthYTitleArea());
@@ -562,6 +563,7 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
     if (!m_strTitleY.isEmpty()) {
         painter.save();
         painter.setFont(m_fontYTitle);
+        painter.setPen(m_colorYTitle);
         painter.rotate(-90);
 
         //The painter rotates around the (0,0) coordinate.
@@ -656,21 +658,6 @@ void CandlestickChart::SetOLHCFont(const QFont &font)
 {
     m_fontOHLC = font;
     m_fChangesMade = true;
-}
-
-/**
- * @brief CandlestickChart::ChartArea : Get the area of the widget that is dedicated to the chart itself
- * @return
- */
-QRect CandlestickChart::ChartArea() const
-{
-    QRect rectFull = this->rect();
-    QRect rectChart = rectFull;
-    rectChart.setTop(rectFull.top() + HeightTopTitleArea());
-    rectChart.setBottom(rectFull.bottom() - HeightXLabelArea());
-    rectChart.setLeft(rectFull.left() + WidthYTitleArea() + WidthYLabelArea());
-    rectChart.setRight(rectFull.right());
-    return rectChart;
 }
 
 void CandlestickChart::EnableCandleFill(bool fEnable)
