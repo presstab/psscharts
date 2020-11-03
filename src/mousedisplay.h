@@ -31,13 +31,37 @@ SOFTWARE.
 
 namespace PssCharts {
 
+class MouseDot
+{
+private:
+    QColor m_color;
+    QPointF m_posDot;
+
+public:
+    MouseDot()
+    {
+        m_color = Qt::black;
+        m_posDot = QPointF();
+    }
+
+    MouseDot(const QColor& color, const QPointF& pos)
+    {
+        m_color = color;
+        m_posDot = pos;
+    }
+
+    QColor Color() const { return m_color; }
+    QPointF Pos() const { return m_posDot; }
+};
+
 class MouseDisplay
 {
 private:
     bool m_isEnabled;
     QPen m_pen;
     QColor m_colorLabelBackground;
-    QPointF m_posDot;
+
+    std::vector<MouseDot> m_vDots;
 
 public:
     MouseDisplay()
@@ -47,12 +71,15 @@ public:
 
     void SetNull();
     void SetColor(const QColor& color);
-    void SetDot(const QPointF& pos) { m_posDot = pos; }
+    void AddDot(const QPointF& pos, const QColor& color);
     void SetLabelBackgroundColor(const QColor& color);
     void SetEnabled(bool fEnable) { m_isEnabled = fEnable; }
     void SetWidth(int nWidth);
+    void ClearDots() { m_vDots.clear(); }
 
-    QPointF DotPos() const { return m_posDot; }
+    //QPointF DotPos() const { return m_posDot; }
+    MouseDot GetDot(const uint32_t& nSeries);
+    std::vector<MouseDot> GetDots() const { return m_vDots; }
     bool IsEnabled() const { return m_isEnabled; }
     QPen Pen() const { return m_pen; }
     QColor LabelBackgroundColor() const { return m_colorLabelBackground; }

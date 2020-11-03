@@ -522,7 +522,21 @@
              </widget>
             </item>
             <item row="2" column="1">
-             <widget class="QComboBox" name="comboboxLineColor"/>
+             <layout class="QHBoxLayout" name="horizontalLayout_19">
+              <item>
+               <widget class="QLabel" name="label_25">
+                <property name="text">
+                 <string>Series</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="comboboxSeriesLineColor"/>
+              </item>
+              <item>
+               <widget class="QComboBox" name="comboboxLineColor"/>
+              </item>
+             </layout>
             </item>
            </layout>
           </widget>
@@ -804,8 +818,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>413</width>
-     <height>22</height>
+     <width>418</width>
+     <height>25</height>
     </rect>
    </property>
   </widget>

@@ -231,8 +231,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Generate some data points to fill the chart
     std::map<uint32_t, double> mapPoints;
+    std::map<uint32_t, double> mapPoints2;
     double nLastPoint = 0;
-    for (auto i = 0; i < 366; i++) {
+    for (auto i = 0; i < 100; i++) {
         double y = QRandomGenerator::global()->generateDouble();
         if (nLastPoint > 0) {
             double nPercentChange = (y - nLastPoint) / nLastPoint;
@@ -242,10 +243,19 @@ MainWindow::MainWindow(QWidget *parent) :
                 y = nLastPoint*0.7;
         }
         mapPoints.emplace(i*(60*60*24), y);
+        double y2 = y *0.9;
+        if (i % 3)
+            y2 *= 1.35;
+        else if (i % 2)
+            y2 *= 0.75;
+        mapPoints2.emplace(i*(60*60*24), y2);
         nLastPoint = y;
     }
 
-    m_lineChart->SetDataPoints(mapPoints);
+    m_lineChart->SetDataPoints(mapPoints, 0);
+    m_lineChart->SetDataPoints(mapPoints2, 1);
+    ui->comboboxSeriesLineColor->addItem("0");
+    ui->comboboxSeriesLineColor->addItem("1");
     m_lineChart->setMinimumSize(QSize(600,400));
     m_candleChart->SetDataPoints(mapPoints, 7*60*60*24);
     m_candleChart->setMinimumSize(QSize(600,400));
@@ -426,7 +436,8 @@ void MainWindow::RedrawChart()
             //Line Color
             m_lineChart->SetLineWidth(ui->spinboxLineWidth->value());
             QColor colorLine = static_cast<Qt::GlobalColor>(ui->comboboxLineColor->currentIndex()+2);
-            m_lineChart->SetLineBrush(colorLine);
+            uint32_t nSeries = ui->comboboxSeriesLineColor->currentText().toUInt();
+            m_lineChart->SetLineBrush(nSeries, colorLine);
 
             //Mouse Display
             m_lineChart->EnableMouseDisplay(ui->checkboxCrosshairs->isChecked());
