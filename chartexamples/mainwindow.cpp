@@ -88,7 +88,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Chart Formats
     ui->comboBoxChartType->addItems(listChartFormats);
-    ui->comboBoxChartType->setCurrentIndex(2); // bar
+    ui->tabWidget->setCurrentIndex(0); // bar
+    ui->comboBoxChartType->setCurrentIndex(0); // bar
 
     ui->comboboxChartFillColor->addItems(listQtColors);
     ui->comboboxChartFillColor->setCurrentIndex(8); //cyan
@@ -131,25 +132,23 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBoxUpCandleFillColor->setCurrentIndex(6); //green
     ui->comboBoxDownCandleFillColor->addItems(listQtColors);
     ui->comboBoxDownCandleFillColor->setCurrentIndex(5); //red
-
     ui->checkBoxBorderColor->setChecked(true);
     ui->comboBoxUpBorderColor->addItems(listQtColors);
     ui->comboBoxUpBorderColor->setCurrentIndex(14); //dark cyan
     ui->comboBoxDownBorderColor->addItems(listQtColors);
     ui->comboBoxDownBorderColor->setCurrentIndex(16); //dark yellow
-
     ui->checkBoxWickColor->setChecked(true);
     ui->comboBoxUpWickColor->addItems(listQtColors);
     ui->comboBoxUpWickColor->setCurrentIndex(12); //dark green
     ui->comboBoxDownWickColor->addItems(listQtColors);
     ui->comboBoxDownWickColor->setCurrentIndex(11); //dark red
-
     ui->checkboxCandleDash->setChecked(false);
     ui->comboBoxUpCandleDashColor->addItems(listQtColors);
     ui->comboBoxUpCandleDashColor->setCurrentIndex(12); //dark green
     ui->comboBoxDownCandleDashColor->addItems(listQtColors);
     ui->comboBoxDownCandleDashColor->setCurrentIndex(11); //dark red
 
+    // Candle Volume Bar
     ui->checkboxCandleVolumeBar->setChecked(true);
     ui->comboboxCandleVolumeBar->addItems(listQtColors);
     ui->comboboxCandleVolumeBar->setCurrentIndex(7); //blue
@@ -215,6 +214,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->spinboxGridlines->setValue(5);
     ui->spinboxLineWidth->setValue(3);
 
+    //Bar Width
     ui->spinboxBarWidth->setMinimum(1);
     ui->spinboxBarWidth->setMaximum(25);
     ui->spinboxBarWidth->setValue(10);
@@ -223,6 +223,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->spinboxBarLineWidth->setValue(2);
     m_barChart->SetBarWidth(10, 1, 25);
 
+    //Candle Width
     ui->spinboxCandleWidth->setMinimum(5);
     ui->spinboxCandleWidth->setMaximum(99);
     ui->spinboxCandleWidth->setValue(10);

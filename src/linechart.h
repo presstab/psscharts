@@ -62,7 +62,6 @@ protected:
 
     bool m_fDrawVolume;
     double m_nBarWidth;
-    QColor m_colorVolume;
 
     QRect MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const;
     void ProcessChangedData() override;

@@ -260,6 +260,13 @@ std::map<uint32_t, Candle> CandlestickChart::ConvertLineToCandlestickData(const 
     return candleData;
 }
 
+/**
+ * @brief CandlestickChart::ConvertLineToCandlestickData Change linechart data into candle stick data with volume data
+ * @param lineChartData Data for a linechart to be made into a candle
+ * @param volPoints Volume data for a line chart to be converted to average volume in candle
+ * @param candleTimePeriod Time period used to create a candle
+ * @return
+ */
 std::map<uint32_t, Candle> CandlestickChart::ConvertLineToCandlestickData(const std::map<uint32_t, double> lineChartData, std::map<uint32_t, double>& volPoints, uint32_t candleTimePeriod)
 {
     int volItems = 1;
@@ -310,6 +317,11 @@ void CandlestickChart::SetDataPoints(std::map<uint32_t, double>& mapPoints, std:
     ProcessChangedData();
 }
 
+/**
+ * @brief CandlestickChart::AddVolumePoint Add a volume value to a candle
+ * @param x: Time period of the volume
+ * @param y: Volume
+ */
 void CandlestickChart::AddVolumePoint(const uint32_t& x, const double& y)
 {
     std::map<uint32_t, Candle>::iterator it = m_mapPoints.find(x);
@@ -322,6 +334,10 @@ void CandlestickChart::AddVolumePoint(const uint32_t& x, const double& y)
     }
 }
 
+/**
+ * @brief CandlestickChart::RemoveVolumePoint Sets volume point to zero does not remove candle
+ * @param x: time period
+ */
 void CandlestickChart::RemoveVolumePoint(const uint32_t &x)
 {
     std::map<uint32_t, Candle>::iterator it = m_mapPoints.find(x);
@@ -330,13 +346,16 @@ void CandlestickChart::RemoveVolumePoint(const uint32_t &x)
     }
 }
 
+/**
+ * @brief CandlestickChart::SetVolumePoints Changes volume of candlestick data to the given map
+ * @param mapPoints
+ */
 void CandlestickChart::SetVolumePoints(const std::map<uint32_t, double>& mapPoints)
 {
     for(auto pair: mapPoints) {
         AddVolumePoint(pair.first, pair.second);
     }
 }
-
 
 void CandlestickChart::ProcessChangedData()
 {
@@ -576,6 +595,7 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
                 painter.fillRect(rect, rectBrush);
             }
         }
+        // Volume bars
         if (m_fDrawVolume) {
             QPointF pointV = QPointF(chartCandle.first + m_nCandleWidth, chartCandle.second.m_volume);
             QPointF pointBottom = QPointF(chartCandle.first - m_nCandleWidth, rectChart.bottom());

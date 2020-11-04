@@ -70,7 +70,6 @@ LineChart::LineChart(QWidget *parent) : Chart(ChartType::LINE, parent)
     m_precision = 100000000;
 
     m_fDrawVolume = true;
-    m_colorVolume = Qt::magenta;
     m_nBarWidth = 5;
 
     setMouseTracking(true);
@@ -116,6 +115,11 @@ QPointF LineChart::ConvertToPlotPoint(const std::pair<uint32_t, double> &pair) c
     return QPointF(nValueX, dValueY);
 }
 
+/**
+ * @brief LineChart::ConvertToVolumePoint Convert to a data point to be used in volume bar chart at bottom of graph
+ * @param pair
+ * @return
+ */
 QPointF LineChart::ConvertToVolumePoint(const std::pair<uint32_t, double> &pair) const
 {
     QRect rectChart = ChartArea();
@@ -221,10 +225,10 @@ void LineChart::SetDataPoints(const std::map<uint32_t, double>& mapPoints, const
 }
 
 /**
- * @brief LineChart::AddVolumePoint
- * @param nSeries
- * @param x
- * @param y
+ * @brief LineChart::AddVolumePoint : Add a data point for volume for a specific series
+ * @param nSeries: index of the series being altered
+ * @param x: date of data
+ * @param y: volume
  */
 void LineChart::AddVolumePoint(const uint32_t& nSeries, const uint32_t& x, const double& y)
 {
@@ -237,9 +241,9 @@ void LineChart::AddVolumePoint(const uint32_t& nSeries, const uint32_t& x, const
 }
 
 /**
- * @brief LineChart::RemoveVolumePoint
- * @param nSeries
- * @param x
+ * @brief LineChart::RemoveVolumePoint: Remove volume data for a specific series
+ * @param nSeries: index of series being altered
+ * @param x: date of data
  */
 void LineChart::RemoveVolumePoint(const uint32_t& nSeries, const uint32_t &x)
 {
@@ -251,11 +255,10 @@ void LineChart::RemoveVolumePoint(const uint32_t& nSeries, const uint32_t &x)
     ProcessChangedData();
 }
 
-
 /**
- * @brief LineChart::SetDataPoints : Set the datapoints of a specific line series.
+ * @brief LineChart::SetVolumePoints : Set the datapoints for the volume of a specific line series.
  * @param mapPoints
- * @param nSeries : The index of the series that is being changed or added.
+ * @param nSeries : The index of the series that is being changed or added
  */
 void LineChart::SetVolumePoints(const std::map<uint32_t, double>& mapPoints, const uint32_t& nSeries)
 {
