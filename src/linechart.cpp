@@ -62,7 +62,7 @@ LineChart::LineChart(QWidget *parent) : Chart(ChartType::LINE, parent)
     m_settingsYLabels.SetNull();
 
     m_axisSections = 0;
-    m_yPadding = 0;
+    m_yPadding = 1;
     m_fEnableFill = true;
     m_fChangesMade = true;
     m_rightMargin = -1;
@@ -288,6 +288,11 @@ void LineChart::ProcessChangedData()
                 m_pairYRange.second = pair.second;
             fFirstRun = false;
         }
+    }
+    // Add y-axis buffer for the volume bars
+    if(m_fDrawVolume) {
+        double buffer = m_yPadding * (m_pairYRange.second - m_pairYRange.first) / 10;
+        m_pairYRange.first -= buffer;
     }
     m_fChangesMade = true;
 }

@@ -741,7 +741,6 @@ void CandlestickChart::SetVolumeColor(const QColor& color) {
     m_fChangesMade = true;
 }
 
-
 void CandlestickChart::SetCandleLineWidth(int nWidth)
 {
     m_nCandleLineWidth = nWidth;
