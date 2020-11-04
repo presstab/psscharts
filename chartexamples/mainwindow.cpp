@@ -157,8 +157,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // Line Volume Bar
     ui->checkboxLineVolumeBar->setChecked(true);
     ui->spinboxLineVolumeBar->setValue(3);
-    ui->comboboxLineVolumeBar->addItems(listQtColors);
-    ui->comboboxLineVolumeBar->setCurrentIndex(9); //magenta
+
     // Pie Chart
     ui->spinboxPieSize->setMinimum(0);
     ui->spinboxPieSize->setMaximum(500);
@@ -225,12 +224,12 @@ MainWindow::MainWindow(QWidget *parent) :
     m_barChart->SetBarWidth(10, 1, 25);
 
     ui->spinboxCandleWidth->setMinimum(5);
-    ui->spinboxCandleWidth->setMaximum(25);
+    ui->spinboxCandleWidth->setMaximum(99);
     ui->spinboxCandleWidth->setValue(10);
     ui->spinboxCandleLineWidth->setMinimum(1);
     ui->spinboxCandleLineWidth->setMaximum(20);
     ui->spinboxCandleLineWidth->setValue(2);
-    m_candleChart->SetCandleWidth(10, 5, 25);
+    m_candleChart->SetCandleWidth(10, 5, 99);
 
     //Crosshairs
     ui->checkboxCrosshairs->setChecked(true);
@@ -241,8 +240,6 @@ MainWindow::MainWindow(QWidget *parent) :
     //Generate some data points to fill the chart
     std::map<uint32_t, double> mapPoints;
     std::map<uint32_t, double> mapPoints2;
-    std::map<uint32_t, double> mapVolume;
-    std::map<uint32_t, double> mapVolume2;
 
     double nLastPoint = 0;
     for (auto i = 0; i < 100; i++) {
@@ -268,8 +265,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_lineChart->SetDataPoints(mapPoints2, 1);
     ui->comboboxSeriesLineColor->addItem("0");
     ui->comboboxSeriesLineColor->addItem("1");
-    m_lineChart->SetVolumePoints(mapPoints2, 0);
-    m_lineChart->SetVolumePoints(mapPoints, 1);
+    m_lineChart->SetVolumePoints(mapPoints, 0);
+    m_lineChart->SetVolumePoints(mapPoints2, 1);
     m_lineChart->setMinimumSize(QSize(600,400));
     m_candleChart->SetDataPoints(mapPoints, mapPoints2, 5*60*60*24);
     m_candleChart->setMinimumSize(QSize(600,400));
@@ -335,7 +332,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->comboBoxUpCandleDashColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboBoxDownCandleDashColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxCandleVolumeBar, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
-    connect(ui->comboboxLineVolumeBar, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxBarColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxBarLineColor, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
     connect(ui->comboboxHighlightBar, &QComboBox::currentTextChanged, this, &MainWindow::RedrawChart);
@@ -461,7 +457,6 @@ void MainWindow::RedrawChart()
             //Volume Bar
             m_lineChart->SetVolumeBarWidth(ui->spinboxLineVolumeBar->value());
             m_lineChart->EnableVolumeBar(ui->checkboxLineVolumeBar->checkState() == Qt::Checked);
-            m_lineChart->SetVolumeColor(static_cast<Qt::GlobalColor>(ui->comboboxLineVolumeBar->currentIndex()+2));
 
             //Mouse Display
             m_lineChart->EnableMouseDisplay(ui->checkboxCrosshairs->isChecked());

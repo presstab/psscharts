@@ -598,9 +598,6 @@
               <item>
                <widget class="QSpinBox" name="spinboxLineVolumeBar"/>
               </item>
-              <item>
-               <widget class="QComboBox" name="comboboxLineVolumeBar"/>
-              </item>
              </layout>
             </item>
            </layout>

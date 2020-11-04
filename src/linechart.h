@@ -85,7 +85,6 @@ public:
     void GetLineEquation(const QLineF& line, double& nSlope, double& nYIntercept);
     QColor GetSeriesColor(const uint32_t& nSeries) const;
     void EnableVolumeBar(bool fEnable);
-    void SetVolumeColor(const QColor& color);
     void SetVolumeBarWidth(int nWidth);
 };
 

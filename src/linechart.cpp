@@ -454,16 +454,13 @@ void LineChart::paintEvent(QPaintEvent *event)
         for (unsigned int i = 0; i < m_vSeries.size(); i++) {
             QPen penBar;
             penBar.setBrush(GetSeriesColor(i));
-            penBar.setWidth(m_lineWidth);
-            QPen penHighlight;
-            penHighlight.setBrush(GetSeriesColor(i));
-            penHighlight.setWidth(m_lineWidth);
             for (const std::pair<uint32_t, double> pair : m_vSeries.at(i)) {
                 QPointF chartBar = ConvertToVolumePoint(pair);
-                QPointF pointBar = QPointF(chartBar.x() + m_nBarWidth, chartBar.y());
-                QPointF pointOrigin = QPointF(chartBar.x() - m_nBarWidth, rectChart.bottom());
+                QPointF pointBar = QPointF(chartBar.x() + i*m_nBarWidth + m_nBarWidth, chartBar.y());
+                QPointF pointOrigin = QPointF(chartBar.x() + i*m_nBarWidth + 1, rectChart.bottom());
                 QRectF rect(pointBar, pointOrigin);
-                QBrush rectBrush = m_colorVolume;
+                QBrush rectBrush = GetSeriesColor(i);
+                painter.setPen(penBar);
                 painter.drawRect(rect);
                 if (m_fEnableFill) {
                     painter.fillRect(rect, rectBrush);
@@ -700,9 +697,4 @@ void LineChart::EnableVolumeBar(bool fEnable)
     m_fChangesMade = true;
 }
 
-void LineChart::SetVolumeColor(const QColor &color)
-{
-    m_colorVolume = color;
-    m_fChangesMade = true;
-}
 }//namespace
