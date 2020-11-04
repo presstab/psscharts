@@ -174,56 +174,117 @@ std::pair<uint32_t, double> LineChart::ConvertFromPlotPoint(const QPointF& point
     return pairValues;
 }
 
-void LineChart::AddDataPoint(const uint32_t& x, const double& y)
+/**
+ * @brief LineChart::AddDataPoint : Add a data point to a specific line series
+ * @param nSeries : The index of the series that is being altered.
+ * @param x
+ * @param y
+ */
+void LineChart::AddDataPoint(const uint32_t& nSeries, const uint32_t& x, const double& y)
 {
-    m_mapPoints.emplace(x, y);
+    if (m_vSeries.size() < nSeries+1) {
+        //Series does not exist
+        return;
+    }
+    m_vSeries.at(nSeries).emplace(x, y);
     ProcessChangedData();
 }
 
-void LineChart::RemoveDataPoint(const uint32_t &x)
+/**
+ * @brief LineChart::RemoveDataPoint : Remove a data point from a specific line series
+ * @param nSeries : The index of the series that is being altered.
+ * @param x
+ */
+void LineChart::RemoveDataPoint(const uint32_t& nSeries, const uint32_t &x)
 {
-    m_mapPoints.erase(x);
+    if (m_vSeries.size() < nSeries+1) {
+        //Series does not exist
+        return;
+    }
+    m_vSeries.at(nSeries).erase(x);
     ProcessChangedData();
 }
 
-void LineChart::SetDataPoints(const std::map<uint32_t, double>& mapPoints)
+/**
+ * @brief LineChart::SetDataPoints : Set the datapoints of a specific line series.
+ * @param mapPoints
+ * @param nSeries : The index of the series that is being changed or added.
+ */
+void LineChart::SetDataPoints(const std::map<uint32_t, double>& mapPoints, const uint32_t& nSeries)
 {
-    m_mapPoints = mapPoints;
+    if (m_vSeries.size() < nSeries+1) {
+        //Series does not exist yet
+        m_vSeries.resize(nSeries+1);
+    }
+    m_vSeries.at(nSeries) = mapPoints;
     ProcessChangedData();
 }
 
-void LineChart::AddVolumePoint(const uint32_t& x, const double& y)
+/**
+ * @brief LineChart::AddVolumePoint
+ * @param nSeries
+ * @param x
+ * @param y
+ */
+void LineChart::AddVolumePoint(const uint32_t& nSeries, const uint32_t& x, const double& y)
 {
-    m_mapVolume.emplace(x, y);
+    if (m_vVolume.size() < nSeries+1) {
+        //Series does not exist
+        return;
+    }
+    m_vVolume.at(nSeries).emplace(x, y);
+    ProcessChangedData();
 }
 
-void LineChart::RemoveVolumePoint(const uint32_t &x)
+/**
+ * @brief LineChart::RemoveVolumePoint
+ * @param nSeries
+ * @param x
+ */
+void LineChart::RemoveVolumePoint(const uint32_t& nSeries, const uint32_t &x)
 {
-    m_mapVolume.erase(x);
+    if (m_vVolume.size() < nSeries+1) {
+        //Series does not exist
+        return;
+    }
+    m_vVolume.at(nSeries).erase(x);
+    ProcessChangedData();
 }
 
-void LineChart::SetVolumePoints(const std::map<uint32_t, double>& mapPoints)
+
+/**
+ * @brief LineChart::SetDataPoints : Set the datapoints of a specific line series.
+ * @param mapPoints
+ * @param nSeries : The index of the series that is being changed or added.
+ */
+void LineChart::SetVolumePoints(const std::map<uint32_t, double>& mapPoints, const uint32_t& nSeries)
 {
-    m_mapVolume = mapPoints;
+    if (m_vVolume.size() < nSeries+1) {
+        //Series does not exist yet
+        m_vVolume.resize(nSeries+1);
+    }
+    m_vVolume.at(nSeries) = mapPoints;
+    ProcessChangedData();
 }
 
 void LineChart::ProcessChangedData()
 {
-    m_mapVolume.clear();
     m_pairXRange = {0, 0};
     m_pairYRange = {0, 0};
     bool fFirstRun = true;
-    for (const auto& pair : m_mapPoints) {
-        //Set min and max for x and y
-        if (fFirstRun || pair.first < m_pairXRange.first)
-            m_pairXRange.first = pair.first;
-        if (fFirstRun || pair.first > m_pairXRange.second)
-            m_pairXRange.second = pair.first;
-        if (fFirstRun || pair.second < m_pairYRange.first)
-            m_pairYRange.first = pair.second;
-        if (fFirstRun || pair.second > m_pairYRange.second)
-            m_pairYRange.second = pair.second;
-        fFirstRun = false;
+    for (const LineSeries& series : m_vSeries) {
+        for (const auto& pair : series) {
+            //Set min and max for x and y
+            if (fFirstRun || pair.first < m_pairXRange.first)
+                m_pairXRange.first = pair.first;
+            if (fFirstRun || pair.first > m_pairXRange.second)
+                m_pairXRange.second = pair.first;
+            if (fFirstRun || pair.second < m_pairYRange.first)
+                m_pairYRange.first = pair.second;
+            if (fFirstRun || pair.second > m_pairYRange.second)
+                m_pairYRange.second = pair.second;
+            fFirstRun = false;
+        }
     }
     m_fChangesMade = true;
 }
@@ -240,6 +301,24 @@ void LineChart::GetLineEquation(const QLineF& line, double& nSlope, double& nYIn
     nYIntercept = line.y1() - (nSlope * line.x1());
 }
 
+QColor LineChart::GetSeriesColor(const uint32_t& nSeries) const
+{
+    QColor color = Qt::black;
+    //Default colors if not set
+    if (nSeries == 1)
+        color = Qt::red;
+    else if (nSeries == 2)
+        color = Qt::blue;
+    else if (nSeries == 3)
+        color = Qt::green;
+    else if (nSeries == 4)
+        color = Qt::yellow;
+
+    if (m_vLineColor.size() >= nSeries + 1)
+        color = m_vLineColor.at(nSeries).color();
+    return color;
+}
+
 void LineChart::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event);
@@ -251,9 +330,9 @@ void LineChart::paintEvent(QPaintEvent *event)
     painter.fillRect(rect(), m_brushBackground);
 
     //If there is only one data point, then return without drawing anything but the background
-    if (m_mapPoints.size() <= 1) {
-        return;
-    }
+//    if (m_mapPoints.size() <= 1) {
+//        return;
+//    }
 
     //If auto precision is enabled, determine the precision to use
     if (m_settingsYLabels.AutoPrecisionEnabled()) {
@@ -301,78 +380,94 @@ void LineChart::paintEvent(QPaintEvent *event)
                 fMouseInChartArea = true;
             }
         }
-     }
+    }
 
-    //Create the lines that are drawn
-    QVector<QPointF> qvecPolygon;
-    QVector<QLineF> qvecLines;
+    //Clear any existing mouse dots
+    m_mousedisplay.ClearDots();
 
-    qvecPolygon.append(rectChart.bottomLeft());
-    bool fFirstRun = true;
-    QPointF pointPrev;
-    bool fMouseSet = false;
-    for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
-        QPointF point = ConvertToPlotPoint(pair);
-        qvecPolygon.append(point);
-        if (fFirstRun) {
+    //Draw each series
+    for (unsigned int i = 0; i < m_vSeries.size(); i++) {
+        const LineSeries& series = m_vSeries.at(i);
+
+        //Create the lines that are drawn
+        QVector<QPointF> qvecPolygon;
+        QVector<QLineF> qvecLines;
+
+        qvecPolygon.append(rectChart.bottomLeft());
+        bool fFirstRun = true;
+        QPointF pointPrev;
+        bool fMouseSet = false;
+
+        for (const std::pair<uint32_t, double>& pair : series) {
+            QPointF point = ConvertToPlotPoint(pair);
+            qvecPolygon.append(point);
+            if (fFirstRun) {
+                pointPrev = point;
+                fFirstRun = false;
+                continue;
+            }
+
+            QLineF line(pointPrev, point);
+            qvecLines.append(line);
             pointPrev = point;
-            fFirstRun = false;
-            continue;
-        }
 
-        QLineF line(pointPrev, point);
-        qvecLines.append(line);
-        pointPrev = point;
-
-        if (fMouseInChartArea && !fMouseSet) {
-            //Find the line that the mouse x point would belong on
-            if (lposMouse.x() >= line.x1() && lposMouse.x() <= line.x2()) {
-                double nLineSlope = 0;
-                double nLineYIntercept = 0;
-                GetLineEquation(line, nLineSlope, nLineYIntercept);
-                double y = nLineSlope * lposMouse.x() + nLineYIntercept;
-                m_mousedisplay.SetDot(QPointF(lposMouse.x(), y));
-                fMouseSet = true;
+            if (fMouseInChartArea && !fMouseSet) {
+                //Find the line that the mouse x point would belong on
+                if (lposMouse.x() >= line.x1() && lposMouse.x() <= line.x2()) {
+                    double nLineSlope = 0;
+                    double nLineYIntercept = 0;
+                    GetLineEquation(line, nLineSlope, nLineYIntercept);
+                    double y = nLineSlope * lposMouse.x() + nLineYIntercept;
+                    fMouseSet = true;
+                    QColor color = GetSeriesColor(i);
+                    m_mousedisplay.AddDot(QPointF(lposMouse.x(), y), color);
+                }
             }
         }
+
+        // Cleanly close the polygon
+        qvecPolygon.append(QPointF(rectChart.right(), rectChart.bottom()));
+
+        /**Todo - Support fill chart when there are multiple line series**/
+        if (m_fEnableFill && m_vSeries.size() == 1) {
+            //Fill in the chart area - Note: this is the most computational part of the painting
+            QPolygonF polygon(qvecPolygon);
+            painter.setBrush(m_brushFill);
+            painter.drawConvexPolygon(polygon); //supposedly faster than "drawPolygon()"
+        }
+
+        //Draw the lines
+        painter.save();
+
+        QBrush brush = GetSeriesColor(i);
+
+        QPen penLine;
+        penLine.setBrush(brush);
+        penLine.setWidth(m_lineWidth);
+        painter.setPen(penLine);
+        painter.drawLines(qvecLines);
+        painter.restore();
     }
-
-    // Cleanly close the polygon
-    qvecPolygon.append(QPointF(rectChart.right(), rectChart.bottom()));
-
-    if (m_fEnableFill) {
-        //Fill in the chart area - Note: this is the most computational part of the painting
-        QPolygonF polygon(qvecPolygon);
-        painter.setBrush(m_brushFill);
-        painter.drawConvexPolygon(polygon); //supposedly faster than "drawPolygon()"
-    }
-
-    //Draw the lines
-    painter.save();
-    QPen penLine;
-    penLine.setBrush(m_brushLine);
-    penLine.setWidth(m_lineWidth);
-    painter.setPen(penLine);
-    painter.drawLines(qvecLines);
-    painter.restore();
 
     //Draw Volume Bars
     if(m_fDrawVolume) {
-        QPen penBar;
-        penBar.setBrush(m_brushLine);
-        penBar.setWidth(m_lineWidth);
-        QPen penHighlight;
-        penHighlight.setBrush(m_brushLine);
-        penHighlight.setWidth(m_lineWidth);
-        for (const std::pair<uint32_t, double>& pair : m_mapVolume) {
-            QPointF chartBar = ConvertToVolumePoint(pair);
-            QPointF pointBar = QPointF(chartBar.x() + m_nBarWidth, chartBar.y());
-            QPointF pointOrigin = QPointF(chartBar.x() - m_nBarWidth, rectChart.bottom());
-            QRectF rect(pointBar, pointOrigin);
-            QBrush rectBrush = m_colorVolume;
-            painter.drawRect(rect);
-            if (m_fEnableFill) {
-                painter.fillRect(rect, rectBrush);
+        for (unsigned int i = 0; i < m_vSeries.size(); i++) {
+            QPen penBar;
+            penBar.setBrush(GetSeriesColor(i));
+            penBar.setWidth(m_lineWidth);
+            QPen penHighlight;
+            penHighlight.setBrush(GetSeriesColor(i));
+            penHighlight.setWidth(m_lineWidth);
+            for (const std::pair<uint32_t, double> pair : m_vSeries.at(i)) {
+                QPointF chartBar = ConvertToVolumePoint(pair);
+                QPointF pointBar = QPointF(chartBar.x() + m_nBarWidth, chartBar.y());
+                QPointF pointOrigin = QPointF(chartBar.x() - m_nBarWidth, rectChart.bottom());
+                QRectF rect(pointBar, pointOrigin);
+                QBrush rectBrush = m_colorVolume;
+                painter.drawRect(rect);
+                if (m_fEnableFill) {
+                    painter.fillRect(rect, rectBrush);
+                }
             }
         }
     }
@@ -443,6 +538,7 @@ void LineChart::paintEvent(QPaintEvent *event)
     if (!m_strTopTitle.isEmpty()) {
         painter.save();
         painter.setFont(m_fontTopTitle);
+        painter.setPen(m_colorTopTitle);
         QRect rectTopTitle = rectFull;
         rectTopTitle.setBottom(rectFull.top() + HeightTopTitleArea());
         rectTopTitle.setLeft(2*WidthYTitleArea());
@@ -454,6 +550,7 @@ void LineChart::paintEvent(QPaintEvent *event)
     if (!m_strTitleY.isEmpty()) {
         painter.save();
         painter.setFont(m_fontYTitle);
+        painter.setPen(m_colorYTitle);
         painter.rotate(-90);
 
         //The painter rotates around the (0,0) coordinate.
@@ -479,45 +576,52 @@ void LineChart::paintEvent(QPaintEvent *event)
         QPointF posBottom(lposMouse.x(), rectChart.bottom());
         painter.drawLine(QLineF(posTop, posBottom));
 
-        //Draw a dot on the line series where the mouse X point is
-        QPainterPath pathDot;
-        QPointF pointCircleCenter(m_mousedisplay.DotPos());
-        pathDot.addEllipse(pointCircleCenter, 5, 5);
-        painter.setBrush(m_brushLine.color());
-        painter.fillPath(pathDot, m_brushLine.color());
+        std::vector<MouseDot> vDots = m_mousedisplay.GetDots();
+        for (const MouseDot& mousedot : vDots) {
+            //Draw a dot on the line series where the mouse X point is
+            QPainterPath pathDot;
+            QPointF pointCircleCenter(mousedot.Pos());
+            pathDot.addEllipse(pointCircleCenter, 5, 5);
 
-        //Add a border to the dot
-        //        QPen pen;
-        //        pen.setColor(m_mousedisplay.LabelBackgroundColor());
-        //        pen.setWidth(2);
-        //        painter.setPen(pen);
-        //        painter.drawPath(pathDot);
+            //Set the mouse dot color equal to the line series it is drawn on
+            QBrush brushLine = mousedot.Color();
 
-        //Draw a small tooltip looking item showing the point's data (x,y)
-        auto pairData = ConvertFromPlotPoint(pointCircleCenter);
-        const uint32_t& nX = pairData.first;
-        const double& nY = pairData.second;
-        QString strLabel = "(";
-        if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
-            strLabel += TimeStampToString(nX);
-        } else {
-            strLabel += PrecisionToString(nX, m_settingsXLabels.Precision());
+            painter.setBrush(brushLine.color());
+            painter.fillPath(pathDot, brushLine.color());
+
+            //Add a border to the dot
+            //        QPen pen;
+            //        pen.setColor(m_mousedisplay.LabelBackgroundColor());
+            //        pen.setWidth(2);
+            //        painter.setPen(pen);
+            //        painter.drawPath(pathDot);
+
+            //Draw a small tooltip looking item showing the point's data (x,y)
+            auto pairData = ConvertFromPlotPoint(pointCircleCenter);
+            const uint32_t& nX = pairData.first;
+            const double& nY = pairData.second;
+            QString strLabel = "(";
+            if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
+                strLabel += TimeStampToString(nX);
+            } else {
+                strLabel += PrecisionToString(nX, m_settingsXLabels.Precision());
+            }
+            strLabel += ", ";
+            strLabel += PrecisionToString(nY, m_settingsYLabels.Precision());
+            strLabel += ")";
+
+            //Create the background of the tooltip
+            QRect rectDraw = MouseOverTooltipRect(painter, rectFull, pointCircleCenter, strLabel);
+
+            QPainterPath pathBackground;
+            pathBackground.addRoundedRect(rectDraw, 5, 5);
+            painter.fillPath(pathBackground, m_mousedisplay.LabelBackgroundColor());
+
+            //Draw the text of the tooltip
+            painter.setBrush(m_brushLabels);
+            painter.setPen(Qt::black);
+            painter.drawText(rectDraw, Qt::AlignCenter, strLabel);
         }
-        strLabel += ", ";
-        strLabel += PrecisionToString(nY, m_settingsYLabels.Precision());
-        strLabel += ")";
-
-        //Create the background of the tooltip
-        QRect rectDraw = MouseOverTooltipRect(painter, rectFull, pointCircleCenter, strLabel);
-
-        QPainterPath pathBackground;
-        pathBackground.addRoundedRect(rectDraw, 5, 5);
-        painter.fillPath(pathBackground, m_mousedisplay.LabelBackgroundColor());
-
-        //Draw the text of the tooltip
-        painter.setBrush(m_brushLabels);
-        painter.setPen(Qt::black);
-        painter.drawText(rectDraw, Qt::AlignCenter, strLabel);
     }
     m_fChangesMade = false;
 }
@@ -558,9 +662,12 @@ void LineChart::SetFillBrush(const QBrush &brush)
     m_fChangesMade = true;
 }
 
-void LineChart::SetLineBrush(const QBrush &brush)
+void LineChart::SetLineBrush(const uint32_t& nSeries, const QBrush &brush)
 {
-    m_brushLine = brush;
+    if (m_vLineColor.size() < nSeries + 1)
+        m_vLineColor.resize(nSeries+1);
+
+    m_vLineColor.at(nSeries) = brush;
     m_fChangesMade = true;
 }
 

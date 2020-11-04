@@ -42,6 +42,8 @@ SOFTWARE.
 class QColor;
 class QPaintEvent;
 
+typedef std::map<uint32_t, double> LineSeries;
+
 namespace PssCharts {
 
 class LineChart : public Chart
@@ -49,12 +51,12 @@ class LineChart : public Chart
     Q_OBJECT
 
 protected:
-    std::map<uint32_t, double> m_mapPoints;
-    std::map<uint32_t, double> m_mapVolume;
+    std::vector<LineSeries> m_vSeries;
+    std::vector<LineSeries> m_vVolume;
     QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair) const;
     QPointF ConvertToVolumePoint(const std::pair<uint32_t, double>& pair) const;
     std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point) override;
-    QBrush m_brushLine;
+    std::vector<QBrush> m_vLineColor; //Line color for each series
     QBrush m_brushFill;
     bool m_fEnableFill; //! Does the line get filled
 
@@ -67,21 +69,24 @@ protected:
 
 public:
     LineChart(QWidget* parent = nullptr);
-    void AddDataPoint(const uint32_t& x, const double& y);
-    void RemoveDataPoint(const uint32_t& x);
-    void SetDataPoints(const std::map<uint32_t, double>& mapPoints);
+    void AddDataPoint(const uint32_t& nSeries, const uint32_t& x, const double& y);
+    void RemoveDataPoint(const uint32_t& nSeries, const uint32_t& x);
+    void SetDataPoints(const std::map<uint32_t, double>& mapPoints, const uint32_t& nSeries);
+
+    void AddVolumePoint(const uint32_t& nSeries, const uint32_t& x, const double& y);
+    void RemoveVolumePoint(const uint32_t& nSeries, const uint32_t& x);
+    void SetVolumePoints(const std::map<uint32_t, double>& mapPoints, const uint32_t& nSeries);
+
     void paintEvent(QPaintEvent *event) override;
     void SetFillBrush(const QBrush& brush);
     void EnableFill(bool fEnable);
-    void SetLineBrush(const QBrush& brush);
+    void SetLineBrush(const uint32_t& nSeries, const QBrush& brush);
     void SetLineWidth(int nWidth);
     void GetLineEquation(const QLineF& line, double& nSlope, double& nYIntercept);
+    QColor GetSeriesColor(const uint32_t& nSeries) const;
     void EnableVolumeBar(bool fEnable);
     void SetVolumeColor(const QColor& color);
     void SetVolumeBarWidth(int nWidth);
-    void AddVolumePoint(const uint32_t& x, const double& y);
-    void RemoveVolumePoint(const uint32_t& x);
-    void SetVolumePoints(const std::map<uint32_t, double>& mapPoints);
 };
 
 } //namespace

@@ -39,6 +39,11 @@ void MouseDisplay::SetColor(const QColor &color)
     m_pen.setColor(color);
 }
 
+void MouseDisplay::AddDot(const QPointF &pos, const QColor &color)
+{
+    m_vDots.emplace_back(MouseDot(color, pos));
+}
+
 void MouseDisplay::SetLabelBackgroundColor(const QColor &color)
 {
     m_colorLabelBackground = color;
@@ -47,6 +52,15 @@ void MouseDisplay::SetLabelBackgroundColor(const QColor &color)
 void MouseDisplay::SetWidth(int nWidth)
 {
     m_pen.setWidth(nWidth);
+}
+
+MouseDot MouseDisplay::GetDot(const uint32_t &nSeries)
+{
+    if (m_vDots.size() >= nSeries+1) {
+        return m_vDots.at(nSeries);
+    }
+
+    return MouseDot();
 }
 
 } //namespace

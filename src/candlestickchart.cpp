@@ -262,16 +262,24 @@ std::map<uint32_t, Candle> CandlestickChart::ConvertLineToCandlestickData(const 
 
 std::map<uint32_t, Candle> CandlestickChart::ConvertLineToCandlestickData(const std::map<uint32_t, double> lineChartData, std::map<uint32_t, double>& volPoints, uint32_t candleTimePeriod)
 {
+    int volItems = 1;
+    double volume = 0;
     std::map<uint32_t, Candle> candleData = ConvertLineToCandlestickData(lineChartData, candleTimePeriod);
     std::map<uint32_t, double>::iterator it_vol = volPoints.begin();
     std::map<uint32_t, Candle>::iterator it_candle = candleData.begin();
     while (it_vol != volPoints.end() && it_candle != candleData.end()) {
         if(it_vol->first < it_candle->first) {
             // add volume to candle data
-            it_candle->second.m_volume += it_vol->second;
+            volume += it_vol->second;
+            volItems++;
             it_vol++;
         } else {
-            // change candle data
+            // set candle to average volume and change candle if value not set
+            if (it_candle->second.m_volume == 0) {
+                it_candle->second.m_volume = volume / volItems;
+                volume = 0;
+                volItems = 1;
+            }
             it_candle++;
         }
     }
@@ -631,6 +639,7 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
     if (!m_strTopTitle.isEmpty()) {
         painter.save();
         painter.setFont(m_fontTopTitle);
+        painter.setPen(m_colorTopTitle);
         QRect rectTopTitle = rectFull;
         rectTopTitle.setBottom(rectFull.top() + HeightTopTitleArea());
         rectTopTitle.setLeft(2*WidthYTitleArea());
@@ -642,6 +651,7 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
     if (!m_strTitleY.isEmpty()) {
         painter.save();
         painter.setFont(m_fontYTitle);
+        painter.setPen(m_colorYTitle);
         painter.rotate(-90);
 
         //The painter rotates around the (0,0) coordinate.

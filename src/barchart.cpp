@@ -272,7 +272,7 @@ void BarChart::paintEvent(QPaintEvent *event)
         QRectF rect(pointBar, pointOrigin);
         QBrush rectBrush = m_color;
         if (lposMouse.x() >= rect.x() - 2*m_nBarWidth && lposMouse.x() <= rect.x()) {
-            m_mousedisplay.SetDot(QPointF(chartBar.x(), chartBar.y()));
+            m_mousedisplay.AddDot(QPointF(chartBar.x(), chartBar.y()), m_color);
             if(m_fEnableHighlightBar) {
                 rectBrush = m_highlight;
             }
@@ -360,6 +360,7 @@ void BarChart::paintEvent(QPaintEvent *event)
     if (!m_strTopTitle.isEmpty()) {
         painter.save();
         painter.setFont(m_fontTopTitle);
+        painter.setPen(m_colorTopTitle);
         QRect rectTopTitle = rectFull;
         rectTopTitle.setBottom(rectFull.top() + HeightTopTitleArea());
         rectTopTitle.setLeft(2*WidthYTitleArea());
@@ -371,6 +372,7 @@ void BarChart::paintEvent(QPaintEvent *event)
     if (!m_strTitleY.isEmpty()) {
         painter.save();
         painter.setFont(m_fontYTitle);
+        painter.setPen(m_colorYTitle);
         painter.rotate(-90);
 
         //The painter rotates around the (0,0) coordinate.
@@ -397,7 +399,8 @@ void BarChart::paintEvent(QPaintEvent *event)
         painter.drawLine(QLineF(posTop, posBottom));
 
         //Draw a small tooltip looking item showing the point's data (x,y)
-        QPointF pointCircleCenter(m_mousedisplay.DotPos());
+        MouseDot mouseDot = m_mousedisplay.GetDot(0);
+        QPointF pointCircleCenter(mouseDot.Pos());
         auto pairData = ConvertFromPlotPoint(pointCircleCenter);
         const uint32_t& nX = pairData.first;
         const double& nY = pairData.second;
