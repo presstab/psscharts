@@ -141,7 +141,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->checkboxCandleVolumeBar->setChecked(true);
     ui->comboboxCandleVolumeBar->addItems(listQtColors);
-    ui->comboboxCandleVolumeBar->setCurrentIndex(9); //magenta
+    ui->comboboxCandleVolumeBar->setCurrentIndex(7); //blue
 
     // Line Volume Bar
     ui->checkboxLineVolumeBar->setChecked(true);
@@ -217,7 +217,7 @@ MainWindow::MainWindow(QWidget *parent) :
                 y = nLastPoint*0.7;
         }
         mapPoints.emplace(i*(60*60*24), y);
-        if (i % 5 == 0) {
+        if (i % 7 == 0) {
             volPoints.emplace(i*(60*60*24), y);
         }
 
@@ -227,8 +227,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_lineChart->SetVolumePoints(volPoints);
     m_lineChart->setMinimumSize(QSize(600,400));
     m_lineChart->hide();
-    m_candleChart->SetDataPoints(mapPoints, 7*60*60*24);
-    m_candleChart->SetVolumePoints(volPoints);
+    m_candleChart->SetDataPoints(mapPoints, volPoints, 7*60*60*24);
     m_candleChart->setMinimumSize(QSize(600,400));
     m_candleChart->hide();
     m_barChart->SetDataPoints(mapPoints);

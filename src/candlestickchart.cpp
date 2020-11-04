@@ -61,7 +61,7 @@ CandlestickChart::CandlestickChart(QWidget *parent) : Chart (ChartType::CANDLEST
     m_settingsYLabels.SetNull();
 
     m_axisSections = 0;
-    m_yPadding = 0;
+    m_yPadding = 1;
     m_nCandleSpacing = 2;
     m_nCandleLineWidth = 2;
     m_nCandleWidth = 8;
@@ -260,6 +260,24 @@ std::map<uint32_t, Candle> CandlestickChart::ConvertLineToCandlestickData(const 
     return candleData;
 }
 
+std::map<uint32_t, Candle> CandlestickChart::ConvertLineToCandlestickData(const std::map<uint32_t, double> lineChartData, std::map<uint32_t, double>& volPoints, uint32_t candleTimePeriod)
+{
+    std::map<uint32_t, Candle> candleData = ConvertLineToCandlestickData(lineChartData, candleTimePeriod);
+    std::map<uint32_t, double>::iterator it_vol = volPoints.begin();
+    std::map<uint32_t, Candle>::iterator it_candle = candleData.begin();
+    while (it_vol != volPoints.end() && it_candle != candleData.end()) {
+        if(it_vol->first < it_candle->first) {
+            // add volume to candle data
+            it_candle->second.m_volume += it_vol->second;
+            it_vol++;
+        } else {
+            // change candle data
+            it_candle++;
+        }
+    }
+    return candleData;
+}
+
 void CandlestickChart::SetDataPoints(std::map<uint32_t, Candle>& mapPoints)
 {
     m_mapPoints = mapPoints;
@@ -272,6 +290,15 @@ void CandlestickChart::SetDataPoints(std::map<uint32_t, double>& mapPoints, uint
         m_nCandleTimePeriod = candleTimePeriod;
     }
     m_mapPoints = ConvertLineToCandlestickData(mapPoints, m_nCandleTimePeriod);
+    ProcessChangedData();
+}
+
+void CandlestickChart::SetDataPoints(std::map<uint32_t, double>& mapPoints, std::map<uint32_t, double>& volPoints, uint32_t candleTimePeriod)
+{
+    if(candleTimePeriod) {
+        m_nCandleTimePeriod = candleTimePeriod;
+    }
+    m_mapPoints = ConvertLineToCandlestickData(mapPoints, volPoints, m_nCandleTimePeriod);
     ProcessChangedData();
 }
 
@@ -326,16 +353,20 @@ void CandlestickChart::ProcessChangedData()
             m_pairXRange.first = rit->first;
         if (fFirstRun || rit->first > m_pairXRange.second)
             m_pairXRange.second = rit->first;
-        if (rit->second.m_low < m_pairYRange.first)
+        if (fFirstRun || rit->second.m_low < m_pairYRange.first)
             m_pairYRange.first = rit->second.m_low;
-        if (rit->second.m_high > m_pairYRange.second)
+        if (fFirstRun || rit->second.m_high > m_pairYRange.second)
             m_pairYRange.second = rit->second.m_high;
         fFirstRun = false;
     }
     // Add y-axis buffer for candlestick data
-    double buffer = m_yPadding * (m_pairYRange.second - m_pairYRange.first);
-    m_pairYRange.first -= buffer;
+    double buffer = m_yPadding * (m_pairYRange.second - m_pairYRange.first) / 20;
     m_pairYRange.second += buffer;
+    // Increase buffer for the volume bars
+    if(m_fDrawVolume) {
+        buffer *= 3;
+    }
+    m_pairYRange.first -= buffer;
     m_fChangesMade = true;
 }
 
@@ -385,6 +416,7 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
         }
     }
 
+    ProcessChangedData();
     QRect rectFull = rect();
     QRect rectChart = ChartArea();
 
@@ -402,7 +434,7 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
         }
      }
 
-    //Draw axis sections next so that they get covered up by chart fill
+    //Draw axis sections
     if (m_axisSections > 0) {
         painter.save();
         painter.setPen(m_penAxisSeparater);
@@ -453,7 +485,6 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
     //Draw Candlesticks
     QPen penCandle;
     penCandle.setWidth(m_nCandleLineWidth);
-    ProcessChangedData();
     std::map<uint32_t, Candle>::reverse_iterator rit;
     for (rit = m_mapPoints.rbegin(); rit != m_mapPoints.rend(); ++rit) {
         std::pair<uint32_t, Candle> chartCandle = ConvertToCandlePlotPoint(*rit);
@@ -574,7 +605,9 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
             m_strOHLC += "H:" + QString::number(currentCandle.m_high) + "\t";
             m_strOHLC += "L:" + QString::number(currentCandle.m_low) + "\t";
             m_strOHLC += "C:" + QString::number(currentCandle.m_close) + "\t";
-            m_strOHLC += "V:" + QString::number(currentCandle.m_volume) + "\t";
+            if (m_fDrawVolume) {
+                m_strOHLC += "V:" + QString::number(currentCandle.m_volume) + "\t";
+            }
             m_strOHLC += QString::number((currentCandle.m_close - currentCandle.m_open)/ currentCandle.m_open)+ "%";
         }
         QRect rectInfo = rectFull;

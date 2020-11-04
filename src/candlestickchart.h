@@ -88,6 +88,7 @@ protected:
     std::pair<uint32_t, Candle> ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle>& pair);
     uint32_t ConvertCandlePlotPointTime(const QPointF& point);
     std::map<uint32_t, Candle> ConvertLineToCandlestickData(const std::map<uint32_t, double> lineChartData, uint32_t candleTimePeriod);
+    std::map<uint32_t, Candle> ConvertLineToCandlestickData(const std::map<uint32_t, double> lineChartData, std::map<uint32_t, double>& volPoints, uint32_t candleTimePeriod);
 
     void wheelEvent(QWheelEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
