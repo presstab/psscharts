@@ -50,19 +50,18 @@ class LineChart : public Chart
 {
     Q_OBJECT
 
-private:
-    static const uint32_t VERSION_MAJOR = 0;
-    static const uint32_t VERSION_MINOR = 1;
-    static const uint32_t VERSION_REVISION = 5;
-    static const uint32_t VERSION_BUILD = 0;
-
 protected:
     std::vector<LineSeries> m_vSeries;
+    std::vector<LineSeries> m_vVolume;
     QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair) const;
+    QPointF ConvertToVolumePoint(const std::pair<uint32_t, double>& pair) const;
     std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point) override;
     std::vector<QBrush> m_vLineColor; //Line color for each series
     QBrush m_brushFill;
     bool m_fEnableFill; //! Does the line get filled
+
+    bool m_fDrawVolume;
+    double m_nBarWidth;
 
     QRect MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const;
     void ProcessChangedData() override;
@@ -72,6 +71,11 @@ public:
     void AddDataPoint(const uint32_t& nSeries, const uint32_t& x, const double& y);
     void RemoveDataPoint(const uint32_t& nSeries, const uint32_t& x);
     void SetDataPoints(const std::map<uint32_t, double>& mapPoints, const uint32_t& nSeries);
+
+    void AddVolumePoint(const uint32_t& nSeries, const uint32_t& x, const double& y);
+    void RemoveVolumePoint(const uint32_t& nSeries, const uint32_t& x);
+    void SetVolumePoints(const std::map<uint32_t, double>& mapPoints, const uint32_t& nSeries);
+
     void paintEvent(QPaintEvent *event) override;
     void SetFillBrush(const QBrush& brush);
     void EnableFill(bool fEnable);
@@ -79,6 +83,8 @@ public:
     void SetLineWidth(int nWidth);
     void GetLineEquation(const QLineF& line, double& nSlope, double& nYIntercept);
     QColor GetSeriesColor(const uint32_t& nSeries) const;
+    void EnableVolumeBar(bool fEnable);
+    void SetVolumeBarWidth(int nWidth);
 };
 
 } //namespace

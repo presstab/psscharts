@@ -48,12 +48,6 @@ class BarChart : public Chart
 {
     Q_OBJECT
 
-private:
-    static const uint32_t VERSION_MAJOR = 0;
-    static const uint32_t VERSION_MINOR = 1;
-    static const uint32_t VERSION_REVISION = 6;
-    static const uint32_t VERSION_BUILD = 0;
-
 protected:
     std::map<uint32_t, double> m_mapPoints;
     QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair);
