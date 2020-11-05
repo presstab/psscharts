@@ -27,6 +27,7 @@ SOFTWARE.
 
 #include <QMainWindow>
 #include "src/chart.h"
+#include "src/legendwidget.h"
 
 namespace Ui {
 class MainWindow;
@@ -49,6 +50,8 @@ private:
     PssCharts::BarChart* m_barChart;
     PssCharts::PieChart* m_pieChart;
     PssCharts::ChartType m_chartType;
+    LegendWidget* m_legend;
+
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);

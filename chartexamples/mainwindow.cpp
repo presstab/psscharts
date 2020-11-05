@@ -70,17 +70,20 @@ MainWindow::MainWindow(QWidget *parent) :
     m_candleChart = new PssCharts::CandlestickChart(this);
     m_barChart = new PssCharts::BarChart(this);
     m_pieChart = new PssCharts::PieChart(this);
+    m_legend = new LegendWidget(this);
     QSize sizeScreen = QGuiApplication::screens()[0]->size();
     if (sizeScreen.height() > sizeScreen.width()) {
         ui->formLayout->addRow(m_lineChart);
         ui->formLayout->addRow(m_candleChart);
         ui->formLayout->addRow(m_barChart);
         ui->formLayout->addRow(m_pieChart);
+        ui->formLayout->addRow(m_legend);
     } else {
         ui->hlayoutMain->addWidget(m_lineChart, /*stretch*/1);
         ui->hlayoutMain->addWidget(m_candleChart, /*stretch*/1);
         ui->hlayoutMain->addWidget(m_barChart, /*stretch*/1);
         ui->hlayoutMain->addWidget(m_pieChart, /*stretch*/1);
+        ui->hlayoutMain->addWidget(m_legend, /*stretch*/1);
     }
     m_chartType = PssCharts::ChartType::PIE;
 
