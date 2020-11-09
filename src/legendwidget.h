@@ -2,12 +2,14 @@
 #define LEGENDWIDGET_H
 
 #include <QWidget>
+#include <QDockWidget>
+#include "titlebar.h"
 
 namespace Ui {
 class LegendWidget;
 }
 
-class LegendWidget : public QWidget
+class LegendWidget : public QDockWidget
 {
     Q_OBJECT
 
@@ -28,6 +30,16 @@ private:
     int HeightTopTitleArea() const;
     void SetTopTitleHeight(int height);
     int m_nLabelSize;
+    TitleBar* m_widgetTitleBar;
+
+private slots:
+    void TitleBarRequestClose();
+
+public:
+    QString Title() const;
+
+signals:
+    void RequestClose();
 };
 
 #endif // LEGENDWIDGET_H

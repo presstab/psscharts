@@ -24,6 +24,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += c++11
 
+ICON = $$PWD/src/icons/chart.icns
+
 SOURCES += \
         chartexamples/main.cpp \
         chartexamples/mainwindow.cpp \
@@ -34,7 +36,8 @@ SOURCES += \
         src/chart.cpp \
         src/piechart.cpp \
         src/stringutil.cpp \
-        src/mousedisplay.cpp
+        src/mousedisplay.cpp \
+        src/titlebar.cpp
 
 HEADERS += \
         chartexamples/mainwindow.h \
@@ -46,7 +49,8 @@ HEADERS += \
         src/piechart.h \
         src/stringutil.h \
         src/axislabelsettings.h \
-        src/mousedisplay.h
+        src/mousedisplay.h \
+        src/titlebar.h
 
 FORMS += \
         chartexamples/mainwindow.ui \

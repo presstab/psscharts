@@ -8,20 +8,27 @@
 #include <QPainter>
 
 LegendWidget::LegendWidget(QWidget *parent) :
-    QWidget(parent),
+    QDockWidget(parent),
     ui(new Ui::LegendWidget)
 {
     ui->setupUi(this);
+//    setTitleBarWidget(m_widgetTitleBar);
+    m_widgetTitleBar = new TitleBar(this);
+    this->setAccessibleName("SideBarWidget");
+    setTitleBarWidget(m_widgetTitleBar);
+    setAllowedAreas(Qt::AllDockWidgetAreas);
+    setFeatures(QDockWidget::AllDockWidgetFeatures);
     m_strTitle = "Chart Legend";
     m_topTitleHeight = -1;
     m_nLabelSize = 11;
     m_data.emplace_back(std::make_pair(QString("red"), QColor(Qt::red)));
     m_data.emplace_back(std::make_pair(QString("blue"), QColor(Qt::blue)));
     m_data.emplace_back(std::make_pair(QString("green"), QColor(Qt::green)));
+    connect(m_widgetTitleBar, &TitleBar::CloseRequested, this, &LegendWidget::TitleBarRequestClose);
 }
 
 LegendWidget::LegendWidget(std::vector<std::pair<QString, QColor>> labels, QWidget *parent) :
-    QWidget(parent),
+    QDockWidget(parent),
     ui(new Ui::LegendWidget)
 {
     ui->setupUi(this);
@@ -86,4 +93,14 @@ int LegendWidget::HeightTopTitleArea() const
 void LegendWidget::SetTopTitleHeight(int height)
 {
     m_topTitleHeight = height;
+}
+
+void LegendWidget::TitleBarRequestClose()
+{
+    setVisible(false);
+}
+
+QString LegendWidget::Title() const
+{
+    return m_widgetTitleBar->Title();
 }
