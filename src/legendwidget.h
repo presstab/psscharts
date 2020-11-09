@@ -16,11 +16,14 @@ public:
     LegendWidget(std::vector<std::pair<QString, QColor>> labels, QWidget *parent = nullptr);
     ~LegendWidget();
     void SetLegendData(std::vector<std::pair<QString, QColor>> chartData);
-    void ClearLayout(QLayout *layout);
+    void ClearLayout();
+    void SetTitle(QString title);
 
 private:
     Ui::LegendWidget *ui;
     std::vector<std::pair<QString, QColor>> m_data;
+    QString m_strTitle;
+
 };
 
 #endif // LEGENDWIDGET_H

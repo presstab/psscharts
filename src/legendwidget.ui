@@ -6,16 +6,16 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>413</width>
+    <height>404</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <widget class="QLabel" name="labelLegend">
+  <layout class="QFormLayout" name="formLayout">
+   <item row="0" column="1">
+    <widget class="QLabel" name="labelTitle">
      <property name="text">
       <string>Chart Legend</string>
      </property>
@@ -24,8 +24,8 @@
      </property>
     </widget>
    </item>
-   <item>
-    <layout class="QFormLayout" name="formLayout"/>
+   <item row="1" column="1">
+    <layout class="QFormLayout" name="formLayoutLabels"/>
    </item>
   </layout>
  </widget>
