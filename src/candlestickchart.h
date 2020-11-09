@@ -49,13 +49,15 @@ struct Candle {
     double m_high;
     double m_low;
     double m_close;
+    double m_volume;
     Candle() {
         m_open = 0;
         m_high = 0;
         m_low = 0;
         m_close = 0;
+        m_volume = 0;
     }
-    Candle(double open, double high, double low, double close) {
+    Candle(double open, double high, double low, double close, double volume = 0) {
         if (high < std::max(open, std::max(low, close))) {
             throw "High is not the maximum value";
         }
@@ -66,21 +68,16 @@ struct Candle {
         m_high = high;
         m_low = low;
         m_close = close;
+        m_volume = volume;
     }
     bool isNull() {
-        return this->m_low == 0.0 && this->m_high == 0.0 && this->m_low == 0.0 && this->m_close == 0.0;
+        return this->m_low == 0.0 && this->m_high == 0.0 && this->m_low == 0.0 && this->m_close == 0.0 && this->m_volume == 0.0;
     }
 };
 
 class CandlestickChart : public Chart
 {
     Q_OBJECT
-
-private:
-    static const uint32_t VERSION_MAJOR = 0;
-    static const uint32_t VERSION_MINOR = 1;
-    static const uint32_t VERSION_REVISION = 5;
-    static const uint32_t VERSION_BUILD = 0;
 
 protected:
     std::map<uint32_t, Candle> m_mapPoints;
@@ -91,6 +88,7 @@ protected:
     std::pair<uint32_t, Candle> ConvertToCandlePlotPoint(const std::pair<uint32_t, Candle>& pair);
     uint32_t ConvertCandlePlotPointTime(const QPointF& point);
     std::map<uint32_t, Candle> ConvertLineToCandlestickData(const std::map<uint32_t, double> lineChartData, uint32_t candleTimePeriod);
+    std::map<uint32_t, Candle> ConvertLineToCandlestickData(const std::map<uint32_t, double> lineChartData, std::map<uint32_t, double>& volPoints, uint32_t candleTimePeriod);
 
     void wheelEvent(QWheelEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
@@ -101,6 +99,7 @@ protected:
     bool m_fDrawOutline;
     bool m_fDisplayCandleDash;
     bool m_fDisplayOHLC;
+    bool m_fDrawVolume;
 
     double m_nCandleWidth;
     double m_nCandleMaxWidth;
@@ -119,20 +118,27 @@ protected:
     QColor m_colorDownTail;
     QColor m_colorUpDash;
     QColor m_colorDownDash;
+    QColor m_colorVolume;
     QFont m_fontOHLC;
     QString m_strOHLC;
 
 public:
     CandlestickChart(QWidget* parent = nullptr);
 
+    void AddVolumePoint(const uint32_t& x, const double& y);
+    void RemoveVolumePoint(const uint32_t& x);
+    void SetVolumePoints(const std::map<uint32_t, double>& mapPoints);
+
     void EnableCandleFill(bool fEnable);
     void EnableWick(bool fEnable);
     void EnableCandleBorder(bool fEnable);
     void EnableCandleDash(bool fEnable);
     void EnableOHLCDisplay(bool fEnable);
+    void EnableVolumeBar(bool fEnable);
 
     void SetDataPoints(std::map<uint32_t, Candle>& mapPoints);
     void SetDataPoints(std::map<uint32_t, double>& mapPoints, uint32_t candleTimePeriod = 0);
+    void SetDataPoints(std::map<uint32_t, double>& mapPoints, std::map<uint32_t, double>& volPoints, uint32_t candleTimePeriod = 0);
     void SetCandleBodyColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetCandleLineColor(const QColor& upColor, const QColor& downColor = QColor());
     void SetTailColor(const QColor& upColor, const QColor& downColor = QColor());
@@ -142,6 +148,7 @@ public:
     void SetCandleWidth(int nWidth, int nMinWidth, int nMaxWidth);
     void SetCandleTimePeriod(uint32_t nTime);
     void SetOLHCFont(const QFont &font);
+    void SetVolumeColor(const QColor& color);
 
 signals:
     void candleWidthChanged(int dChange);

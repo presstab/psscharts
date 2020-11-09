@@ -62,12 +62,15 @@ LineChart::LineChart(QWidget *parent) : Chart(ChartType::LINE, parent)
     m_settingsYLabels.SetNull();
 
     m_axisSections = 0;
-    m_yPadding = 0;
+    m_yPadding = 1;
     m_fEnableFill = true;
     m_fChangesMade = true;
     m_rightMargin = -1;
     m_topTitleHeight = -1;
     m_precision = 100000000;
+
+    m_fDrawVolume = true;
+    m_nBarWidth = 5;
 
     setMouseTracking(true);
 }
@@ -107,6 +110,46 @@ QPointF LineChart::ConvertToPlotPoint(const std::pair<uint32_t, double> &pair) c
         dValueY = rectChart.top() + (nHeight/2);
     } else {
         dValueY /= nSpanY;
+        dValueY = rectChart.bottom() - dValueY; // Qt uses inverted Y axis
+    }
+    return QPointF(nValueX, dValueY);
+}
+
+/**
+ * @brief LineChart::ConvertToVolumePoint Convert to a data point to be used in volume bar chart at bottom of graph
+ * @param pair
+ * @return
+ */
+QPointF LineChart::ConvertToVolumePoint(const std::pair<uint32_t, double> &pair) const
+{
+    QRect rectChart = ChartArea();
+    if (m_yPadding > 0) {
+        //Y padding will make it so that there is an area on the top and bottom of the ChartArea
+        //that does not get drawn in. It makes it so the lines don't go right onto the edges.
+        rectChart.setBottom(rectChart.bottom() - m_yPadding);
+        rectChart.setTop(rectChart.top() + m_yPadding);
+    }
+
+    //compute point-value of X
+    int nWidth = rectChart.width();
+    double nValueMaxX = (MaxX() - MinX());
+    double nValueX = ((pair.first - MinX()) / nValueMaxX);
+    nValueX *= nWidth;
+    nValueX += rectChart.left();
+
+    //compute point-value of Volume
+    int nHeight = rectChart.height();
+    uint64_t y1 = pair.second * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
+    uint64_t nMaxY = MaxY()*m_precision;
+    uint64_t nMinY = MinY()*m_precision;
+    uint64_t nSpanY = (nMaxY - nMinY);
+    uint64_t nValueY = (y1 - nMinY);
+    nValueY *= nHeight;
+    double dValueY = nValueY;
+    if (nSpanY == 0) {
+        dValueY = rectChart.top() + (nHeight/2);
+    } else {
+        dValueY /= 10*nSpanY;
         dValueY = rectChart.bottom() - dValueY; // Qt uses inverted Y axis
     }
     return QPointF(nValueX, dValueY);
@@ -181,6 +224,52 @@ void LineChart::SetDataPoints(const std::map<uint32_t, double>& mapPoints, const
     ProcessChangedData();
 }
 
+/**
+ * @brief LineChart::AddVolumePoint : Add a data point for volume for a specific series
+ * @param nSeries: index of the series being altered
+ * @param x: date of data
+ * @param y: volume
+ */
+void LineChart::AddVolumePoint(const uint32_t& nSeries, const uint32_t& x, const double& y)
+{
+    if (m_vVolume.size() < nSeries+1) {
+        //Series does not exist
+        return;
+    }
+    m_vVolume.at(nSeries).emplace(x, y);
+    ProcessChangedData();
+}
+
+/**
+ * @brief LineChart::RemoveVolumePoint: Remove volume data for a specific series
+ * @param nSeries: index of series being altered
+ * @param x: date of data
+ */
+void LineChart::RemoveVolumePoint(const uint32_t& nSeries, const uint32_t &x)
+{
+    if (m_vVolume.size() < nSeries+1) {
+        //Series does not exist
+        return;
+    }
+    m_vVolume.at(nSeries).erase(x);
+    ProcessChangedData();
+}
+
+/**
+ * @brief LineChart::SetVolumePoints : Set the datapoints for the volume of a specific line series.
+ * @param mapPoints
+ * @param nSeries : The index of the series that is being changed or added
+ */
+void LineChart::SetVolumePoints(const std::map<uint32_t, double>& mapPoints, const uint32_t& nSeries)
+{
+    if (m_vVolume.size() < nSeries+1) {
+        //Series does not exist yet
+        m_vVolume.resize(nSeries+1);
+    }
+    m_vVolume.at(nSeries) = mapPoints;
+    ProcessChangedData();
+}
+
 void LineChart::ProcessChangedData()
 {
     m_pairXRange = {0, 0};
@@ -199,6 +288,11 @@ void LineChart::ProcessChangedData()
                 m_pairYRange.second = pair.second;
             fFirstRun = false;
         }
+    }
+    // Add y-axis buffer for the volume bars
+    if(m_fDrawVolume) {
+        double buffer = m_yPadding * (m_pairYRange.second - m_pairYRange.first) / 10;
+        m_pairYRange.first -= buffer;
     }
     m_fChangesMade = true;
 }
@@ -362,6 +456,28 @@ void LineChart::paintEvent(QPaintEvent *event)
         painter.drawLines(qvecLines);
         painter.restore();
     }
+
+    //Draw Volume Bars
+    if(m_fDrawVolume) {
+        for (unsigned int i = 0; i < m_vSeries.size(); i++) {
+            QPen penBar;
+            penBar.setBrush(GetSeriesColor(i));
+            for (const std::pair<uint32_t, double> pair : m_vSeries.at(i)) {
+                QPointF chartBar = ConvertToVolumePoint(pair);
+                QPointF pointBar = QPointF(chartBar.x() + i*m_nBarWidth + m_nBarWidth, chartBar.y());
+                QPointF pointOrigin = QPointF(chartBar.x() + i*m_nBarWidth + 1, rectChart.bottom());
+                QRectF rect(pointBar, pointOrigin);
+                QBrush rectBrush = GetSeriesColor(i);
+                painter.setPen(penBar);
+                painter.drawRect(rect);
+                if (m_fEnableFill) {
+                    painter.fillRect(rect, rectBrush);
+                }
+            }
+        }
+    }
+    painter.save();
+    painter.restore();
 
     //Draw axis sections next so that they get covered up by chart fill
     if (m_axisSections > 0) {
@@ -566,6 +682,12 @@ void LineChart::SetLineWidth(int nWidth)
     m_fChangesMade = true;
 }
 
+void LineChart::SetVolumeBarWidth(int nWidth)
+{
+    m_nBarWidth = nWidth;
+    m_fChangesMade = true;
+}
+
 /**
  * Set the linechart to fill in the area between the line and the bottom of the chart.
  * Default is enabled.
@@ -574,6 +696,13 @@ void LineChart::SetLineWidth(int nWidth)
 void LineChart::EnableFill(bool fEnable)
 {
     m_fEnableFill = fEnable;
+    m_fChangesMade = true;
+}
+
+void LineChart::EnableVolumeBar(bool fEnable)
+{
+    m_fDrawVolume = fEnable;
+    m_fChangesMade = true;
 }
 
 }//namespace

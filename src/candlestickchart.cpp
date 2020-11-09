@@ -61,7 +61,7 @@ CandlestickChart::CandlestickChart(QWidget *parent) : Chart (ChartType::CANDLEST
     m_settingsYLabels.SetNull();
 
     m_axisSections = 0;
-    m_yPadding = 0;
+    m_yPadding = 1;
     m_nCandleSpacing = 2;
     m_nCandleLineWidth = 2;
     m_nCandleWidth = 8;
@@ -81,11 +81,13 @@ CandlestickChart::CandlestickChart(QWidget *parent) : Chart (ChartType::CANDLEST
     m_colorDownTail = Qt::darkRed;
     m_colorUpDash = Qt::darkGreen;
     m_colorDownDash = Qt::darkRed;
+    m_colorVolume = Qt::gray;
     m_fFillCandle = true;
     m_fDrawWick = true;
     m_fDrawOutline = true;
     m_fDisplayCandleDash = false;
     m_fDisplayOHLC = true;
+    m_fDrawVolume = true;
     m_fontOHLC.setPointSize(8);
 
     setMouseTracking(true);
@@ -120,65 +122,70 @@ std::pair<uint32_t, Candle> CandlestickChart::ConvertToCandlePlotPoint(const std
         m_nCandles++;
     }
 
-    //compute point-value of Open
+    // get values of Y
     int nHeight = rectChart.height();
+    uint64_t nMaxY = MaxY()*m_precision;
+    uint64_t nMinY = MinY()*m_precision;
+    uint64_t nSpanY = (nMaxY - nMinY);
+
+    //compute point-value of Open
     uint64_t nOpen = pair.second.m_open * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
-    uint64_t nMaxOpen = MaxY()*m_precision;
-    uint64_t nMinOpen = MinY()*m_precision;
-    uint64_t nSpanOpen = (nMaxOpen - nMinOpen);
-    uint64_t nValueOpen = (nOpen - nMinOpen);
+    uint64_t nValueOpen = (nOpen - nMinY);
     nValueOpen *= nHeight;
     double dValueOpen = nValueOpen;
-    if (nSpanOpen == 0) {
+    if (nSpanY == 0) {
         dValueOpen = rectChart.top() + (nHeight/2);
     } else {
-        dValueOpen /= nSpanOpen;
+        dValueOpen /= nSpanY;
         dValueOpen = rectChart.bottom() - dValueOpen; // Qt uses inverted Y axis
     }
 
     //compute point-value of High
     uint64_t nHigh = pair.second.m_high * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
-    uint64_t nMaxHigh = MaxY()*m_precision;
-    uint64_t nMinHigh = MinY()*m_precision;
-    uint64_t nSpanHigh = (nMaxHigh - nMinHigh);
-    uint64_t nValueHigh = (nHigh - nMinHigh);
+    uint64_t nValueHigh = (nHigh - nMinY);
     nValueHigh *= nHeight;
     double dValueHigh = nValueHigh;
-    if (nSpanHigh == 0) {
+    if (nSpanY == 0) {
         dValueHigh = rectChart.top() + (nHeight/2);
     } else {
-        dValueHigh /= nSpanHigh;
+        dValueHigh /= nSpanY;
         dValueHigh = rectChart.bottom() - dValueHigh; // Qt uses inverted Y axis
     }
 
     //compute point-value of Low
     uint64_t nLow = pair.second.m_low * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
-    uint64_t nMaxLow = MaxY()*m_precision;
-    uint64_t nMinLow = MinY()*m_precision;
-    uint64_t nSpanLow = (nMaxLow - nMinLow);
-    uint64_t nValueLow = (nLow - nMinLow);
+    uint64_t nValueLow = (nLow - nMinY);
     nValueLow *= nHeight;
     double dValueLow = nValueLow;
-    if (nSpanLow == 0) {
+    if (nSpanY == 0) {
         dValueLow = rectChart.top() + (nHeight/2);
     } else {
-        dValueLow /= nSpanLow;
+        dValueLow /= nSpanY;
         dValueLow = rectChart.bottom() - dValueLow; // Qt uses inverted Y axis
     }
 
     //compute point-value of Close
     uint64_t nClose = pair.second.m_close * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
-    uint64_t nMaxClose = MaxY()*m_precision;
-    uint64_t nMinClose = MinY()*m_precision;
-    uint64_t nSpanClose = (nMaxClose - nMinClose);
-    uint64_t nValueClose = (nClose - nMinClose);
+    uint64_t nValueClose = (nClose - nMinY);
     nValueClose *= nHeight;
     double dValueClose = nValueClose;
-    if (nSpanClose == 0) {
+    if (nSpanY == 0) {
         dValueClose = rectChart.top() + (nHeight/2);
     } else {
-        dValueClose /= nSpanClose;
+        dValueClose /= nSpanY;
         dValueClose = rectChart.bottom() - dValueClose; // Qt uses inverted Y axis
+    }
+
+    //compute point-value of Volume
+    uint64_t nVolume = pair.second.m_volume * m_precision; //Convert to precision/uint64_t to force a certain decimal precision
+    uint64_t nValueVolume = (nVolume - nMinY);
+    nValueVolume *= nHeight;
+    double dValueVolume = nValueVolume;
+    if (nSpanY == 0) {
+        dValueVolume = rectChart.top() + (nHeight/2);
+    } else {
+        dValueVolume /= 10*nSpanY;
+        dValueVolume = rectChart.bottom() - dValueVolume; // Qt uses inverted Y axis
     }
 
     // Have to manually add values to avoid exception since Qt uses inverted Y axis
@@ -187,6 +194,7 @@ std::pair<uint32_t, Candle> CandlestickChart::ConvertToCandlePlotPoint(const std
     candle.m_high = dValueHigh;
     candle.m_low = dValueLow;
     candle.m_close = dValueClose;
+    candle.m_volume = dValueVolume;
     return std::pair<uint32_t, Candle>(nValueX, candle);
 }
 
@@ -252,6 +260,39 @@ std::map<uint32_t, Candle> CandlestickChart::ConvertLineToCandlestickData(const 
     return candleData;
 }
 
+/**
+ * @brief CandlestickChart::ConvertLineToCandlestickData Change linechart data into candle stick data with volume data
+ * @param lineChartData Data for a linechart to be made into a candle
+ * @param volPoints Volume data for a line chart to be converted to average volume in candle
+ * @param candleTimePeriod Time period used to create a candle
+ * @return
+ */
+std::map<uint32_t, Candle> CandlestickChart::ConvertLineToCandlestickData(const std::map<uint32_t, double> lineChartData, std::map<uint32_t, double>& volPoints, uint32_t candleTimePeriod)
+{
+    int volItems = 1;
+    double volume = 0;
+    std::map<uint32_t, Candle> candleData = ConvertLineToCandlestickData(lineChartData, candleTimePeriod);
+    std::map<uint32_t, double>::iterator it_vol = volPoints.begin();
+    std::map<uint32_t, Candle>::iterator it_candle = candleData.begin();
+    while (it_vol != volPoints.end() && it_candle != candleData.end()) {
+        if(it_vol->first < it_candle->first) {
+            // add volume to candle data
+            volume += it_vol->second;
+            volItems++;
+            it_vol++;
+        } else {
+            // set candle to average volume and change candle if value not set
+            if (it_candle->second.m_volume == 0) {
+                it_candle->second.m_volume = volume / volItems;
+                volume = 0;
+                volItems = 1;
+            }
+            it_candle++;
+        }
+    }
+    return candleData;
+}
+
 void CandlestickChart::SetDataPoints(std::map<uint32_t, Candle>& mapPoints)
 {
     m_mapPoints = mapPoints;
@@ -265,6 +306,55 @@ void CandlestickChart::SetDataPoints(std::map<uint32_t, double>& mapPoints, uint
     }
     m_mapPoints = ConvertLineToCandlestickData(mapPoints, m_nCandleTimePeriod);
     ProcessChangedData();
+}
+
+void CandlestickChart::SetDataPoints(std::map<uint32_t, double>& mapPoints, std::map<uint32_t, double>& volPoints, uint32_t candleTimePeriod)
+{
+    if(candleTimePeriod) {
+        m_nCandleTimePeriod = candleTimePeriod;
+    }
+    m_mapPoints = ConvertLineToCandlestickData(mapPoints, volPoints, m_nCandleTimePeriod);
+    ProcessChangedData();
+}
+
+/**
+ * @brief CandlestickChart::AddVolumePoint Add a volume value to a candle
+ * @param x: Time period of the volume
+ * @param y: Volume
+ */
+void CandlestickChart::AddVolumePoint(const uint32_t& x, const double& y)
+{
+    std::map<uint32_t, Candle>::iterator it = m_mapPoints.find(x);
+    if (it != m_mapPoints.end()) {
+        it->second.m_volume = y;
+    } else {
+        Candle candle;
+        candle.m_volume = y;
+        m_mapPoints.emplace(x,candle);
+    }
+}
+
+/**
+ * @brief CandlestickChart::RemoveVolumePoint Sets volume point to zero does not remove candle
+ * @param x: time period
+ */
+void CandlestickChart::RemoveVolumePoint(const uint32_t &x)
+{
+    std::map<uint32_t, Candle>::iterator it = m_mapPoints.find(x);
+    if (it != m_mapPoints.end()) {
+        it->second.m_volume = 0;
+    }
+}
+
+/**
+ * @brief CandlestickChart::SetVolumePoints Changes volume of candlestick data to the given map
+ * @param mapPoints
+ */
+void CandlestickChart::SetVolumePoints(const std::map<uint32_t, double>& mapPoints)
+{
+    for(auto pair: mapPoints) {
+        AddVolumePoint(pair.first, pair.second);
+    }
 }
 
 void CandlestickChart::ProcessChangedData()
@@ -298,8 +388,12 @@ void CandlestickChart::ProcessChangedData()
     }
     // Add y-axis buffer for candlestick data
     double buffer = m_yPadding * (m_pairYRange.second - m_pairYRange.first) / 20;
-    m_pairYRange.first -= buffer;
     m_pairYRange.second += buffer;
+    // Increase buffer for the volume bars
+    if(m_fDrawVolume) {
+        buffer *= 3;
+    }
+    m_pairYRange.first -= buffer;
     m_fChangesMade = true;
 }
 
@@ -349,6 +443,7 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
         }
     }
 
+    ProcessChangedData();
     QRect rectFull = rect();
     QRect rectChart = ChartArea();
 
@@ -366,7 +461,7 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
         }
      }
 
-    //Draw axis sections next so that they get covered up by chart fill
+    //Draw axis sections
     if (m_axisSections > 0) {
         painter.save();
         painter.setPen(m_penAxisSeparater);
@@ -417,7 +512,6 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
     //Draw Candlesticks
     QPen penCandle;
     penCandle.setWidth(m_nCandleLineWidth);
-    ProcessChangedData();
     std::map<uint32_t, Candle>::reverse_iterator rit;
     for (rit = m_mapPoints.rbegin(); rit != m_mapPoints.rend(); ++rit) {
         std::pair<uint32_t, Candle> chartCandle = ConvertToCandlePlotPoint(*rit);
@@ -501,6 +595,17 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
                 painter.fillRect(rect, rectBrush);
             }
         }
+        // Volume bars
+        if (m_fDrawVolume) {
+            QPointF pointV = QPointF(chartCandle.first + m_nCandleWidth, chartCandle.second.m_volume);
+            QPointF pointBottom = QPointF(chartCandle.first - m_nCandleWidth, rectChart.bottom());
+            QRectF rect(pointV, pointBottom);
+            QBrush rectBrush = m_colorVolume;
+            penCandle.setColor(m_colorVolume);
+            painter.setPen(penCandle);
+            painter.setBrush(rectBrush);
+            painter.drawRect(rect);
+        }
     }
     painter.save();
     painter.restore();
@@ -528,6 +633,9 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
             m_strOHLC += "H:" + QString::number(currentCandle.m_high) + "\t";
             m_strOHLC += "L:" + QString::number(currentCandle.m_low) + "\t";
             m_strOHLC += "C:" + QString::number(currentCandle.m_close) + "\t";
+            if (m_fDrawVolume) {
+                m_strOHLC += "V:" + QString::number(currentCandle.m_volume) + "\t";
+            }
             m_strOHLC += QString::number((currentCandle.m_close - currentCandle.m_open)/ currentCandle.m_open)+ "%";
         }
         QRect rectInfo = rectFull;
@@ -628,6 +736,11 @@ void CandlestickChart::SetDashColor(const QColor& upColor, const QColor& downCol
     m_fChangesMade = true;
 }
 
+void CandlestickChart::SetVolumeColor(const QColor& color) {
+    m_colorVolume = color;
+    m_fChangesMade = true;
+}
+
 void CandlestickChart::SetCandleLineWidth(int nWidth)
 {
     m_nCandleLineWidth = nWidth;
@@ -683,6 +796,11 @@ void CandlestickChart::EnableCandleDash(bool fEnable)
 void CandlestickChart::EnableOHLCDisplay(bool fEnable)
 {
     m_fDisplayOHLC = fEnable;
+}
+
+void CandlestickChart::EnableVolumeBar(bool fEnable)
+{
+    m_fDrawVolume = fEnable;
 }
 
 void CandlestickChart::wheelEvent(QWheelEvent *event)
