@@ -5,8 +5,7 @@
 #include <functional>
 #include <utility>
 #include <iostream>
-#include <QPushButton>
-#include <QToolButton>
+#include <QPainter>
 
 LegendWidget::LegendWidget(QWidget *parent) :
     QWidget(parent),
@@ -14,10 +13,11 @@ LegendWidget::LegendWidget(QWidget *parent) :
 {
     ui->setupUi(this);
     m_strTitle = "Chart Legend";
+    m_topTitleHeight = -1;
+    m_nLabelSize = 11;
     m_data.emplace_back(std::make_pair(QString("red"), QColor(Qt::red)));
     m_data.emplace_back(std::make_pair(QString("blue"), QColor(Qt::blue)));
-    SetLegendData(m_data);
-    SetLegendData(m_data);
+    m_data.emplace_back(std::make_pair(QString("green"), QColor(Qt::green)));
 }
 
 LegendWidget::LegendWidget(std::vector<std::pair<QString, QColor>> labels, QWidget *parent) :
@@ -25,6 +25,7 @@ LegendWidget::LegendWidget(std::vector<std::pair<QString, QColor>> labels, QWidg
     ui(new Ui::LegendWidget)
 {
     ui->setupUi(this);
+    LegendWidget();
     m_data = labels;
 }
 
@@ -33,38 +34,56 @@ LegendWidget::~LegendWidget()
     delete ui;
 }
 
-
-void LegendWidget::SetLegendData(std::vector<std::pair<QString, QColor>> chartData)
+void LegendWidget::paintEvent(QPaintEvent *event)
 {
-    ClearLayout();
+    Q_UNUSED(event);
+    QPainter painter(this);
+    QRect rectChart = LabelArea();
     ui->labelTitle->setText(m_strTitle);
-    QHBoxLayout *layout = new QHBoxLayout;
-    for (auto pair: chartData) {
-        QHBoxLayout *layout = new QHBoxLayout;
-        QToolButton *button = new QToolButton;
-        QLabel* label = new QLabel;
-        label->setText(pair.first);
-        QPalette pal;
-        pal.setColor(QPalette::Button, pair.second);
-        button->setDisabled(true);
-        button->setAutoFillBackground(true);
-        button->setPalette(pal);
-        button->update();
-        layout->addWidget(label);
-        layout->addWidget(button);
-        ui->formLayoutLabels->addRow(layout);
+    QFont font = painter.font();
+    font.setPointSize(m_nLabelSize);
+    painter.setFont(font);
+    for(int i = 0; i < static_cast<int>(m_data.size()); i++) {
+        QRect textRect((15 + 2*(m_nLabelSize+3)), (2*i*(m_nLabelSize+3))+HeightTopTitleArea()+5, rectChart.right()-rectChart.left(), 2*m_nLabelSize);
+        QRect colorRect(15,(2*i*(m_nLabelSize+3))+HeightTopTitleArea()+5, 2*m_nLabelSize, 2*m_nLabelSize);
+        painter.drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, m_data[i].first);
+        painter.fillRect(colorRect, m_data[i].second);
     }
-    this->setLayout(layout);
-
-}
-
-void LegendWidget::ClearLayout()
-{
-    qDeleteAll(this->children());
-    ui->setupUi(this);
 }
 
 void LegendWidget::SetTitle(QString title)
 {
     m_strTitle = title;
+}
+
+void LegendWidget::SetLegendData(std::vector<std::pair<QString, QColor>> chartData)
+{
+    m_data = chartData;
+}
+
+/**
+ * @brief LegendWidget::LabelArea : Get the area of the widget that is dedicated to the labels
+ * @return
+ */
+QRect LegendWidget::LabelArea() const
+{
+    QRect rectFull = this->rect();
+    QRect rectChart = rectFull;
+    rectChart.setTop(rectFull.top() + HeightTopTitleArea());
+    return rectChart;
+}
+
+int LegendWidget::HeightTopTitleArea() const
+{
+    if (m_topTitleHeight != -1)
+        return m_topTitleHeight;
+
+    if (m_strTitle.isEmpty())
+        return 0;
+
+    return 30;
+}
+void LegendWidget::SetTopTitleHeight(int height)
+{
+    m_topTitleHeight = height;
 }

@@ -16,14 +16,18 @@ public:
     LegendWidget(std::vector<std::pair<QString, QColor>> labels, QWidget *parent = nullptr);
     ~LegendWidget();
     void SetLegendData(std::vector<std::pair<QString, QColor>> chartData);
-    void ClearLayout();
     void SetTitle(QString title);
 
 private:
+    void paintEvent(QPaintEvent *event) override;
     Ui::LegendWidget *ui;
     std::vector<std::pair<QString, QColor>> m_data;
     QString m_strTitle;
-
+    QRect LabelArea() const;
+    int m_topTitleHeight;
+    int HeightTopTitleArea() const;
+    void SetTopTitleHeight(int height);
+    int m_nLabelSize;
 };
 
 #endif // LEGENDWIDGET_H
