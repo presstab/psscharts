@@ -12,12 +12,13 @@ LegendWidget::LegendWidget(QWidget *parent) :
     ui(new Ui::LegendWidget)
 {
     ui->setupUi(this);
-//    setTitleBarWidget(m_widgetTitleBar);
     m_widgetTitleBar = new TitleBar(this);
-    this->setAccessibleName("SideBarWidget");
+    this->setAccessibleName("LegendWidget");
     setTitleBarWidget(m_widgetTitleBar);
     setAllowedAreas(Qt::AllDockWidgetAreas);
-    setFeatures(QDockWidget::AllDockWidgetFeatures);
+    setFeatures(QDockWidget::DockWidgetMovable);
+    this->setMinimumWidth(150);
+    this->setMaximumWidth(150);
     m_strTitle = "Chart Legend";
     m_topTitleHeight = -1;
     m_nLabelSize = 11;
@@ -25,15 +26,6 @@ LegendWidget::LegendWidget(QWidget *parent) :
     m_data.emplace_back(std::make_pair(QString("blue"), QColor(Qt::blue)));
     m_data.emplace_back(std::make_pair(QString("green"), QColor(Qt::green)));
     connect(m_widgetTitleBar, &TitleBar::CloseRequested, this, &LegendWidget::TitleBarRequestClose);
-}
-
-LegendWidget::LegendWidget(std::vector<std::pair<QString, QColor>> labels, QWidget *parent) :
-    QDockWidget(parent),
-    ui(new Ui::LegendWidget)
-{
-    ui->setupUi(this);
-    LegendWidget();
-    m_data = labels;
 }
 
 LegendWidget::~LegendWidget()
@@ -56,6 +48,7 @@ void LegendWidget::paintEvent(QPaintEvent *event)
         painter.drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, m_data[i].first);
         painter.fillRect(colorRect, m_data[i].second);
     }
+    this->setMinimumHeight(2*m_data.size()*(m_nLabelSize+3)+HeightTopTitleArea()+5);
 }
 
 void LegendWidget::SetTitle(QString title)
@@ -66,6 +59,14 @@ void LegendWidget::SetTitle(QString title)
 void LegendWidget::SetLegendData(std::vector<std::pair<QString, QColor>> chartData)
 {
     m_data = chartData;
+}
+
+void LegendWidget::SetLegendData(std::map<std::string, QColor> chartData)
+{
+    m_data.clear();
+    for(auto pair : chartData) {
+        m_data.emplace_back(std::make_pair(QString::fromStdString(pair.first), pair.second));
+    }
 }
 
 /**

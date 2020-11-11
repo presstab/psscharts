@@ -85,6 +85,7 @@ public:
     QColor GetSeriesColor(const uint32_t& nSeries) const;
     void EnableVolumeBar(bool fEnable);
     void SetVolumeBarWidth(int nWidth);
+    std::vector<std::pair<QString, QColor>> GetLegendData();
 };
 
 } //namespace

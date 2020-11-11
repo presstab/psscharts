@@ -470,10 +470,7 @@ void MainWindow::RedrawChart()
             display->SetColor(colorCrosshair);
 
             m_lineChart->repaint();
-            std::vector<std::pair<QString, QColor>> m_data;
-            m_data.emplace_back(std::make_pair(QString("red"), QColor(Qt::red)));
-            m_data.emplace_back(std::make_pair(QString("blue"), QColor(Qt::blue)));
-            m_legend->SetLegendData(m_data);
+            m_legend->SetLegendData(m_lineChart->GetLegendData());
             m_legend->repaint();
             break;
         }
@@ -550,12 +547,7 @@ void MainWindow::RedrawChart()
             display->SetColor(colorCrosshair);
 
             m_candleChart->repaint();
-
-
-            std::vector<std::pair<QString, QColor>> m_data;
-            m_data.emplace_back(std::make_pair(QString("green"), QColor(Qt::green)));
-            m_data.emplace_back(std::make_pair(QString("red"), QColor(Qt::red)));
-            m_legend->SetLegendData(m_data);
+            m_legend->SetLegendData(m_candleChart->GetLegendData());
             m_legend->repaint();
             break;
         }
@@ -623,10 +615,7 @@ void MainWindow::RedrawChart()
             display->SetColor(colorCrosshair);
 
             m_barChart->repaint();
-            std::vector<std::pair<QString, QColor>> m_data;
-            m_data.emplace_back(std::make_pair(QString("green"), QColor(Qt::green)));
-            m_data.emplace_back(std::make_pair(QString("blue"), QColor(Qt::blue)));
-            m_legend->SetLegendData(m_data);
+            m_legend->SetLegendData(m_barChart->GetLegendData());
             m_legend->repaint();
             break;
         }
@@ -687,11 +676,7 @@ void MainWindow::RedrawChart()
             ui->spinboxPieGreen->setValue(sliceColor.green());
             ui->spinboxPieRed->setValue(sliceColor.red());
             m_pieChart->repaint();
-            std::vector<std::pair<QString, QColor>> m_data;
-            m_data.emplace_back(std::make_pair(QString("green"), QColor(Qt::green)));
-            m_data.emplace_back(std::make_pair(QString("red"), QColor(Qt::red)));
-            m_data.emplace_back(std::make_pair(QString("blue"), QColor(Qt::blue)));
-            m_legend->SetLegendData(m_data);
+            m_legend->SetLegendData(m_pieChart->GetColorMap());
             m_legend->repaint();
             break;
         }

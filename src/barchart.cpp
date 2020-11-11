@@ -521,6 +521,13 @@ void BarChart::EnableHighlightBorder(bool fEnable)
     m_fEnableHighlightOutline = fEnable;
 }
 
+std::vector<std::pair<QString, QColor>> BarChart::GetLegendData()
+{
+    std::vector<std::pair<QString, QColor>> vLegend;
+    vLegend.emplace_back(std::make_pair("data", m_color));
+    return vLegend;
+}
+
 void BarChart::wheelEvent(QWheelEvent *event)
 {
     int dBarWidth = event->angleDelta().y()/120;

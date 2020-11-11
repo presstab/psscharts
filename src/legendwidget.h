@@ -15,9 +15,9 @@ class LegendWidget : public QDockWidget
 
 public:
     explicit LegendWidget(QWidget *parent = nullptr);
-    LegendWidget(std::vector<std::pair<QString, QColor>> labels, QWidget *parent = nullptr);
     ~LegendWidget();
     void SetLegendData(std::vector<std::pair<QString, QColor>> chartData);
+    void SetLegendData(std::map<std::string, QColor> chartData);
     void SetTitle(QString title);
 
 private:
