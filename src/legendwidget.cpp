@@ -8,15 +8,10 @@
 #include <QPainter>
 
 LegendWidget::LegendWidget(QWidget *parent) :
-    QDockWidget(parent),
+    QWidget(parent),
     ui(new Ui::LegendWidget)
 {
     ui->setupUi(this);
-    m_widgetTitleBar = new TitleBar(this);
-    this->setAccessibleName("LegendWidget");
-    setTitleBarWidget(m_widgetTitleBar);
-    setAllowedAreas(Qt::AllDockWidgetAreas);
-    setFeatures(QDockWidget::DockWidgetMovable);
     this->setMinimumWidth(150);
     this->setMaximumWidth(150);
     m_strTitle = "Chart Legend";
@@ -25,7 +20,6 @@ LegendWidget::LegendWidget(QWidget *parent) :
     m_data.emplace_back(std::make_pair(QString("red"), QColor(Qt::red)));
     m_data.emplace_back(std::make_pair(QString("blue"), QColor(Qt::blue)));
     m_data.emplace_back(std::make_pair(QString("green"), QColor(Qt::green)));
-    connect(m_widgetTitleBar, &TitleBar::CloseRequested, this, &LegendWidget::TitleBarRequestClose);
 }
 
 LegendWidget::~LegendWidget()
@@ -91,17 +85,8 @@ int LegendWidget::HeightTopTitleArea() const
 
     return 30;
 }
+
 void LegendWidget::SetTopTitleHeight(int height)
 {
     m_topTitleHeight = height;
-}
-
-void LegendWidget::TitleBarRequestClose()
-{
-    setVisible(false);
-}
-
-QString LegendWidget::Title() const
-{
-    return m_widgetTitleBar->Title();
 }
