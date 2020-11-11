@@ -62,6 +62,7 @@ private slots:
     void ChangeCandleWidth(int dChange);
     void ChangeBarWidth(int dChange);
     void PieColorChanged(const QString& text);
+    void ChangeLegendOrientation();
 };
 
 #endif // MAINWINDOW_H

@@ -60,6 +60,13 @@ QStringList listChartFormats = {
     "Pie"
 };
 
+QStringList listLegendOrientations = {
+    "Top",
+    "Left",
+    "Right",
+    "Bottom"
+};
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -77,13 +84,11 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->formLayout->addRow(m_candleChart);
         ui->formLayout->addRow(m_barChart);
         ui->formLayout->addRow(m_pieChart);
-        ui->formLayout->addRow(m_legend);
     } else {
         ui->hlayoutMain->addWidget(m_lineChart, /*stretch*/1);
         ui->hlayoutMain->addWidget(m_candleChart, /*stretch*/1);
         ui->hlayoutMain->addWidget(m_barChart, /*stretch*/1);
         ui->hlayoutMain->addWidget(m_pieChart, /*stretch*/1);
-        ui->hlayoutMain->addWidget(m_legend, /*stretch*/1);
     }
     m_chartType = PssCharts::ChartType::PIE;
 
@@ -241,6 +246,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboboxCrosshairColor->addItems(listQtColors);
     ui->comboboxCrosshairColor->setCurrentIndex(0); //black
 
+    //Legend
+    ui->checkboxChartLegend->setChecked(true);
+    ui->comboboxChartLegend->addItems(listLegendOrientations);
+    ui->comboboxChartLegend->setCurrentIndex(2); //right
+
     //Generate some data points to fill the chart
     std::map<uint32_t, double> mapPoints;
     std::map<uint32_t, double> mapPoints2;
@@ -372,6 +382,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(m_candleChart, &PssCharts::CandlestickChart::candleWidthChanged, this, &MainWindow::ChangeCandleWidth);
     connect(m_barChart, &PssCharts::BarChart::barWidthChanged, this, &MainWindow::ChangeBarWidth);
+    connect(ui->comboboxChartLegend, &QComboBox::currentTextChanged, this, &MainWindow::ChangeLegendOrientation);
+    connect(ui->checkboxChartLegend, &QCheckBox::clicked, this, &MainWindow::ChangeLegendOrientation);
 }
 
 MainWindow::~MainWindow()
@@ -702,3 +714,30 @@ void MainWindow::PieColorChanged(const QString& text) {
     RedrawChart();
 }
 
+void MainWindow::ChangeLegendOrientation() {
+    m_legend->setVisible(ui->checkboxChartLegend->isChecked());
+    switch (ui->comboboxChartLegend->currentIndex()) {
+        case 0:{
+        ui->gridLayout->addWidget(m_legend,0,0);
+        ui->gridLayout->addLayout(ui->hlayoutMain,1,0);
+            break;
+        }
+        case 1:{
+        ui->gridLayout->addLayout(ui->hlayoutMain,0,0);
+        ui->gridLayout->addWidget(m_legend,1,0);
+            break;
+        }
+        case 2: {
+        ui->gridLayout->addWidget(m_legend,0,0);
+        ui->gridLayout->addLayout(ui->hlayoutMain,0,1);
+            break;
+        }
+        case 3: {
+        ui->gridLayout->addLayout(ui->hlayoutMain,0,0);
+        ui->gridLayout->addWidget(m_legend,0,1);
+            break;
+        }
+        default:
+            break;
+    }
+}

@@ -6,20 +6,17 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>413</width>
-    <height>878</height>
+    <width>431</width>
+    <height>845</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>PSS Charts</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
-    <item>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
      <layout class="QHBoxLayout" name="hlayoutMain">
-      <property name="leftMargin">
-       <number>0</number>
-      </property>
       <item>
        <layout class="QFormLayout" name="formLayout">
         <item row="0" column="0">
@@ -215,7 +212,28 @@
           </item>
          </layout>
         </item>
-        <item row="11" column="0" colspan="2">
+        <item row="11" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Chart Legend</string>
+          </property>
+         </widget>
+        </item>
+        <item row="11" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QCheckBox" name="checkboxChartLegend">
+            <property name="text">
+             <string>Enable</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboboxChartLegend"/>
+          </item>
+         </layout>
+        </item>
+        <item row="12" column="0" colspan="2">
          <widget class="QTabWidget" name="tabWidget">
           <property name="tabPosition">
            <enum>QTabWidget::South</enum>
@@ -853,6 +871,9 @@
       </item>
      </layout>
     </item>
+    <item row="0" column="1">
+     <layout class="QVBoxLayout" name="chartLayout"/>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -860,7 +881,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>413</width>
+     <width>431</width>
      <height>22</height>
     </rect>
    </property>
