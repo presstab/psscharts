@@ -80,10 +80,14 @@ MainWindow::MainWindow(QWidget *parent) :
     m_legend = new LegendWidget(this);
     QSize sizeScreen = QGuiApplication::screens()[0]->size();
     if (sizeScreen.height() > sizeScreen.width()) {
-        ui->formLayout->addRow(m_lineChart);
-        ui->formLayout->addRow(m_candleChart);
-        ui->formLayout->addRow(m_barChart);
-        ui->formLayout->addRow(m_pieChart);
+//        ui->formLayout->addRow(m_lineChart);
+//        ui->formLayout->addRow(m_candleChart);
+//        ui->formLayout->addRow(m_barChart);
+//        ui->formLayout->addRow(m_pieChart);
+        ui->chartLayout->addWidget(m_lineChart, /*stretch*/1);
+        ui->chartLayout->addWidget(m_candleChart, /*stretch*/1);
+        ui->chartLayout->addWidget(m_barChart, /*stretch*/1);
+        ui->chartLayout->addWidget(m_pieChart, /*stretch*/1);
     } else {
         ui->hlayoutMain->addWidget(m_lineChart, /*stretch*/1);
         ui->hlayoutMain->addWidget(m_candleChart, /*stretch*/1);
@@ -301,6 +305,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->spinboxPieRed->setValue(sliceColor.red());
     m_pieChart->setMinimumSize(QSize(600,400));
     RedrawChart();
+    ChangeLegendOrientation();
 
     connect(ui->tabWidget, &QTabWidget::currentChanged, ui->comboBoxChartType, &QComboBox::setCurrentIndex);
     connect(ui->comboBoxChartType, SIGNAL(currentIndexChanged(int)), ui->tabWidget, SLOT(setCurrentIndex(int)));
@@ -717,24 +722,32 @@ void MainWindow::PieColorChanged(const QString& text) {
 void MainWindow::ChangeLegendOrientation() {
     m_legend->setVisible(ui->checkboxChartLegend->isChecked());
     switch (ui->comboboxChartLegend->currentIndex()) {
-        case 0:{
+        case 0:{ // Top
+        ui->chartLayout->removeWidget(m_legend);
+        ui->gridLayout->removeWidget(m_legend);
         ui->gridLayout->addWidget(m_legend,0,0);
         ui->gridLayout->addLayout(ui->hlayoutMain,1,0);
             break;
         }
-        case 1:{
-        ui->gridLayout->addLayout(ui->hlayoutMain,0,0);
-        ui->gridLayout->addWidget(m_legend,1,0);
-            break;
-        }
-        case 2: {
+        case 1:{ // Left
+        ui->chartLayout->removeWidget(m_legend);
+        ui->gridLayout->removeWidget(m_legend);
         ui->gridLayout->addWidget(m_legend,0,0);
         ui->gridLayout->addLayout(ui->hlayoutMain,0,1);
             break;
         }
-        case 3: {
+        case 2: { // Right
+        ui->chartLayout->removeWidget(m_legend);
+        ui->gridLayout->removeWidget(m_legend);
         ui->gridLayout->addLayout(ui->hlayoutMain,0,0);
         ui->gridLayout->addWidget(m_legend,0,1);
+            break;
+        }
+        case 3: { // Bottom
+        ui->chartLayout->removeWidget(m_legend);
+        ui->gridLayout->removeWidget(m_legend);
+        ui->gridLayout->addLayout(ui->hlayoutMain,0,0);
+        ui->gridLayout->addWidget(m_legend,1,0);
             break;
         }
         default:

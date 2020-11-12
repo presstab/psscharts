@@ -524,7 +524,7 @@ void BarChart::EnableHighlightBorder(bool fEnable)
 std::vector<std::pair<QString, QColor>> BarChart::GetLegendData()
 {
     std::vector<std::pair<QString, QColor>> vLegend;
-    vLegend.emplace_back(std::make_pair("data", m_color));
+    vLegend.emplace_back(std::make_pair("Data", m_color));
     return vLegend;
 }
 
