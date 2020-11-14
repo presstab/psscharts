@@ -12,14 +12,9 @@ LegendWidget::LegendWidget(QWidget *parent) :
     ui(new Ui::LegendWidget)
 {
     ui->setupUi(this);
-    this->setMinimumWidth(150);
-    this->setMaximumWidth(150);
     m_strTitle = "Chart Legend";
     m_topTitleHeight = -1;
     m_nLabelSize = 11;
-    m_data.emplace_back(std::make_pair(QString("red"), QColor(Qt::red)));
-    m_data.emplace_back(std::make_pair(QString("blue"), QColor(Qt::blue)));
-    m_data.emplace_back(std::make_pair(QString("green"), QColor(Qt::green)));
 }
 
 LegendWidget::~LegendWidget()
@@ -36,13 +31,18 @@ void LegendWidget::paintEvent(QPaintEvent *event)
     QFont font = painter.font();
     font.setPointSize(m_nLabelSize);
     painter.setFont(font);
+    int maxWidth = ui->labelTitle->fontMetrics().horizontalAdvance(m_strTitle) + m_strTitle.size();
     for(int i = 0; i < static_cast<int>(m_data.size()); i++) {
         QRect textRect((15 + 2*(m_nLabelSize+3)), (2*i*(m_nLabelSize+3))+HeightTopTitleArea()+5, rectChart.right()-rectChart.left(), 2*m_nLabelSize);
         QRect colorRect(15,(2*i*(m_nLabelSize+3))+HeightTopTitleArea()+5, 2*m_nLabelSize, 2*m_nLabelSize);
         painter.drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, m_data[i].first);
         painter.fillRect(colorRect, m_data[i].second);
+        if(painter.fontMetrics().horizontalAdvance(m_data[i].first) > maxWidth) {
+            maxWidth = painter.fontMetrics().horizontalAdvance(m_data[i].first);
+        }
     }
     this->setMinimumHeight(2*m_data.size()*(m_nLabelSize+3)+HeightTopTitleArea()+5);
+    this->setMinimumWidth(maxWidth);
 }
 
 void LegendWidget::SetTitle(QString title)
