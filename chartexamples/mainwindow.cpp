@@ -679,7 +679,7 @@ void MainWindow::RedrawChart()
             ui->spinboxPieGreen->setValue(sliceColor.green());
             ui->spinboxPieRed->setValue(sliceColor.red());
             m_pieChart->repaint();
-            m_legend->SetLegendData(m_pieChart->GetColorMap());
+            m_legend->SetLegendData(m_pieChart->GetLegendData());
             m_legend->repaint();
             break;
         }
