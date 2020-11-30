@@ -66,7 +66,7 @@ void LegendWidget::paintEvent(QPaintEvent *event)
                 }
             }
         }
-        this->setMinimumHeight(2*row*labelMetric.height()+HeightTopTitleArea()+10);
+        this->setMinimumHeight((2*(++row)*labelMetric.height())+HeightTopTitleArea()+10);
     }
 }
 

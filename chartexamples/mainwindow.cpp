@@ -79,7 +79,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_pieChart = new PssCharts::PieChart(this);
     m_legend = new LegendWidget(this);
     ui->hlayoutMain->addLayout(ui->formLayout, 0);
-    ui->hlayoutMain->addLayout(ui->chartLayout, 1);
+    ui->hlayoutMain->addLayout(ui->chartLayout, 10);
     QSize sizeScreen = QGuiApplication::screens()[0]->size();
     if (sizeScreen.height() > sizeScreen.width()) {
         ui->formLayout->addRow(m_lineChart);
@@ -252,6 +252,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->checkboxChartLegend->setChecked(true);
     ui->comboboxChartLegend->addItems(listLegendOrientations);
     ui->comboboxChartLegend->setCurrentIndex(2); //right
+    m_legend->setMinimumSize(QSize(100,100));
+    m_legend->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
     //Generate some data points to fill the chart
     std::map<uint32_t, double> mapPoints;
@@ -284,10 +286,15 @@ MainWindow::MainWindow(QWidget *parent) :
     m_lineChart->SetVolumePoints(mapPoints, 0);
     m_lineChart->SetVolumePoints(mapPoints2, 1);
     m_lineChart->setMinimumSize(QSize(600,400));
+    m_lineChart->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
     m_candleChart->SetDataPoints(mapPoints, mapPoints2, 5*60*60*24);
     m_candleChart->setMinimumSize(QSize(600,400));
+    m_candleChart->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
     m_barChart->SetDataPoints(mapPoints);
     m_barChart->setMinimumSize(QSize(600,400));
+    m_barChart->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     m_pieChart->AddDataPoint("USA", 4932.10437982);
     m_pieChart->AddDataPoint("Italy", 1235.7598342);
@@ -296,12 +303,15 @@ MainWindow::MainWindow(QWidget *parent) :
     m_pieChart->AddDataPoint("Brazil", 1235.7598342);
     m_pieChart->AddDataPoint("India", 6235.671273894);
     m_pieChart->AddDataPoint("Egypt", 943.9102548);
+
     ui->comboboxPieSlice->addItems(m_pieChart->ChartLabels());
     QColor sliceColor = m_pieChart->GetColor(ui->comboboxPieSlice->currentText().toStdString());
     ui->spinboxPieBlue->setValue(sliceColor.blue());
     ui->spinboxPieGreen->setValue(sliceColor.green());
     ui->spinboxPieRed->setValue(sliceColor.red());
     m_pieChart->setMinimumSize(QSize(600,400));
+    m_pieChart->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
     ChangeLegendOrientation();
     RedrawChart();
 
