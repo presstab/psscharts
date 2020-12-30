@@ -29,6 +29,7 @@ SOURCES += \
         chartexamples/mainwindow.cpp \
         src/barchart.cpp \
         src/candlestickchart.cpp \
+        src/legendwidget.cpp \
         src/linechart.cpp \
         src/chart.cpp \
         src/piechart.cpp \
@@ -39,6 +40,7 @@ HEADERS += \
         chartexamples/mainwindow.h \
         src/barchart.h \
         src/candlestickchart.h \
+        src/legendwidget.h \
         src/linechart.h \
         src/chart.h \
         src/piechart.h \
@@ -47,7 +49,8 @@ HEADERS += \
         src/mousedisplay.h
 
 FORMS += \
-        chartexamples/mainwindow.ui
+        chartexamples/mainwindow.ui \
+        src/legendwidget.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

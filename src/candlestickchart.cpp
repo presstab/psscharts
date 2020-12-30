@@ -814,4 +814,15 @@ void CandlestickChart::wheelEvent(QWheelEvent *event)
     }
 }
 
+std::vector<std::pair<QString, QColor>> CandlestickChart::GetLegendData()
+{
+    std::vector<std::pair<QString, QColor>> vLegend;
+    vLegend.emplace_back(std::make_pair("Up", m_colorUpCandle));
+    vLegend.emplace_back(std::make_pair("Down", m_colorDownCandle));
+    if(m_fDrawVolume) {
+        vLegend.emplace_back(std::make_pair("Volume", m_colorVolume));
+    }
+    return vLegend;
+}
+
 }//namespace

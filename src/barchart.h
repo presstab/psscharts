@@ -93,6 +93,7 @@ public:
     void EnableBorder(bool fEnable);
     void EnableHighlight(bool fEnable);
     void EnableHighlightBorder(bool fEnable);
+    std::vector<std::pair<QString, QColor>> GetLegendData();
 
 signals:
     void barWidthChanged(int dChange);

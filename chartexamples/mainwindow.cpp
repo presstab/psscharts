@@ -60,6 +60,13 @@ QStringList listChartFormats = {
     "Pie"
 };
 
+QStringList listLegendOrientations = {
+    "Top",
+    "Left",
+    "Right",
+    "Bottom"
+};
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -70,6 +77,9 @@ MainWindow::MainWindow(QWidget *parent) :
     m_candleChart = new PssCharts::CandlestickChart(this);
     m_barChart = new PssCharts::BarChart(this);
     m_pieChart = new PssCharts::PieChart(this);
+    m_legend = new LegendWidget(this);
+    ui->hlayoutMain->addLayout(ui->formLayout, 0);
+    ui->hlayoutMain->addLayout(ui->chartLayout, 10);
     QSize sizeScreen = QGuiApplication::screens()[0]->size();
     if (sizeScreen.height() > sizeScreen.width()) {
         ui->formLayout->addRow(m_lineChart);
@@ -238,6 +248,13 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboboxCrosshairColor->addItems(listQtColors);
     ui->comboboxCrosshairColor->setCurrentIndex(0); //black
 
+    //Legend
+    ui->checkboxChartLegend->setChecked(true);
+    ui->comboboxChartLegend->addItems(listLegendOrientations);
+    ui->comboboxChartLegend->setCurrentIndex(2); //right
+    m_legend->setMinimumSize(QSize(100,100));
+    m_legend->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+
     //Generate some data points to fill the chart
     std::map<uint32_t, double> mapPoints;
     std::map<uint32_t, double> mapPoints2;
@@ -269,10 +286,15 @@ MainWindow::MainWindow(QWidget *parent) :
     m_lineChart->SetVolumePoints(mapPoints, 0);
     m_lineChart->SetVolumePoints(mapPoints2, 1);
     m_lineChart->setMinimumSize(QSize(600,400));
+    m_lineChart->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
     m_candleChart->SetDataPoints(mapPoints, mapPoints2, 5*60*60*24);
     m_candleChart->setMinimumSize(QSize(600,400));
+    m_candleChart->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
     m_barChart->SetDataPoints(mapPoints);
     m_barChart->setMinimumSize(QSize(600,400));
+    m_barChart->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     m_pieChart->AddDataPoint("USA", 4932.10437982);
     m_pieChart->AddDataPoint("Italy", 1235.7598342);
@@ -281,12 +303,16 @@ MainWindow::MainWindow(QWidget *parent) :
     m_pieChart->AddDataPoint("Brazil", 1235.7598342);
     m_pieChart->AddDataPoint("India", 6235.671273894);
     m_pieChart->AddDataPoint("Egypt", 943.9102548);
+
     ui->comboboxPieSlice->addItems(m_pieChart->ChartLabels());
     QColor sliceColor = m_pieChart->GetColor(ui->comboboxPieSlice->currentText().toStdString());
     ui->spinboxPieBlue->setValue(sliceColor.blue());
     ui->spinboxPieGreen->setValue(sliceColor.green());
     ui->spinboxPieRed->setValue(sliceColor.red());
     m_pieChart->setMinimumSize(QSize(600,400));
+    m_pieChart->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    ChangeLegendOrientation();
     RedrawChart();
 
     connect(ui->tabWidget, &QTabWidget::currentChanged, ui->comboBoxChartType, &QComboBox::setCurrentIndex);
@@ -369,6 +395,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(m_candleChart, &PssCharts::CandlestickChart::candleWidthChanged, this, &MainWindow::ChangeCandleWidth);
     connect(m_barChart, &PssCharts::BarChart::barWidthChanged, this, &MainWindow::ChangeBarWidth);
+    connect(ui->comboboxChartLegend, &QComboBox::currentTextChanged, this, &MainWindow::ChangeLegendOrientation);
+    connect(ui->checkboxChartLegend, &QCheckBox::clicked, this, &MainWindow::ChangeLegendOrientation);
 }
 
 MainWindow::~MainWindow()
@@ -410,10 +438,7 @@ void MainWindow::RedrawChart()
 
     switch (m_chartType) {
         case PssCharts::ChartType::LINE:{
-            m_barChart->setVisible(false);
-            m_candleChart->setVisible(false);
-            m_pieChart->setVisible(false);
-            m_lineChart->setVisible(true);
+            ChangeChart(PssCharts::ChartType::LINE);
 
             //Chart Title
             m_lineChart->SetTopTitle(ui->lineeditChartTitle->text());
@@ -467,13 +492,12 @@ void MainWindow::RedrawChart()
             display->SetColor(colorCrosshair);
 
             m_lineChart->repaint();
+            m_legend->SetLegendData(m_lineChart->GetLegendData());
+            m_legend->repaint();
             break;
         }
         case PssCharts::ChartType::CANDLESTICK: {
-            m_lineChart->setVisible(false);
-            m_barChart->setVisible(false);
-            m_pieChart->setVisible(false);
-            m_candleChart->setVisible(true);
+            ChangeChart(PssCharts::ChartType::CANDLESTICK);
 
             //Chart Title
             m_candleChart->SetTopTitle(ui->lineeditChartTitle->text());
@@ -542,14 +566,13 @@ void MainWindow::RedrawChart()
             display->SetColor(colorCrosshair);
 
             m_candleChart->repaint();
+            m_legend->SetLegendData(m_candleChart->GetLegendData());
+            m_legend->repaint();
             break;
         }
         case PssCharts::ChartType::BAR:
         {
-            m_lineChart->setVisible(false);
-            m_candleChart->setVisible(false);
-            m_pieChart->setVisible(false);
-            m_barChart->setVisible(true);
+            ChangeChart(PssCharts::ChartType::BAR);
 
             //Chart Title
             m_barChart->SetTopTitle(ui->lineeditChartTitle->text());
@@ -608,13 +631,12 @@ void MainWindow::RedrawChart()
             display->SetColor(colorCrosshair);
 
             m_barChart->repaint();
+            m_legend->SetLegendData(m_barChart->GetLegendData());
+            m_legend->repaint();
             break;
         }
         case PssCharts::ChartType::PIE:{
-            m_lineChart->setVisible(false);
-            m_candleChart->setVisible(false);
-            m_barChart->setVisible(false);
-            m_pieChart->setVisible(true);
+            ChangeChart(PssCharts::ChartType::PIE);
 
             //Chart Title
             m_pieChart->SetTopTitle(ui->lineeditChartTitle->text());
@@ -667,6 +689,8 @@ void MainWindow::RedrawChart()
             ui->spinboxPieGreen->setValue(sliceColor.green());
             ui->spinboxPieRed->setValue(sliceColor.red());
             m_pieChart->repaint();
+            m_legend->SetLegendData(m_pieChart->GetLegendData());
+            m_legend->repaint();
             break;
         }
 
@@ -691,3 +715,64 @@ void MainWindow::PieColorChanged(const QString& text) {
     RedrawChart();
 }
 
+void MainWindow::ChangeLegendOrientation() {
+    m_legend->setVisible(ui->checkboxChartLegend->isChecked());
+    switch (ui->comboboxChartLegend->currentIndex()) {
+        case 0:{ // Top
+            ui->chartLayout->removeWidget(m_legend);
+            ui->chartLayout->addWidget(m_legend,0,1);
+            break;
+        }
+        case 1:{ // Left
+            ui->chartLayout->removeWidget(m_legend);
+            ui->chartLayout->addWidget(m_legend,1,0);
+            break;
+        }
+        case 2: { // Right
+            ui->chartLayout->removeWidget(m_legend);
+            ui->chartLayout->addWidget(m_legend,1,2);
+            break;
+        }
+        case 3: { // Bottom
+            ui->chartLayout->removeWidget(m_legend);
+            ui->chartLayout->addWidget(m_legend,2,1);
+            break;
+        }
+        default:
+            break;
+        }
+}
+
+void MainWindow::ChangeChart(PssCharts::ChartType type) {
+    m_lineChart->hide();
+    m_candleChart->hide();
+    m_barChart->hide();
+    m_pieChart->hide();
+    ui->chartLayout->removeWidget(m_lineChart);
+    ui->chartLayout->removeWidget(m_candleChart);
+    ui->chartLayout->removeWidget(m_barChart);
+    ui->chartLayout->removeWidget(m_pieChart);
+    switch (type) {
+        case PssCharts::ChartType::BAR: {
+            ui->chartLayout->addWidget(m_barChart, 1, 1);
+            m_barChart->show();
+            break;
+        }
+        case PssCharts::ChartType::CANDLESTICK: {
+            ui->chartLayout->addWidget(m_candleChart, 1, 1);
+            m_candleChart->show();
+            break;
+        }
+        case PssCharts::ChartType::PIE: {
+            ui->chartLayout->addWidget(m_pieChart, 1, 1);
+            m_pieChart->show();
+            break;
+        }
+        case PssCharts::ChartType::LINE:
+        default:{
+            ui->chartLayout->addWidget(m_lineChart, 1, 1);
+            m_lineChart->show();
+            break;
+        }
+    }
+}

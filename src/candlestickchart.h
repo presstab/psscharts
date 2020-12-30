@@ -149,6 +149,7 @@ public:
     void SetCandleTimePeriod(uint32_t nTime);
     void SetOLHCFont(const QFont &font);
     void SetVolumeColor(const QColor& color);
+    std::vector<std::pair<QString, QColor>> GetLegendData();
 
 signals:
     void candleWidthChanged(int dChange);

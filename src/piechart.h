@@ -120,6 +120,8 @@ public:
 
     QColor GetColor(std::string label);
     void SetColor(std::string label, QColor qColor);
+    std::map<std::string, QColor> GetColorMap();
+    std::vector<std::pair<QString, QColor>> GetLegendData();
 
     void SetHighlight(QColor color);
     void EnableHighlight(bool fEnable);

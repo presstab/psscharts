@@ -27,6 +27,8 @@ SOFTWARE.
 
 #include <QMainWindow>
 #include "src/chart.h"
+#include "src/legendwidget.h"
+#include "ui_mainwindow.h"
 
 namespace Ui {
 class MainWindow;
@@ -49,6 +51,7 @@ private:
     PssCharts::BarChart* m_barChart;
     PssCharts::PieChart* m_pieChart;
     PssCharts::ChartType m_chartType;
+    LegendWidget* m_legend;
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
@@ -59,6 +62,8 @@ private slots:
     void ChangeCandleWidth(int dChange);
     void ChangeBarWidth(int dChange);
     void PieColorChanged(const QString& text);
+    void ChangeLegendOrientation();
+    void ChangeChart(PssCharts::ChartType type);
 };
 
 #endif // MAINWINDOW_H

@@ -6,34 +6,50 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>413</width>
-    <height>878</height>
+    <width>431</width>
+    <height>849</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>PSS Charts</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
-    <item>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
      <layout class="QHBoxLayout" name="hlayoutMain">
-      <property name="leftMargin">
-       <number>0</number>
-      </property>
       <item>
        <layout class="QFormLayout" name="formLayout">
         <item row="0" column="0">
          <widget class="QLabel" name="label_12">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>Chart Type</string>
           </property>
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="QComboBox" name="comboBoxChartType"/>
+         <widget class="QComboBox" name="comboBoxChartType">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
         </item>
         <item row="1" column="0">
          <widget class="QLabel" name="label">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>Chart Title</string>
           </property>
@@ -42,7 +58,14 @@
         <item row="1" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_6">
           <item>
-           <widget class="QLineEdit" name="lineeditChartTitle"/>
+           <widget class="QLineEdit" name="lineeditChartTitle">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QSpinBox" name="spinboxTitleFontSize"/>
@@ -58,16 +81,35 @@
         </item>
         <item row="2" column="0">
          <widget class="QLabel" name="label_2">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>Title Color</string>
           </property>
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="QComboBox" name="comboboxChartTitleColor"/>
+         <widget class="QComboBox" name="comboboxChartTitleColor">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
         </item>
         <item row="3" column="0">
          <widget class="QLabel" name="labelYTitle">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>Y Title</string>
           </property>
@@ -76,7 +118,14 @@
         <item row="3" column="1">
          <layout class="QHBoxLayout" name="horizontalLayoutYTitle">
           <item>
-           <widget class="QLineEdit" name="lineeditYTitle"/>
+           <widget class="QLineEdit" name="lineeditYTitle">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QSpinBox" name="spinboxYTitleFontSize"/>
@@ -92,16 +141,35 @@
         </item>
         <item row="4" column="0">
          <widget class="QLabel" name="label_3">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>Axis Color</string>
           </property>
          </widget>
         </item>
         <item row="4" column="1">
-         <widget class="QComboBox" name="comboboxYTitleColor"/>
+         <widget class="QComboBox" name="comboboxYTitleColor">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
         </item>
         <item row="5" column="0">
          <widget class="QLabel" name="labelDrawAxisLabels">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>Draw Axis Labels</string>
           </property>
@@ -127,6 +195,12 @@
         </item>
         <item row="6" column="0">
          <widget class="QLabel" name="label_10">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>Axis Label Precision</string>
           </property>
@@ -137,6 +211,12 @@
         </item>
         <item row="7" column="0">
          <widget class="QLabel" name="labelDrawAxisLine">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>Draw Axis Line</string>
           </property>
@@ -162,6 +242,12 @@
         </item>
         <item row="8" column="0">
          <widget class="QLabel" name="labelGridlineCount">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>Gridline Count</string>
           </property>
@@ -172,6 +258,12 @@
         </item>
         <item row="9" column="0">
          <widget class="QLabel" name="label_9">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>Fill Background</string>
           </property>
@@ -187,18 +279,31 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="comboboxBgColor"/>
+           <widget class="QComboBox" name="comboboxBgColor">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
-        <item row="10" column="0">
+        <item row="11" column="0">
          <widget class="QLabel" name="label_11">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>Crosshairs</string>
           </property>
          </widget>
         </item>
-        <item row="10" column="1">
+        <item row="11" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_8">
           <item>
            <widget class="QCheckBox" name="checkboxCrosshairs">
@@ -211,17 +316,64 @@
            <widget class="QSpinBox" name="spinboxCrosshairWidth"/>
           </item>
           <item>
-           <widget class="QComboBox" name="comboboxCrosshairColor"/>
+           <widget class="QComboBox" name="comboboxCrosshairColor">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
-        <item row="11" column="0" colspan="2">
+        <item row="12" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Chart Legend</string>
+          </property>
+         </widget>
+        </item>
+        <item row="12" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QCheckBox" name="checkboxChartLegend">
+            <property name="text">
+             <string>Enable</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboboxChartLegend">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="13" column="0" colspan="2">
          <widget class="QTabWidget" name="tabWidget">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="tabPosition">
            <enum>QTabWidget::South</enum>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tabBar">
            <attribute name="title">
@@ -851,6 +1003,9 @@
         </item>
        </layout>
       </item>
+      <item>
+       <layout class="QGridLayout" name="chartLayout"/>
+      </item>
      </layout>
     </item>
    </layout>
@@ -860,7 +1015,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>413</width>
+     <width>431</width>
      <height>22</height>
     </rect>
    </property>

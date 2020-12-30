@@ -486,6 +486,18 @@ QColor PieChart::GetColor(std::string label)
     return m_mapColors.at(label);
 }
 
+std::map<std::string, QColor> PieChart::GetColorMap() {
+    return m_mapColors;
+}
+
+std::vector<std::pair<QString, QColor>> PieChart::GetLegendData() {
+    std::vector<std::pair<QString, QColor>> vLegendData;
+    for(auto pair : m_mapColors) {
+        vLegendData.emplace_back(std::make_pair(QString::fromStdString(pair.first), pair.second));
+    }
+    return vLegendData;
+}
+
 /**
  * @brief PieChart::ChartLabels Gives a list of the labels for the chart
  * @return Alphabetized list of the labels

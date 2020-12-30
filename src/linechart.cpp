@@ -705,4 +705,12 @@ void LineChart::EnableVolumeBar(bool fEnable)
     m_fChangesMade = true;
 }
 
+std::vector<std::pair<QString, QColor>> LineChart::GetLegendData()
+{
+    std::vector<std::pair<QString, QColor>> vLegend;
+    for(int i = 0; i < static_cast<int>(m_vSeries.size()); i++) {
+        vLegend.emplace_back(QString::number(i), GetSeriesColor(i));
+    }
+    return vLegend;
+}
 }//namespace
