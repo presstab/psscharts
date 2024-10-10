@@ -265,7 +265,7 @@ void BarChart::paintEvent(QPaintEvent *event)
     penHighlight.setWidth(m_lineWidth);
     bool fMouseSet = false;
     ProcessChangedData();
-    for (const std::pair<uint32_t, double>& pair : m_mapPoints) {
+    for (const std::pair<const uint32_t, double>& pair : m_mapPoints) {
         QPointF chartBar = ConvertToPlotPoint(pair);
         QPointF pointBar = QPointF(chartBar.x() + m_nBarWidth, chartBar.y());
         QPointF pointOrigin = QPointF(chartBar.x() - m_nBarWidth, rectChart.bottom());

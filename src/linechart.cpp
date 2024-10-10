@@ -406,7 +406,7 @@ void LineChart::paintEvent(QPaintEvent *event)
         QPointF pointPrev;
         bool fMouseSet = false;
 
-        for (const std::pair<uint32_t, double>& pair : series) {
+        for (const std::pair<const uint32_t, double>& pair : series) {
             QPointF point = ConvertToPlotPoint(pair);
             qvecPolygon.append(point);
             if (fFirstRun) {
