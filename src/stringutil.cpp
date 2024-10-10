@@ -26,6 +26,7 @@ SOFTWARE.
 
 #include <QDateTime>
 
+#include <cctype>
 #include <sstream>
 #include <iomanip>
 
@@ -69,6 +70,15 @@ int PrecisionHint(const double& n)
         return 7;
 
      return 8;
+}
+
+std::string convertToUpper(std::string const &strInput)
+{
+    std::string strOutput = "";
+    for (std::string::size_type i = 0; i < strInput.length(); ++i)
+        strOutput += std::toupper(static_cast<unsigned char>(strInput[i]));
+
+    return strOutput;
 }
 
 } //namespace

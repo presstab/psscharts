@@ -78,16 +78,6 @@ PieChart::PieChart(QWidget *parent) : Chart(ChartType::PIE, parent)
     setMouseTracking(true);
 }
 
-std::string PieChart::strToUpper(std::string const &strInput)
-{
-    std::string strOutput = "";
-    std::locale locale;
-    for (std::string::size_type i = 0; i < strInput.length(); ++i)
-        strOutput += std::toupper(strInput[i], locale);
-
-    return strOutput;
-}
-
 std::string PieChart::LabelTypeToString(const PieLabelType type)
 {
     switch (type) {
@@ -108,7 +98,7 @@ std::string PieChart::LabelTypeToString(const PieLabelType type)
 
 PieLabelType PieChart::LabelTypeFromString(std::string strType)
 {
-    strType = strToUpper(strType);
+    strType = convertToUpper(strType);
     if (strType == "LABEL")
         return PieLabelType::PIE_LABEL;
     else if (strType == "LABEL AND PERCENTAGE")

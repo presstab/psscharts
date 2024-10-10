@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
 #include "chart.h"
 #include "stringutil.h"
 
@@ -87,16 +86,6 @@ Chart::Chart(ChartType type, QWidget* parent) : QWidget (parent)
     m_precision = 100000000;
 
     setMouseTracking(true);
-}
-
-std::string convertToUpper(std::string const &strInput)
-{
-    std::string strOutput = "";
-    std::locale locale;
-    for (std::string::size_type i = 0; i < strInput.length(); ++i)
-        strOutput += std::toupper(strInput[i], locale);
-
-    return strOutput;
 }
 
 std::string ChartTypeToString(const ChartType type)

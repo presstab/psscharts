@@ -31,6 +31,7 @@ namespace PssCharts {
     int PrecisionHint(const double& n);
     QString PrecisionToString(double d, int precision = 8);
     QString TimeStampToString(const uint64_t& nTime);
+    std::string convertToUpper(std::string const &strInput);
 }
 
 #endif // STRINGUTIL_H
