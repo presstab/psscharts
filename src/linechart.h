@@ -59,9 +59,14 @@ protected:
     std::map<std::string, std::string> m_mapProperties;
     std::vector<LineSeries> m_vSeries;
     std::vector<LineSeries> m_vVolume;
+    mutable bool m_fPlotPointsDirty;
+    std::vector<QVector<QPointF>> m_cachedPlotPoints;
+    std::vector<QVector<QPointF>> m_cachedVolumePoints;
+    
     QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair) const;
     QPointF ConvertToVolumePoint(const std::pair<uint32_t, double>& pair) const;
     std::pair<uint32_t, double> ConvertFromPlotPoint(const QPointF& point) override;
+    void UpdateCachedPoints();
     std::vector<QBrush> m_vLineColor; //Line color for each series
     QBrush m_brushFill;
     bool m_fEnableFill; //! Does the line get filled
@@ -95,6 +100,7 @@ public:
     void SetVolumePoints(const std::map<uint32_t, double>& mapPoints, const uint32_t& nSeries);
 
     void paintEvent(QPaintEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
     void SetFillBrush(const QBrush& brush);
     void EnableFill(bool fEnable);
     void SetLineBrush(const uint32_t& nSeries, const QBrush& brush);

@@ -69,6 +69,7 @@ LineChart::LineChart(QWidget *parent) : Chart(ChartType::LINE, parent)
     m_topTitleHeight = -1;
     m_precision = 100000000;
     m_nYSectionModulus = 0;
+    m_fPlotPointsDirty = true;
 
     m_fDrawVolume = false;
     m_nBarWidth = 5;
@@ -385,6 +386,7 @@ void LineChart::ProcessChangedData()
         m_pairYRange.first -= buffer;
     }
     m_fChangesMade = true;
+    m_fPlotPointsDirty = true; // Mark cached points as dirty when data changes
 }
 
 /**
@@ -417,6 +419,54 @@ QColor LineChart::GetSeriesColor(const uint32_t& nSeries) const
     return color;
 }
 
+/**
+ * @brief LineChart::UpdateCachedPoints Convert data points to screen coordinates and cache them
+ */
+void LineChart::UpdateCachedPoints()
+{
+    if (!m_fPlotPointsDirty) {
+        return; // Points are already up to date
+    }
+
+    // Clear existing cached points
+    m_cachedPlotPoints.clear();
+    m_cachedVolumePoints.clear();
+    
+    // Resize containers to match number of series
+    m_cachedPlotPoints.resize(m_vSeries.size());
+    m_cachedVolumePoints.resize(m_vVolume.size());
+    
+    // Convert all series data points to screen coordinates
+    for (size_t i = 0; i < m_vSeries.size(); i++) {
+        const LineSeries& series = m_vSeries.at(i);
+        QVector<QPointF>& plotPoints = m_cachedPlotPoints[i];
+        
+        // Reserve space to avoid reallocations
+        plotPoints.reserve(series.data.size());
+        
+        // Convert each data point to screen coordinates
+        for (const auto& pair : series.data) {
+            plotPoints.append(ConvertToPlotPoint(pair));
+        }
+    }
+    
+    // Convert volume data points
+    for (size_t i = 0; i < m_vVolume.size(); i++) {
+        const LineSeries& series = m_vVolume.at(i);
+        QVector<QPointF>& volumePoints = m_cachedVolumePoints[i];
+        
+        // Reserve space to avoid reallocations
+        volumePoints.reserve(series.data.size());
+        
+        // Convert each volume data point to screen coordinates
+        for (const auto& pair : series.data) {
+            volumePoints.append(ConvertToVolumePoint(pair));
+        }
+    }
+    
+    m_fPlotPointsDirty = false; // Mark points as up to date
+}
+
 void LineChart::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event);
@@ -426,11 +476,6 @@ void LineChart::paintEvent(QPaintEvent *event)
     painter.setRenderHint(QPainter::Antialiasing, true);
     painter.setBrush(m_brushBackground);
     painter.fillRect(rect(), m_brushBackground);
-
-    //If there is only one data point, then return without drawing anything but the background
-//    if (m_mapPoints.size() <= 1) {
-//        return;
-//    }
 
     //If auto precision is enabled, determine the precision to use
     if (m_settingsYLabels.AutoPrecisionEnabled()) {
@@ -465,6 +510,11 @@ void LineChart::paintEvent(QPaintEvent *event)
 
     QRect rectFull = rect();
     QRect rectChart = ChartArea();
+
+    // Update the cached points if necessary (data changed or resize occurred)
+    if (m_fPlotPointsDirty || m_fChangesMade) {
+        UpdateCachedPoints();
+    }
 
     // Determine if mouse location is inside of the chart
     QPoint gposMouse = QCursor::pos();
@@ -504,137 +554,140 @@ void LineChart::paintEvent(QPaintEvent *event)
         if (!series.fShow || series.data.empty())
             continue;
 
-
-        //Create the lines that are drawn
+        // Use cached plot points instead of converting during paint
         QVector<QPointF> qvecPolygon;
         QVector<QLineF> qvecLines;
-
-        qvecPolygon.append(rectChart.bottomLeft());
-        bool fFirstRun = true;
-        QPointF pointPrev;
-        bool fMouseSet = false;
-
-        QPointF pointLast;
-        double dataLast;
-        for (const std::pair<const uint32_t, double>& pair : series.data) {
-            QPointF point = ConvertToPlotPoint(pair);
-            qvecPolygon.append(point);
-            if (fFirstRun) {
-                pointPrev = point;
-                fFirstRun = false;
-                continue;
-            }
-
-            QLineF line(pointPrev, point);
-            qvecLines.append(line);
-            pointPrev = point;
-
-            if (fMouseInChartArea && !fMouseSet) {
-                //Find the line that the mouse x point would belong on
-                if (lposMouse.x() >= line.x1() && lposMouse.x() <= line.x2()) {
-                    double nLineSlope = 0;
-                    double nLineYIntercept = 0;
-                    GetLineEquation(line, nLineSlope, nLineYIntercept);
-                    double y = nLineSlope * lposMouse.x() + nLineYIntercept;
-                    fMouseSet = true;
-                    QColor color = GetSeriesColor(i);
-                    m_mousedisplay.AddDot(QPointF(lposMouse.x(), y), color);
+        
+        // Ensure we have cached data for this series
+        if (i < m_cachedPlotPoints.size()) {
+            const QVector<QPointF>& cachedPoints = m_cachedPlotPoints[i];
+            
+            // Create polygon starting with bottom-left corner
+            qvecPolygon.append(rectChart.bottomLeft());
+            
+            // Add all cached points to the polygon
+            qvecPolygon.append(cachedPoints);
+            
+            // Add lines between points
+            if (cachedPoints.size() > 1) {
+                for (int j = 1; j < cachedPoints.size(); j++) {
+                    qvecLines.append(QLineF(cachedPoints[j-1], cachedPoints[j]));
                 }
             }
-            pointLast = point;
-            dataLast = pair.second;
-        }
+            
+            // Handle mouse interactions with lines
+            if (fMouseInChartArea) {
+                bool fMouseSet = false;
+                for (const QLineF& line : qvecLines) {
+                    if (!fMouseSet && lposMouse.x() >= line.x1() && lposMouse.x() <= line.x2()) {
+                        double nLineSlope = 0;
+                        double nLineYIntercept = 0;
+                        GetLineEquation(line, nLineSlope, nLineYIntercept);
+                        double y = nLineSlope * lposMouse.x() + nLineYIntercept;
+                        fMouseSet = true;
+                        QColor color = GetSeriesColor(i);
+                        m_mousedisplay.AddDot(QPointF(lposMouse.x(), y), color);
+                    }
+                }
+            }
+            
+            // Cleanly close the polygon
+            qvecPolygon.append(QPointF(rectChart.right(), rectChart.bottom()));
+            
+            // Get the last data point for labels
+            QPointF pointLast;
+            double dataLast = 0;
+            
+            if (!series.data.empty()) {
+                auto lastDataIter = series.data.rbegin();
+                dataLast = lastDataIter->second;
+                
+                if (!cachedPoints.empty()) {
+                    pointLast = cachedPoints.last();
+                }
+            }
+            
+            // Show a label of where the line ends
+            QRect rectDraw;
+            rectDraw.setTopLeft(pointLast.toPoint());
+            rectDraw.setBottomRight(QPoint(pointLast.x()+50, pointLast.y()+10));
 
-        // Cleanly close the polygon
-        qvecPolygon.append(QPointF(rectChart.right(), rectChart.bottom()));
+            //Center the label on the line
+            rectDraw.moveBottom(rectDraw.bottom() - rectDraw.height()/2);
 
-        // Show a label of where the line ends
-        QRect rectDraw;
-        rectDraw.setTopLeft(pointLast.toPoint());
-        rectDraw.setBottomRight(QPoint(pointLast.x()+50, pointLast.y()+10));
+            QPainterPath path;
+            path.addRoundedRect(rectDraw, 5, 5);
+            painter.fillPath(path, GetSeriesColor(i));
 
-        //Center the label on the line
-        rectDraw.moveBottom(rectDraw.bottom() - rectDraw.height()/2);
+            const auto& fontBefore = painter.font();
+            painter.setFont(m_settingsYLabels.font);
 
-        QPainterPath path;
-        path.addRoundedRect(rectDraw, 5, 5);
-        painter.fillPath(path, GetSeriesColor(i));
+            //If there is a label for the series, add it too
+            QString strText = QString::number(dataLast, 'f', m_settingsYLabels.Precision());
+            if (series.label != "")
+                strText = series.label;
 
-        //int nWidthText = fm.horizontalAdvance(strLabel);
-        //rectDraw.setBottomRight(QPoint(pointDraw.x() + nWidthText, rectXLabels.bottom()));
+            painter.drawText(rectDraw, Qt::AlignCenter, strText);
 
-        //Center the label on the line
-        //rectDraw.moveLeft(rectDraw.left() - rectDraw.width() / 2);
-        // if (!fDrawIndicatorLine) {
-        //     //Assume this is for the mouse display if not using an indicator line
-        //     QPainterPath path;
-        //     path.addRoundedRect(rectDraw, 5, 5);
-        //     painter.fillPath(path, m_mousedisplay.LabelBackgroundColor());
-        // }
-        const auto& fontBefore = painter.font();
-        painter.setFont(m_settingsYLabels.font);
+            //Draw a percent change box if enabled
+            if (m_fDrawZero) {
+                QRect rectPercent = rectDraw;
+                rectPercent.moveLeft(rectDraw.right());
+                double percentChange = dataLast * 100;
+                strText = QString::number(percentChange, 'f', 3) + QString("%");
+                if (m_settingsYLabels.fPriceDisplay) {
+                    strText = PrecisionToString(series.priceRaw, PrecisionHint(series.priceRaw));
+                }
 
-        //If there is a label for the series, add it too
-        QString strText = QString::number(dataLast, 'f', m_settingsYLabels.Precision());
-        if (series.label != "")
-            strText = series.label;
+                QPainterPath path_percent;
+                path_percent.addRoundedRect(rectPercent, 5, 5);
+                painter.fillPath(path_percent, GetSeriesColor(i));
+                painter.drawText(rectPercent, Qt::AlignCenter, strText);
+            }
+            painter.setFont(fontBefore);
 
-        painter.drawText(rectDraw, Qt::AlignCenter, strText);
-
-        //Draw a percent change box if enabled
-        if (m_fDrawZero) {
-            QRect rectPercent = rectDraw;
-            rectPercent.moveLeft(rectDraw.right());
-            double percentChange = dataLast * 100;
-            strText = QString::number(percentChange, 'f', 3) + QString("%");
-            if (m_settingsYLabels.fPriceDisplay) {
-                strText = PrecisionToString(series.priceRaw, PrecisionHint(series.priceRaw));
-                //strText = QString::number(series.priceRaw, 'f', m_settingsYLabels.Precision());
+            /**Todo - Support fill chart when there are multiple line series**/
+            if (m_fEnableFill && m_vSeries.size() == 1) {
+                //Fill in the chart area - Note: this is the most computational part of the painting
+                QPolygonF polygon(qvecPolygon);
+                painter.setBrush(m_brushFill);
+                painter.drawConvexPolygon(polygon); //supposedly faster than "drawPolygon()"
             }
 
-            QPainterPath path_percent;
-            path_percent.addRoundedRect(rectPercent, 5, 5);
-            painter.fillPath(path_percent, GetSeriesColor(i));
-            painter.drawText(rectPercent, Qt::AlignCenter, strText);
+            //Draw the lines
+            painter.save();
+
+            QBrush brush = GetSeriesColor(i);
+
+            QPen penLine;
+            penLine.setBrush(brush);
+            penLine.setWidth(m_lineWidth);
+            painter.setPen(penLine);
+            painter.drawLines(qvecLines);
+            painter.restore();
         }
-        painter.setFont(fontBefore);
-
-        /**Todo - Support fill chart when there are multiple line series**/
-        if (m_fEnableFill && m_vSeries.size() == 1) {
-            //Fill in the chart area - Note: this is the most computational part of the painting
-            QPolygonF polygon(qvecPolygon);
-            painter.setBrush(m_brushFill);
-            painter.drawConvexPolygon(polygon); //supposedly faster than "drawPolygon()"
-        }
-
-        //Draw the lines
-        painter.save();
-
-        QBrush brush = GetSeriesColor(i);
-
-        QPen penLine;
-        penLine.setBrush(brush);
-        penLine.setWidth(m_lineWidth);
-        painter.setPen(penLine);
-        painter.drawLines(qvecLines);
-        painter.restore();
     }
 
     //Draw Volume Bars
-    if(m_fDrawVolume) {
-        for (unsigned int i = 0; i < m_vSeries.size(); i++) {
+    if (m_fDrawVolume) {
+        for (unsigned int i = 0; i < m_vVolume.size(); i++) {
             QPen penBar;
             penBar.setBrush(GetSeriesColor(i));
-            for (const std::pair<uint32_t, double> pair : m_vSeries.at(i).data) {
-                QPointF chartBar = ConvertToVolumePoint(pair);
-                QPointF pointBar = QPointF(chartBar.x() + i*m_nBarWidth + m_nBarWidth, chartBar.y());
-                QPointF pointOrigin = QPointF(chartBar.x() + i*m_nBarWidth + 1, rectChart.bottom());
-                QRectF rect(pointBar, pointOrigin);
-                QBrush rectBrush = GetSeriesColor(i);
-                painter.setPen(penBar);
-                painter.drawRect(rect);
-                if (m_fEnableFill) {
-                    painter.fillRect(rect, rectBrush);
+            
+            // Use cached volume points if available
+            if (i < m_cachedVolumePoints.size()) {
+                const QVector<QPointF>& cachedVolumePoints = m_cachedVolumePoints[i];
+                
+                for (const QPointF& chartBar : cachedVolumePoints) {
+                    QPointF pointBar = QPointF(chartBar.x() + i*m_nBarWidth + m_nBarWidth, chartBar.y());
+                    QPointF pointOrigin = QPointF(chartBar.x() + i*m_nBarWidth + 1, rectChart.bottom());
+                    QRectF rect(pointBar, pointOrigin);
+                    QBrush rectBrush = GetSeriesColor(i);
+                    painter.setPen(penBar);
+                    painter.drawRect(rect);
+                    if (m_fEnableFill) {
+                        painter.fillRect(rect, rectBrush);
+                    }
                 }
             }
         }
@@ -866,6 +919,15 @@ void LineChart::SetVolumeBarWidth(int nWidth)
 {
     m_nBarWidth = nWidth;
     m_fChangesMade = true;
+    m_fPlotPointsDirty = true;
+}
+
+void LineChart::resizeEvent(QResizeEvent *event)
+{
+    Q_UNUSED(event);
+    // Mark cached points as dirty when the widget is resized
+    m_fPlotPointsDirty = true;
+    Chart::resizeEvent(event);
 }
 
 /**
@@ -883,6 +945,7 @@ void LineChart::EnableVolumeBar(bool fEnable)
 {
     m_fDrawVolume = fEnable;
     m_fChangesMade = true;
+    m_fPlotPointsDirty = true;
 }
 
 std::vector<std::pair<QString, QColor>> LineChart::GetLegendData()
