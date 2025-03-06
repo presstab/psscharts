@@ -41,6 +41,8 @@ SOFTWARE.
 
 class QColor;
 class QPaintEvent;
+class QMouseEvent;
+class QResizeEvent;
 
 struct LineSeries {
     std::map<uint32_t, double> data;
@@ -75,6 +77,11 @@ protected:
     bool m_fDrawZero;
     double m_nBarWidth;
     uint32_t m_nYSectionModulus;
+    
+    // Mouse interaction tracking
+    QPoint m_lastMousePos;
+    std::vector<MouseDot> m_lastMouseDots;
+    bool m_lastMouseInChartArea;
 
     QRect MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const;
     void ProcessChangedData() override;
@@ -101,6 +108,7 @@ public:
 
     void paintEvent(QPaintEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
     void SetFillBrush(const QBrush& brush);
     void EnableFill(bool fEnable);
     void SetLineBrush(const uint32_t& nSeries, const QBrush& brush);

@@ -31,6 +31,8 @@ SOFTWARE.
 #include <QPaintEvent>
 #include <QPen>
 #include <QPainterPath>
+#include <QMouseEvent>
+#include <QResizeEvent>
 
 /* ----------------------------------------------- |
  * |              TOP TITLE AREA                   |
@@ -73,6 +75,10 @@ LineChart::LineChart(QWidget *parent) : Chart(ChartType::LINE, parent)
 
     m_fDrawVolume = false;
     m_nBarWidth = 5;
+    
+    // Initialize mouse tracking variables
+    m_lastMouseInChartArea = false;
+    m_lastMousePos = QPoint(0, 0);
 
     setMouseTracking(true);
 }
@@ -516,21 +522,30 @@ void LineChart::paintEvent(QPaintEvent *event)
         UpdateCachedPoints();
     }
 
-    // Determine if mouse location is inside of the chart
-    QPoint gposMouse = QCursor::pos();
-    QPoint gposChart = mapToGlobal(QPoint(0+WidthYTitleArea()+WidthYLabelArea(),0+HeightTopTitleArea()));
-    QPoint lposMouse = this->mapFromGlobal(gposMouse);
+    // Determine if mouse location is inside of the chart, but only if mouse display is enabled
+    QPoint lposMouse;
     bool fMouseInChartArea = false;
-    if (m_mousedisplay.IsEnabled() && gposMouse.y() >= gposChart.y()) {
-        if (gposMouse.y() <= rectChart.height() + gposChart.y()) {
-            //Y is in chart range, check if x is in the chart range too
-            if (gposMouse.x() >= gposChart.x() && gposMouse.x() <= gposChart.x() + rectChart.width()) {
-                fMouseInChartArea = true;
-            }
+    
+    if (m_mousedisplay.IsEnabled()) {
+        QPoint gposMouse = QCursor::pos();
+        QPoint gposChart = mapToGlobal(QPoint(0+WidthYTitleArea()+WidthYLabelArea(),0+HeightTopTitleArea()));
+        lposMouse = this->mapFromGlobal(gposMouse);
+        
+        // Check if the mouse is in the chart area
+        if (gposMouse.y() >= gposChart.y() && 
+            gposMouse.y() <= rectChart.height() + gposChart.y() &&
+            gposMouse.x() >= gposChart.x() && 
+            gposMouse.x() <= gposChart.x() + rectChart.width()) {
+            fMouseInChartArea = true;
         }
+        
+        // Update the last mouse position state
+        m_lastMousePos = lposMouse;
+        m_lastMouseInChartArea = fMouseInChartArea;
     }
 
-    //Clear any existing mouse dots
+    //Clear any existing mouse dots and save current state before clearing
+    m_lastMouseDots = m_mousedisplay.GetDots();
     m_mousedisplay.ClearDots();
 
     //Draw a horizontal line at Y=0 to show gain/loss
@@ -927,7 +942,126 @@ void LineChart::resizeEvent(QResizeEvent *event)
     Q_UNUSED(event);
     // Mark cached points as dirty when the widget is resized
     m_fPlotPointsDirty = true;
+    
+    // Reset mouse tracking on resize
+    m_lastMouseInChartArea = false;
+    m_lastMouseDots.clear();
+    
     Chart::resizeEvent(event);
+}
+
+void LineChart::mouseMoveEvent(QMouseEvent *event)
+{
+    // Only process mouse movement when mouse display is enabled
+    if (!m_mousedisplay.IsEnabled()) {
+        Chart::mouseMoveEvent(event);
+        return;
+    }
+    
+    QRect rectChart = ChartArea();
+    QPoint currentPos = event->pos();
+    bool currentInChartArea = rectChart.contains(currentPos);
+    
+    // If nothing has changed in mouse state, don't bother repainting
+    if (currentPos == m_lastMousePos && currentInChartArea == m_lastMouseInChartArea) {
+        Chart::mouseMoveEvent(event);
+        return;
+    }
+    
+    // Calculate regions that need to be repainted
+    QRegion updateRegion;
+    
+    // Create the invalidation region for the previous mouse position
+    if (m_lastMouseInChartArea) {
+        // Invalidate crosshair lines
+        updateRegion += QRect(rectChart.left(), m_lastMousePos.y() - 1, 
+                             rectChart.width(), 3); // Horizontal line
+        updateRegion += QRect(m_lastMousePos.x() - 1, rectChart.top(), 
+                             3, rectChart.height()); // Vertical line
+        
+        // Invalidate all previous mouse dots and tooltips
+        for (const MouseDot& dot : m_lastMouseDots) {
+            QPointF dotPos = dot.Pos();
+            // Area for the dot (assuming radius 5)
+            updateRegion += QRect(dotPos.x() - 6, dotPos.y() - 6, 12, 12);
+            
+            // Area for the tooltip - this is a conservative estimate
+            // Create text to determine size
+            auto pairData = ConvertFromPlotPoint(dotPos);
+            const uint32_t& nX = pairData.first;
+            const double& nY = pairData.second;
+            QString strLabel = "(";
+            if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
+                strLabel += TimeStampToString(nX);
+            } else {
+                strLabel += PrecisionToString(nX, m_settingsXLabels.Precision());
+            }
+            strLabel += ", ";
+            strLabel += PrecisionToString(nY, m_settingsYLabels.Precision());
+            strLabel += ")";
+            
+            QFontMetrics fm(font());
+            int tooltipWidth = fm.horizontalAdvance(strLabel) + 10;
+            int tooltipHeight = fm.height() + 8;
+            
+            // Tooltip typically appears below the dot
+            updateRegion += QRect(dotPos.x() - tooltipWidth/2, dotPos.y() + 5, 
+                                 tooltipWidth, tooltipHeight);
+        }
+        
+        // Also update Y axis label area if mouse display changes the labels
+        if (m_settingsYLabels.fEnabled) {
+            QRect yLabelArea = YLabelArea();
+            updateRegion += QRect(yLabelArea.left(), m_lastMousePos.y() - 10, 
+                                 yLabelArea.width(), 20);
+        }
+        
+        // Update X axis label area if mouse display changes the labels
+        if (m_settingsXLabels.fEnabled) {
+            QRect xLabelArea = XLabelArea();
+            updateRegion += QRect(m_lastMousePos.x() - 50, xLabelArea.top(), 
+                                 100, xLabelArea.height());
+        }
+    }
+    
+    // Add regions for current mouse position
+    if (currentInChartArea) {
+        // Crosshair lines
+        updateRegion += QRect(rectChart.left(), currentPos.y() - 1, 
+                             rectChart.width(), 3); // Horizontal line
+        updateRegion += QRect(currentPos.x() - 1, rectChart.top(), 
+                             3, rectChart.height()); // Vertical line
+        
+        // Conservative estimate for potential tooltips/dots
+        // Add a bit more area around current position
+        updateRegion += QRect(currentPos.x() - 75, currentPos.y() - 20, 150, 40);
+        
+        // Y-axis label area for current mouse position
+        if (m_settingsYLabels.fEnabled) {
+            QRect yLabelArea = YLabelArea();
+            updateRegion += QRect(yLabelArea.left(), currentPos.y() - 10, 
+                                 yLabelArea.width(), 20);
+        }
+        
+        // X-axis label area for current mouse position
+        if (m_settingsXLabels.fEnabled) {
+            QRect xLabelArea = XLabelArea();
+            updateRegion += QRect(currentPos.x() - 50, xLabelArea.top(), 
+                                 100, xLabelArea.height());
+        }
+    }
+    
+    // Store current state for next time
+    m_lastMousePos = currentPos;
+    m_lastMouseInChartArea = currentInChartArea;
+    m_lastMouseDots = m_mousedisplay.GetDots();
+    
+    // Update only the required regions
+    if (!updateRegion.isEmpty()) {
+        update(updateRegion);
+    }
+    
+    Chart::mouseMoveEvent(event);
 }
 
 /**
