@@ -42,7 +42,12 @@ SOFTWARE.
 class QColor;
 class QPaintEvent;
 
-typedef std::map<uint32_t, double> LineSeries;
+struct LineSeries {
+    std::map<uint32_t, double> data;
+    double priceRaw;
+    bool fShow;
+    QString label;
+};
 
 namespace PssCharts {
 
@@ -51,6 +56,7 @@ class LineChart : public Chart
     Q_OBJECT
 
 protected:
+    std::map<std::string, std::string> m_mapProperties;
     std::vector<LineSeries> m_vSeries;
     std::vector<LineSeries> m_vVolume;
     QPointF ConvertToPlotPoint(const std::pair<uint32_t, double>& pair) const;
@@ -61,16 +67,28 @@ protected:
     bool m_fEnableFill; //! Does the line get filled
 
     bool m_fDrawVolume;
+    bool m_fDrawZero;
     double m_nBarWidth;
+    uint32_t m_nYSectionModulus;
 
     QRect MouseOverTooltipRect(const QPainter& painter, const QRect& rectFull, const QPointF& pointCircleCenter, const QString& strLabel) const;
     void ProcessChangedData() override;
 
 public:
     LineChart(QWidget* parent = nullptr);
+
+    void AddProperty(const std::string& strKey, const std::string& strValue);
+    bool GetProperty(const std::string& strKey, std::string& strValue);
+    void ClearProperties();
+
     void AddDataPoint(const uint32_t& nSeries, const uint32_t& x, const double& y);
     void RemoveDataPoint(const uint32_t& nSeries, const uint32_t& x);
     void SetDataPoints(const std::map<uint32_t, double>& mapPoints, const uint32_t& nSeries);
+    void RemoveSeries(const uint32_t& nSeries);
+    void ClearAll();
+    int SeriesCount() {return m_vSeries.size();};
+    void HideSeries(const uint32_t& nSeries, bool fHide);
+    bool SeriesHidden(const uint32_t& nSeries);
 
     void AddVolumePoint(const uint32_t& nSeries, const uint32_t& x, const double& y);
     void RemoveVolumePoint(const uint32_t& nSeries, const uint32_t& x);
@@ -80,11 +98,17 @@ public:
     void SetFillBrush(const QBrush& brush);
     void EnableFill(bool fEnable);
     void SetLineBrush(const uint32_t& nSeries, const QBrush& brush);
+    void SetSeriesLabel(const uint32_t& nSeries, const QString& strLabel);
+    QString SeriesLabel(const uint32_t& nSeries);
+    void SetSeriesRawPrice(const uint32_t& nSeries, const double& price);
+    void ClearSeriesLabels();
     void SetLineWidth(int nWidth);
     void GetLineEquation(const QLineF& line, double& nSlope, double& nYIntercept);
     QColor GetSeriesColor(const uint32_t& nSeries) const;
     void EnableVolumeBar(bool fEnable);
     void SetVolumeBarWidth(int nWidth);
+    void SetYSectionModulus(uint32_t nMod) { m_nYSectionModulus = nMod; }
+    void DrawYZeroLine(bool fDraw) { m_fDrawZero = fDraw; }
     std::vector<std::pair<QString, QColor>> GetLegendData();
 };
 

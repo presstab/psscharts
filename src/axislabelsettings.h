@@ -44,7 +44,9 @@ public:
     bool fDynamicSizing; //Whether the dimension should be followed, or should go with a hint
     QSize sizeDynamicDimension;
     AxisLabelType labeltype;
+    int32_t timeOffset; //If labeltype is timestamp, can offset time to be in local
     bool fEnabled; //Is the drawing of the axis labels enabled
+    bool fPriceDisplay; //Display price instead of % on right side Y Label
 
     AxisLabelSettings()
     {

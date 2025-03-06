@@ -68,11 +68,32 @@ LineChart::LineChart(QWidget *parent) : Chart(ChartType::LINE, parent)
     m_rightMargin = -1;
     m_topTitleHeight = -1;
     m_precision = 100000000;
+    m_nYSectionModulus = 0;
 
-    m_fDrawVolume = true;
+    m_fDrawVolume = false;
     m_nBarWidth = 5;
 
     setMouseTracking(true);
+}
+
+
+// Custom user data
+void LineChart::AddProperty(const std::string &strKey, const std::string &strValue)
+{
+    m_mapProperties.emplace(strKey, strValue);
+}
+
+bool LineChart::GetProperty(const std::string &strKey, std::string &strValue)
+{
+    if (!m_mapProperties.count(strKey))
+        return false;
+    strValue = m_mapProperties.at(strKey);
+    return true;
+}
+
+void LineChart::ClearProperties()
+{
+    m_mapProperties.clear();
 }
 
 /**
@@ -190,7 +211,7 @@ void LineChart::AddDataPoint(const uint32_t& nSeries, const uint32_t& x, const d
         //Series does not exist
         return;
     }
-    m_vSeries.at(nSeries).emplace(x, y);
+    m_vSeries.at(nSeries).data.emplace(x, y);
     ProcessChangedData();
 }
 
@@ -205,7 +226,7 @@ void LineChart::RemoveDataPoint(const uint32_t& nSeries, const uint32_t &x)
         //Series does not exist
         return;
     }
-    m_vSeries.at(nSeries).erase(x);
+    m_vSeries.at(nSeries).data.erase(x);
     ProcessChangedData();
 }
 
@@ -219,9 +240,78 @@ void LineChart::SetDataPoints(const std::map<uint32_t, double>& mapPoints, const
     if (m_vSeries.size() < nSeries+1) {
         //Series does not exist yet
         m_vSeries.resize(nSeries+1);
+        m_vSeries.at(nSeries).fShow = true;
     }
-    m_vSeries.at(nSeries) = mapPoints;
+    m_vSeries.at(nSeries).data = mapPoints;
     ProcessChangedData();
+}
+
+void LineChart::RemoveSeries(const uint32_t& nSeries)
+{
+    //Check that series exists
+    if (m_vSeries.size() < nSeries + 1) {
+        return;
+    }
+    m_vSeries.erase(m_vSeries.begin()+nSeries);
+}
+
+void LineChart::ClearAll()
+{
+    m_vSeries.clear();
+    m_vVolume.clear();
+}
+
+// Keeps data in chart series, but does not paint the line
+void LineChart::HideSeries(const uint32_t& nSeries, bool fHide)
+{
+    //Check that series exists
+    if (m_vSeries.size() < nSeries + 1) {
+        return;
+    }
+    m_vSeries.at(nSeries).fShow = !fHide;
+}
+
+bool LineChart::SeriesHidden(const uint32_t &nSeries)
+{
+    if (m_vSeries.size() < nSeries + 1) {
+        return false;
+    }
+    return !m_vSeries.at(nSeries).fShow;
+}
+
+void LineChart::SetSeriesLabel(const uint32_t &nSeries, const QString &strLabel)
+{
+    if (m_vSeries.size() < nSeries + 1) {
+        return;
+    }
+
+    m_vSeries.at(nSeries).label = strLabel;
+}
+
+QString LineChart::SeriesLabel(const uint32_t &nSeries)
+{
+    if (m_vSeries.size() < nSeries + 1) {
+        return "";
+    }
+
+    return m_vSeries.at(nSeries).label;
+}
+
+void LineChart::SetSeriesRawPrice(const uint32_t& nSeries, const double &price)
+{
+    if (m_vSeries.size() < nSeries + 1) {
+        return;
+    }
+
+    m_vSeries.at(nSeries).priceRaw = price;
+}
+
+void LineChart::ClearSeriesLabels()
+{
+    for (unsigned int i = 0; i < m_vSeries.size(); i++) {
+        m_vSeries.at(i).label.clear();
+        m_vSeries.at(i).priceRaw = 0;
+    }
 }
 
 /**
@@ -236,7 +326,7 @@ void LineChart::AddVolumePoint(const uint32_t& nSeries, const uint32_t& x, const
         //Series does not exist
         return;
     }
-    m_vVolume.at(nSeries).emplace(x, y);
+    m_vVolume.at(nSeries).data.emplace(x, y);
     ProcessChangedData();
 }
 
@@ -251,7 +341,7 @@ void LineChart::RemoveVolumePoint(const uint32_t& nSeries, const uint32_t &x)
         //Series does not exist
         return;
     }
-    m_vVolume.at(nSeries).erase(x);
+    m_vVolume.at(nSeries).data.erase(x);
     ProcessChangedData();
 }
 
@@ -266,7 +356,7 @@ void LineChart::SetVolumePoints(const std::map<uint32_t, double>& mapPoints, con
         //Series does not exist yet
         m_vVolume.resize(nSeries+1);
     }
-    m_vVolume.at(nSeries) = mapPoints;
+    m_vVolume.at(nSeries).data = mapPoints;
     ProcessChangedData();
 }
 
@@ -276,7 +366,7 @@ void LineChart::ProcessChangedData()
     m_pairYRange = {0, 0};
     bool fFirstRun = true;
     for (const LineSeries& series : m_vSeries) {
-        for (const auto& pair : series) {
+        for (const auto& pair : series.data) {
             //Set min and max for x and y
             if (fFirstRun || pair.first < m_pairXRange.first)
                 m_pairXRange.first = pair.first;
@@ -363,7 +453,7 @@ void LineChart::paintEvent(QPaintEvent *event)
         if (m_settingsXLabels.fDynamicSizing) {
             QString strLabel;
             if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP)
-                strLabel = TimeStampToString(MaxX());
+                strLabel = TimeStampToString(MaxX(), m_settingsXLabels.timeOffset);
             else
                 strLabel = PrecisionToString(MaxX(), m_settingsXLabels.Precision());
 
@@ -393,9 +483,27 @@ void LineChart::paintEvent(QPaintEvent *event)
     //Clear any existing mouse dots
     m_mousedisplay.ClearDots();
 
+    //Draw a horizontal line at Y=0 to show gain/loss
+    if (m_fDrawZero) {
+        painter.save();
+        QPointF pointZeroY = ConvertToPlotPoint(std::make_pair(MinX(), 0));
+        QPointF pointLeft(rectChart.left(), pointZeroY.y());
+        QPointF pointRight(rectChart.right(), pointZeroY.y());
+        QPen penZero;
+        penZero.setWidthF(2.5);
+        penZero.setColor(Qt::black);
+
+        painter.setPen(penZero);
+        painter.drawLine(pointLeft, pointRight);
+        painter.restore();
+    }
+
     //Draw each series
     for (unsigned int i = 0; i < m_vSeries.size(); i++) {
         const LineSeries& series = m_vSeries.at(i);
+        if (!series.fShow || series.data.empty())
+            continue;
+
 
         //Create the lines that are drawn
         QVector<QPointF> qvecPolygon;
@@ -406,7 +514,9 @@ void LineChart::paintEvent(QPaintEvent *event)
         QPointF pointPrev;
         bool fMouseSet = false;
 
-        for (const std::pair<const uint32_t, double>& pair : series) {
+        QPointF pointLast;
+        double dataLast;
+        for (const std::pair<const uint32_t, double>& pair : series.data) {
             QPointF point = ConvertToPlotPoint(pair);
             qvecPolygon.append(point);
             if (fFirstRun) {
@@ -431,10 +541,63 @@ void LineChart::paintEvent(QPaintEvent *event)
                     m_mousedisplay.AddDot(QPointF(lposMouse.x(), y), color);
                 }
             }
+            pointLast = point;
+            dataLast = pair.second;
         }
 
         // Cleanly close the polygon
         qvecPolygon.append(QPointF(rectChart.right(), rectChart.bottom()));
+
+        // Show a label of where the line ends
+        QRect rectDraw;
+        rectDraw.setTopLeft(pointLast.toPoint());
+        rectDraw.setBottomRight(QPoint(pointLast.x()+50, pointLast.y()+10));
+
+        //Center the label on the line
+        rectDraw.moveBottom(rectDraw.bottom() - rectDraw.height()/2);
+
+        QPainterPath path;
+        path.addRoundedRect(rectDraw, 5, 5);
+        painter.fillPath(path, GetSeriesColor(i));
+
+        //int nWidthText = fm.horizontalAdvance(strLabel);
+        //rectDraw.setBottomRight(QPoint(pointDraw.x() + nWidthText, rectXLabels.bottom()));
+
+        //Center the label on the line
+        //rectDraw.moveLeft(rectDraw.left() - rectDraw.width() / 2);
+        // if (!fDrawIndicatorLine) {
+        //     //Assume this is for the mouse display if not using an indicator line
+        //     QPainterPath path;
+        //     path.addRoundedRect(rectDraw, 5, 5);
+        //     painter.fillPath(path, m_mousedisplay.LabelBackgroundColor());
+        // }
+        const auto& fontBefore = painter.font();
+        painter.setFont(m_settingsYLabels.font);
+
+        //If there is a label for the series, add it too
+        QString strText = QString::number(dataLast, 'f', m_settingsYLabels.Precision());
+        if (series.label != "")
+            strText = series.label;
+
+        painter.drawText(rectDraw, Qt::AlignCenter, strText);
+
+        //Draw a percent change box if enabled
+        if (m_fDrawZero) {
+            QRect rectPercent = rectDraw;
+            rectPercent.moveLeft(rectDraw.right());
+            double percentChange = dataLast * 100;
+            strText = QString::number(percentChange, 'f', 3) + QString("%");
+            if (m_settingsYLabels.fPriceDisplay) {
+                strText = PrecisionToString(series.priceRaw, PrecisionHint(series.priceRaw));
+                //strText = QString::number(series.priceRaw, 'f', m_settingsYLabels.Precision());
+            }
+
+            QPainterPath path_percent;
+            path_percent.addRoundedRect(rectPercent, 5, 5);
+            painter.fillPath(path_percent, GetSeriesColor(i));
+            painter.drawText(rectPercent, Qt::AlignCenter, strText);
+        }
+        painter.setFont(fontBefore);
 
         /**Todo - Support fill chart when there are multiple line series**/
         if (m_fEnableFill && m_vSeries.size() == 1) {
@@ -462,7 +625,7 @@ void LineChart::paintEvent(QPaintEvent *event)
         for (unsigned int i = 0; i < m_vSeries.size(); i++) {
             QPen penBar;
             penBar.setBrush(GetSeriesColor(i));
-            for (const std::pair<uint32_t, double> pair : m_vSeries.at(i)) {
+            for (const std::pair<uint32_t, double> pair : m_vSeries.at(i).data) {
                 QPointF chartBar = ConvertToVolumePoint(pair);
                 QPointF pointBar = QPointF(chartBar.x() + i*m_nBarWidth + m_nBarWidth, chartBar.y());
                 QPointF pointOrigin = QPointF(chartBar.x() + i*m_nBarWidth + 1, rectChart.bottom());
@@ -482,6 +645,7 @@ void LineChart::paintEvent(QPaintEvent *event)
     //Draw axis sections next so that they get covered up by chart fill
     if (m_axisSections > 0) {
         painter.save();
+        m_penAxisSeparater.setWidthF(0.3);
         painter.setPen(m_penAxisSeparater);
         int nSpacingY = rectChart.height() / m_axisSections;
         int nSpacingX = rectChart.width() / m_axisSections;
@@ -489,6 +653,22 @@ void LineChart::paintEvent(QPaintEvent *event)
         std::vector<int> vXPoints;
         for (uint32_t i = 0; i <= m_axisSections; i++) {
             int y = rectChart.top() + i*nSpacingY;
+            //todo: finish
+            //modulus mode only places lines when mod is 0  (ie multiple of 5, 10, 100, etc)
+            uint32_t y_value = ConvertFromPlotPoint(QPointF(0, y)).second;
+            if (m_nYSectionModulus > 0) {
+                uint32_t remain = y_value % m_nYSectionModulus;
+                if (remain) {
+                    uint32_t y_line = y_value - remain;
+                    auto y_new = ConvertToPlotPoint(std::make_pair(0, double(y_line))).y();
+                    auto check = ConvertFromPlotPoint((QPointF(0, y_new))).second;
+                    qDebug() << "new point at value: " << QString::number(y_line) << " check value: " << QString::number(check);
+                    y = y_new;
+                    if (y_line > 100000) {
+                        qDebug() << "oiut of range";
+                    }
+                }
+            }
             vYPoints.emplace_back(y);
             QPointF lineLeftPoint(rectChart.left(), y);
             QPointF lineRightPoint(rectChart.right(), y);

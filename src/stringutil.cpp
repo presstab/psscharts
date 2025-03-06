@@ -40,34 +40,67 @@ QString PrecisionToString(double d, int precision)
     return QString::fromStdString(stream.str());
 }
 
-QString TimeStampToString(const uint64_t &nTime)
+QString TimeStampToString(const uint64_t &nTime, const int32_t& nOffset)
 {
     QDateTime datetime;
-    datetime.setSecsSinceEpoch(nTime);
-    QDate date = datetime.date();
+    datetime.setSecsSinceEpoch(static_cast<int64_t>(nTime) + nOffset);
+    const QDate& date = datetime.date();
     return QString("%1/%2/%3").arg(QString::number(date.month()))
             .arg(QString::number(date.day()))
             .arg(QString::number(date.year()));
 }
 
+QString TimeStampToString_Hours(const uint64_t &nTime, const uint32_t nRange, const int32_t& nOffset)
+{
+    QDateTime datetime;
+    datetime.setSecsSinceEpoch(static_cast<int64_t>(nTime) + nOffset);
+
+
+    const QTime& time = datetime.time();
+    auto hour = time.hour();
+    QString strAMPM = "AM";
+    if (hour > 12) {
+        hour -= 12;
+        strAMPM = "PM";
+    }
+
+    if (nRange > 60*60*12) {
+        //Show date if greater than 12 hours
+        return QString("%1/%2 %3 %4").arg(QString::number(datetime.date().month()))
+            .arg(QString::number(datetime.date().day()))
+            .arg(QString::number(hour))
+            .arg(strAMPM);
+    } else if (nRange > 60*60) {
+        //Don't show seconds if its over an hour length
+        return QString("%1:%2 %3").arg(QString::number(hour))
+            .arg(QString::number(time.minute()))
+            .arg(strAMPM);
+    }
+
+    return QString("%1:%2:%3 %4").arg(QString::number(hour))
+        .arg(QString::number(time.minute()))
+        .arg(QString::number(time.second()))
+        .arg(strAMPM);
+}
+
 int PrecisionHint(const double& n)
 {
-    if (n >100)
+    if (n >10000)
         return  0;
-    else if (n > 10)
+    else if (n > 1000)
         return 1;
-    else if (n > 1)
+    else if (n > 100)
         return 2;
-    else if (n > 0.1)
+    else if (n > 10)
         return 3;
-    else if (n > 0.01)
+    else if (n > 1)
         return 4;
-    else if (n > 0.001)
+    else if (n > 0.1)
         return 5;
-    else if (n > 0.0001)
+    else if (n > 0.01)
+        return 5;
+    else if (n > 0.001)
         return 6;
-    else if (n > 0.00001)
-        return 7;
 
      return 8;
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
 MIT License
 
 Copyright (c) 2020 Paddington Software Services
@@ -47,7 +47,9 @@ enum class AxisLabelType
 {
     AX_NO_LABEL,
     AX_TIMESTAMP,
-    AX_NUMBER
+    AX_TIMESTAMP_TIME,
+    AX_NUMBER,
+    AX_PERCENT
 };
 
 enum class ChartType
@@ -136,6 +138,7 @@ public:
     void SetAxisLabelsBrush(const QBrush& brush);
     void SetXLabelType(AxisLabelType labelType);
     void SetYLabelType(AxisLabelType labelType);
+    void SetTimeOffset(const int32_t& nTimeOffset);
     void SetYLabelWidth(int width);
     void SetYLabelFont(const QFont& font);
     void SetXLabelHeight(int height);
@@ -168,6 +171,7 @@ public:
     QBrush BackgroundBrush() const;
 
     QPixmap grab(const QRect &rectangle = QRect(QPoint(0, 0), QSize(-1, -1)));
+    bool SaveAsPng(const QString& filePath);
     void mouseMoveEvent(QMouseEvent* event) override;
 
 

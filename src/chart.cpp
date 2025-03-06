@@ -161,8 +161,9 @@ int Chart::WidthYTitleArea() const
 
 int Chart::WidthYLabelArea() const
 {
-    if (m_settingsYLabels.fDynamicSizing && m_settingsYLabels.sizeDynamicDimension.width() > 0)
+    if (m_settingsYLabels.fDynamicSizing && m_settingsYLabels.sizeDynamicDimension.width() > 0) {
         return  m_settingsYLabels.sizeDynamicDimension.width();
+    }
 
     if (m_settingsYLabels.labeltype == AxisLabelType::AX_NO_LABEL)
         return 0;
@@ -199,6 +200,15 @@ void Chart::DrawXLabels(QPainter& painter, const std::vector<int>& vXPoints, boo
     QFontMetrics fm(painter.font());
 
     QRect rectXLabels = XLabelArea();
+    QRect rectChart = ChartArea();
+    QPen penBefore = painter.pen();
+    QPen penLines(penBefore);
+    penLines.setWidthF(0.3);
+
+    // Get range
+    uint32_t nMinX = MinX();
+    uint32_t nMaxX = MaxX();
+    uint32_t nRangeX = nMaxX - nMinX;
     for (int x : vXPoints) {
         QPointF pointDraw(x, rectXLabels.top());
         std::pair<uint32_t, double> pairPoints = ConvertFromPlotPoint(pointDraw);
@@ -207,6 +217,8 @@ void Chart::DrawXLabels(QPainter& painter, const std::vector<int>& vXPoints, boo
         QString strLabel;
         if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP) {
             strLabel = TimeStampToString(nValue);
+        } else if (m_settingsXLabels.labeltype == AxisLabelType::AX_TIMESTAMP_TIME) {
+            strLabel = TimeStampToString_Hours(nValue, nRangeX, m_settingsXLabels.timeOffset);
         } else {
             strLabel = PrecisionToString(nValue, m_settingsXLabels.Precision());
         }
@@ -227,10 +239,15 @@ void Chart::DrawXLabels(QPainter& painter, const std::vector<int>& vXPoints, boo
 
         painter.drawText(rectDraw, Qt::AlignCenter, strLabel);
 
-        //Draw a line on the axis showing the location of this x value
-        if (fDrawIndicatorLine)
-            painter.drawLine(QLine(QPoint(rectDraw.center().x(), rectDraw.top()),
-                                   QPoint(rectDraw.center().x(), rectDraw.top() + 5)));
+        //Draw axis lines, a line on the axis showing the location of this x value
+        if (true) {
+            if (x == vXPoints.back())
+                x = rectChart.right();
+            painter.setPen(penLines);
+            painter.drawLine(QLine(QPoint(x, rectChart.top()),
+                                   QPoint(x, rectDraw.top())));
+            painter.setPen(penBefore);
+        }
     }
 }
 
@@ -244,7 +261,12 @@ void Chart::DrawYLabels(QPainter &painter, const std::vector<int> &vYPoints, boo
         std::pair<uint32_t, double> pairPoints = ConvertFromPlotPoint(pointDraw);
         const double& nValue = pairPoints.second;
 
-        QString strLabel = PrecisionToString(nValue, m_settingsYLabels.Precision());
+        QString strLabel;
+        if (m_settingsYLabels.labeltype == AxisLabelType::AX_PERCENT) {
+            strLabel = PrecisionToString(nValue*100, 2) + QString("%");
+        } else {
+            strLabel = PrecisionToString(nValue, m_settingsYLabels.Precision());
+        }
 
         int nWidthText = fm.horizontalAdvance(strLabel);
 
@@ -277,6 +299,12 @@ QPixmap Chart::grab(const QRect &rectangle)
 
     m_pixmapCache = QWidget::grab(rectangle);
     return m_pixmapCache;
+}
+
+bool Chart::SaveAsPng(const QString &filePath)
+{
+    QPixmap pixmap = grab(this->rect());
+    return pixmap.save(QString(filePath)+QString("/chart.png"), "PNG");
 }
 
 void Chart::mouseMoveEvent(QMouseEvent *event)
@@ -323,9 +351,16 @@ void Chart::SetYLabelType(AxisLabelType labelType)
     m_fChangesMade = true;
 }
 
+void Chart::SetTimeOffset(const int32_t &nTimeOffset)
+{
+    m_settingsXLabels.timeOffset = nTimeOffset;
+    m_settingsYLabels.timeOffset = nTimeOffset;
+}
+
 void Chart::SetYLabelWidth(int width)
 {
     m_settingsYLabels.nDimension = width;
+    m_settingsYLabels.fDynamicSizing = false;
 }
 
 void Chart::SetYTitle(const QString &strTitle)
