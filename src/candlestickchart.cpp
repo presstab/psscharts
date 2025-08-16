@@ -29,6 +29,7 @@ SOFTWARE.
 #include <QLineF>
 #include <QPainter>
 #include <QPaintEvent>
+#include <QMouseEvent>
 #include <QPen>
 
 /* ----------------------------------------------- |
@@ -88,7 +89,11 @@ CandlestickChart::CandlestickChart(QWidget *parent) : Chart (ChartType::CANDLEST
     m_fDisplayCandleDash = false;
     m_fDisplayOHLC = true;
     m_fDrawVolume = true;
+    m_fEnableHighlightCandle = true;
+    m_fEnableHighlightOutline = true;
     m_fontOHLC.setPointSize(8);
+    m_colorHighlight = QColor(Qt::magenta);
+    m_brushHighlight = QBrush(QColor(Qt::white));
 
     setMouseTracking(true);
 }
@@ -512,16 +517,21 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
     //Draw Candlesticks
     QPen penCandle;
     penCandle.setWidth(m_nCandleLineWidth);
+    QPen penHighlight;
+    penHighlight.setBrush(m_brushHighlight);
+    penHighlight.setWidth(m_nCandleLineWidth);
     std::map<uint32_t, Candle>::reverse_iterator rit;
     for (rit = m_mapPoints.rbegin(); rit != m_mapPoints.rend(); ++rit) {
         std::pair<uint32_t, Candle> chartCandle = ConvertToCandlePlotPoint(*rit);
         if (chartCandle.second.isNull()) {
             break;
         }
+        bool fCandleHighlighted = (lposMouse.x() >= chartCandle.first - m_nCandleWidth && lposMouse.x() <= chartCandle.first + m_nCandleWidth);
         QPointF pointO = QPointF(chartCandle.first, chartCandle.second.m_open);
         QPointF pointH = QPointF(chartCandle.first, chartCandle.second.m_high);
         QPointF pointL = QPointF(chartCandle.first, chartCandle.second.m_low);
         QPointF pointC = QPointF(chartCandle.first, chartCandle.second.m_close);
+        QBrush rectBrush;
         if(chartCandle.second.m_open > chartCandle.second.m_close) {
             if(m_fDrawWick) {
                 QLineF HCline(pointH, pointC);
@@ -541,23 +551,8 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
             }
             pointO = QPointF(chartCandle.first + m_nCandleWidth, chartCandle.second.m_open);
             pointC = QPointF(chartCandle.first - m_nCandleWidth, chartCandle.second.m_close);
-            QRectF rect(pointO, pointC);
-            QBrush rectBrush = m_colorUpCandle;
-            if(m_fDrawOutline) {
-                penCandle.setColor(m_colorUpCandleLine);
-                painter.setPen(penCandle);
-                painter.drawRect(rect);
-                if (m_fFillCandle) {
-                    painter.fillRect(rect, rectBrush);
-                } else {
-                    painter.fillRect(rect, m_brushBackground);
-                }
-            } else if (m_fFillCandle) {
-                penCandle.setColor(m_colorUpCandle);
-                painter.setPen(penCandle);
-                painter.drawRect(rect);
-                painter.fillRect(rect, rectBrush);
-            }
+            rectBrush = m_colorUpCandle;
+            penCandle.setColor(m_colorUpCandleLine);
         } else {
             if(m_fDrawWick) {
                 QLineF HOline(pointH, pointO);
@@ -577,23 +572,33 @@ void CandlestickChart::paintEvent(QPaintEvent *event)
             }
             pointO = QPointF(chartCandle.first - m_nCandleWidth, chartCandle.second.m_open);
             pointC = QPointF(chartCandle.first + m_nCandleWidth, chartCandle.second.m_close);
-            QRectF rect(pointO, pointC);
-            QBrush rectBrush = m_colorDownCandle;
-            if(m_fDrawOutline) {
-                penCandle.setColor(m_colorDownCandleLine);
-                painter.setPen(penCandle);
-                painter.drawRect(rect);
-                if (m_fFillCandle) {
-                    painter.fillRect(rect, rectBrush);
-                } else {
-                    painter.fillRect(rect, m_brushBackground);
-                }
-            } else if (m_fFillCandle) {
-                penCandle.setColor(m_colorDownCandle);
-                painter.setPen(penCandle);
-                painter.drawRect(rect);
+            rectBrush = m_colorDownCandle;
+            penCandle.setColor(m_colorDownCandleLine);
+        }
+
+        if (fCandleHighlighted && m_fEnableHighlightCandle) {
+            rectBrush = m_colorHighlight;
+        }
+
+        if (fCandleHighlighted && m_fEnableHighlightOutline) {
+            painter.setPen(penHighlight);
+        } else {
+            painter.setPen(penCandle);
+        }
+
+        QRectF rect(pointO, pointC);
+        if(m_fDrawOutline) {
+            painter.drawRect(rect);
+            if (m_fFillCandle) {
                 painter.fillRect(rect, rectBrush);
+            } else {
+                painter.fillRect(rect, m_brushBackground);
             }
+        } else if (m_fFillCandle) {
+            penCandle.setColor(rectBrush.color());
+            painter.setPen(penCandle);
+            painter.drawRect(rect);
+            painter.fillRect(rect, rectBrush);
         }
         // Volume bars
         if (m_fDrawVolume) {
@@ -767,6 +772,18 @@ void CandlestickChart::SetCandleTimePeriod(uint32_t nTime)
     m_fChangesMade = true;
 }
 
+void CandlestickChart::SetHighlightColor(const QColor &color)
+{
+    m_colorHighlight = color;
+    m_fChangesMade = true;
+}
+
+void CandlestickChart::SetHighlightBrush(const QBrush &brush)
+{
+    m_brushHighlight = brush;
+    m_fChangesMade = true;
+}
+
 void CandlestickChart::SetOLHCFont(const QFont &font)
 {
     m_fontOHLC = font;
@@ -801,6 +818,22 @@ void CandlestickChart::EnableOHLCDisplay(bool fEnable)
 void CandlestickChart::EnableVolumeBar(bool fEnable)
 {
     m_fDrawVolume = fEnable;
+}
+
+void CandlestickChart::EnableHighlight(bool fEnable)
+{
+    m_fEnableHighlightCandle = fEnable;
+}
+
+void CandlestickChart::EnableHighlightBorder(bool fEnable)
+{
+    m_fEnableHighlightOutline = fEnable;
+}
+
+void CandlestickChart::mouseMoveEvent(QMouseEvent *event)
+{
+    Q_UNUSED(event);
+    update();
 }
 
 void CandlestickChart::wheelEvent(QWheelEvent *event)

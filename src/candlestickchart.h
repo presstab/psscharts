@@ -35,6 +35,7 @@ SOFTWARE.
 #include <QString>
 #include <QWidget>
 #include <QWheelEvent>
+#include <QMouseEvent>
 
 #include <list>
 #include <set>
@@ -91,6 +92,7 @@ protected:
     std::map<uint32_t, Candle> ConvertLineToCandlestickData(const std::map<uint32_t, double> lineChartData, std::map<uint32_t, double>& volPoints, uint32_t candleTimePeriod);
 
     void wheelEvent(QWheelEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
 
     bool m_fIsLineChart;
@@ -100,6 +102,8 @@ protected:
     bool m_fDisplayCandleDash;
     bool m_fDisplayOHLC;
     bool m_fDrawVolume;
+    bool m_fEnableHighlightCandle;
+    bool m_fEnableHighlightOutline;
 
     double m_nCandleWidth;
     double m_nCandleMaxWidth;
@@ -119,6 +123,8 @@ protected:
     QColor m_colorUpDash;
     QColor m_colorDownDash;
     QColor m_colorVolume;
+    QColor m_colorHighlight;
+    QBrush m_brushHighlight;
     QFont m_fontOHLC;
     QString m_strOHLC;
 
@@ -135,6 +141,8 @@ public:
     void EnableCandleDash(bool fEnable);
     void EnableOHLCDisplay(bool fEnable);
     void EnableVolumeBar(bool fEnable);
+    void EnableHighlight(bool fEnable);
+    void EnableHighlightBorder(bool fEnable);
 
     void SetDataPoints(std::map<uint32_t, Candle>& mapPoints);
     void SetDataPoints(std::map<uint32_t, double>& mapPoints, uint32_t candleTimePeriod = 0);
@@ -147,6 +155,8 @@ public:
     void SetCandleWidth(int nWidth);
     void SetCandleWidth(int nWidth, int nMinWidth, int nMaxWidth);
     void SetCandleTimePeriod(uint32_t nTime);
+    void SetHighlightColor(const QColor& color);
+    void SetHighlightBrush(const QBrush& brush);
     void SetOLHCFont(const QFont &font);
     void SetVolumeColor(const QColor& color);
     std::vector<std::pair<QString, QColor>> GetLegendData();

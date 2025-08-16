@@ -546,6 +546,10 @@ void MainWindow::RedrawChart()
             m_candleChart->EnableCandleDash(ui->checkboxCandleDash->checkState() == Qt::Checked);
             m_candleChart->EnableVolumeBar(ui->checkboxCandleVolumeBar->checkState() == Qt::Checked);
 
+            m_candleChart->EnableHighlight(true);
+            m_candleChart->SetHighlightColor(Qt::magenta);
+            m_candleChart->SetHighlightBrush(QBrush(Qt::white));
+
             //OHLC Display
             m_candleChart->EnableOHLCDisplay(ui->checkBoxOHLCDisplay->checkState() == Qt::Checked);
             QFont fontOHLC;
